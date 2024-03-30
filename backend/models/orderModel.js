@@ -2,22 +2,6 @@ const mongoose = require('mongoose');
 
 const OrderSchema = mongoose.Schema(
   {
-    customer: {
-      type: String,
-      required: true
-    },
-    country: {
-      type: String,
-      required: true
-    },
-    province: {
-      type: String,
-      required: true
-    },
-    zipcode: {
-      type: Number,
-      required: true
-    },
     phone: {
       type: Number,
       required: true
@@ -31,13 +15,13 @@ const OrderSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
-    tax: {
-      type: Number,
-      required: true,
-    },
     payment: {
       type: String,
-      require: true 
+      require: true
+    },
+    order_id: {
+      type: Number,
+      required: true
     },
     user: {
       type: mongoose.Schema.ObjectId,

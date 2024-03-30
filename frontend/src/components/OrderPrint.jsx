@@ -117,7 +117,6 @@ const OrderPrint = ({ order }) => {
                     </div>
                     <div className="i_col w_50 text_right">
                       <p>$ {order.subTotal}</p>
-                      <p>${order.tax}</p>
                       <p>${order.totalAmount}</p>
                     </div>
                   </div>

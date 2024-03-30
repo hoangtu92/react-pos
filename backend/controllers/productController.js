@@ -3,84 +3,79 @@ const Product = require('../models/productModel');
 // @route   /api/product/all-products
 // @desc    All Products
 const getAllProducts = async (req, res) => {
-    const products = await Product.find({})
+    const products = await Product.find({}, null,  { limit: 10, skip: 0 })
     res.status(201).json(products)
 }
 
-// @route   /api/product/add-product
-// @desc    Add Product
-const addProduct = async (req, res) => {
+const do_sync = async (results, page = 1, cb, perpage = 100) => {
 
-    const { name, stock, image, price, category } = req.body
-    
-    if (!name || !stock || !price || !category ) {
-        res.status(400)
-        throw new Error('Please fill in the blanks')  
+    let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/product/get?page=${page}&perpage=${perpage}`, {
+        method: "GET",
+        headers: {
+            'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
+            'Content-Type': 'application/json'
+        }
+    })
+    if(result.ok){
+        const products = await result.json();
+        let created = [], updated = [];
+
+        for(let i=0; i< products.length; i++){
+
+            let {sku, name, price, image} = products[i];
+
+            const exists = await Product.findOne({"sku": sku});
+            if(!exists){
+                const product = await Product.create({
+                    sku,
+                    name,
+                    price,
+                    image
+                });
+                created.push(product)
+            }
+            else{
+                await Product.updateOne({"sku": sku},{
+                    name: name,
+                    price: price,
+                    image: image
+                });
+                updated.push(products[i]);
+            }
+        }
+
+        results.push({
+            created: created,
+            updated: updated
+        });
+
+        if(products.length >= perpage){
+            page++;
+            await do_sync(results, page, cb, perpage)
+        }
+        else cb(true);
     }
+    else cb(false);
 
-    const product = await Product.create({
-        name,
-        stock,
-        image,
-        price,
-        category,
-        user: req.user._id
-    })  
-
-    res.status(201).json(product)  
 }
 
-// @route   /api/product/update-product
-// @desc    Update Product
-const updateProduct = async (req, res) => { 
-    const { product } = req.body
-    
-    if (product.user.toString() !== req.user.id) {
-        res.status(401)
-        throw new Error('A user can only update the product they added')
-    }
+// @route /api/product/sync
+// @desc Sync product with justdog
+const syncProduct = async(req, res) => {
 
-    const updateProduct = await Product.findByIdAndUpdate(
-        { _id: product.id },
-        product,
-        { new: true, runValidators: true }
-    )
-    
-    res.status(201).json(updateProduct)
-}
+    let results = [];
+    await do_sync(results, 1, (status) => {
+      if(status){
+          res.status(200).json(results)
+      }
+      else {
+          res.status(400)
+      }
+    })
 
-// @route   /api/product/product-filter
-// @desc    Filter Product
-const categoryProductFilter = async (req, res) => { 
-    const { category } = req.params
-    const filterProduct = await Product.find({ category: category })
-    res.status(201).json(filterProduct)
-}
-
-const removeProduct = async (req, res) => { 
-
-    const { product: productId } = req.params;
-
-    const product = await Product.findOne({ _id: productId })
-
-    if (!product) {
-            res.status(400)
-            throw new Error('Please fill in the blanks')  
-    }
-
-     if (product.user.toString() !== req.user.id) {
-        res.status(401)
-        throw new Error('A user can only delete the product they added')
-    }
-
-    await product.deleteOne()
-    res.status(201).json(product)
 }
 
 module.exports = {
-    addProduct,
-    getAllProducts,
-    updateProduct,
-    categoryProductFilter,
-    removeProduct
+    syncProduct,
+    getAllProducts
 }

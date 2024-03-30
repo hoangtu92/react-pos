@@ -6,7 +6,6 @@ import {
   FaShopify,
   FaUserCircle,
   FaSignInAlt,
-  FaWpforms,
 } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { logout, reset } from "../features/auth/authSlice";
@@ -33,10 +32,6 @@ const SidebarLeft = () => {
         <Link to="/dashboard/orders">
           <FaShopify className="menu-icon" />
           Orders
-        </Link>
-        <Link to="/dashboard/form">
-          <FaWpforms className="menu-icon" />
-          Form
         </Link>
         <Link to="/cart">
           <FaShoppingCart className="menu-icon" />

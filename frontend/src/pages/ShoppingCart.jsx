@@ -5,13 +5,12 @@ import {
   decrease,
   productSubTotal,
   productTotalAmount,
-  productTax,
   removeCartItem,
 } from "../features/cart/cartSlice";
 import { useSelector, useDispatch } from "react-redux";
 
 const ShoppingCart = () => {
-  const { cartItems, subTotal, totalAmount, tax } = useSelector(
+  const { cartItems, subTotal, totalAmount } = useSelector(
     (state) => state.cart
   );
   const navigate = useNavigate();
@@ -19,7 +18,6 @@ const ShoppingCart = () => {
 
   useEffect(() => {
     dispatch(productSubTotal());
-    dispatch(productTax());
     dispatch(productTotalAmount());
   }, [dispatch, cartItems]);
 
@@ -45,12 +43,13 @@ const ShoppingCart = () => {
         )}
       </div>
 
+      <div className={"cart-container"}>
       {cartItems ? (
         cartItems.map((cart) => (
           <div className="cart-items" key={cart.id}>
             <div className="image">
               {cart.image ? (
-                <img className="product-image" src={cart.image} alt="..." />
+                <img className="product-image" src={"https://justdog.tw/wp-content/uploads/"+ cart.image} alt="..." />
               ) : (
                 <img
                   className="default-image"
@@ -74,26 +73,11 @@ const ShoppingCart = () => {
               </button>
 
               <div className="details">
-                <div className="status">
-                  <span className="status-note">Category:</span>
-                  <p className="status-text">{cart.category}</p>
-                </div>
-
                 <div className="price">
                   <p>$ {cart.price}</p>
                 </div>
 
                 <div className="count">
-                  <button
-                    className="increment-btn"
-                    type="button"
-                    onClick={() => {
-                      dispatch(increase(cart.id));
-                    }}
-                  >
-                    +
-                  </button>
-                  <span className="amount">{cart.quantity}</span>
                   <button
                     className="decrement-btn"
                     type="button"
@@ -102,6 +86,16 @@ const ShoppingCart = () => {
                     }}
                   >
                     -
+                  </button>
+                  <span className="amount">{cart.quantity}</span>
+                  <button
+                    className="increment-btn"
+                    type="button"
+                    onClick={() => {
+                      dispatch(increase(cart.id));
+                    }}
+                  >
+                    +
                   </button>
                 </div>
               </div>
@@ -112,14 +106,12 @@ const ShoppingCart = () => {
         <div>Products Loading...</div>
       )}
 
+      </div>
+
       <div className="total-card">
         <div className="total-items">
           <span className="items-count">Items ({cartItems.length})</span>
           <span className="items-price">$ {subTotal.toFixed(2)}</span>
-        </div>
-        <div className="item-taxs">
-          <span className="item-tax">Tax (%8)</span>
-          <span className="item-tax-price">$ {tax.toFixed(2)}</span>
         </div>
         <div className="divider"></div>
         <div className="total">

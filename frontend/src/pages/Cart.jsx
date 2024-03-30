@@ -8,7 +8,6 @@ import {
   decrease,
   productSubTotal,
   productTotalAmount,
-  productTax,
   removeCartItem,
 } from "../features/cart/cartSlice";
 import { orderCreate } from "../features/order/orderSlice";
@@ -16,7 +15,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { deleteLocalStorageCart } from "../utils/localStorage";
 
 const Cart = () => {
-  const { cartItems, subTotal, totalAmount, tax } = useSelector(
+  const { cartItems, subTotal, totalAmount } = useSelector(
     (state) => state.cart
   );
   const { user } = useSelector((state) => state.auth);
@@ -26,14 +25,9 @@ const Cart = () => {
 
   useEffect(() => {
     dispatch(productSubTotal());
-    dispatch(productTax());
     dispatch(productTotalAmount());
   }, [dispatch, cartItems]);
 
-  const [customer, setCustomer] = useState("");
-  const [country, setCountry] = useState("Turkey");
-  const [province, setProvince] = useState("Address 1");
-  const [zipcode, setZipcode] = useState("");
   const [phone, setPhone] = useState("");
   const [payment, setPayment] = useState("Cash");
 
@@ -41,20 +35,15 @@ const Cart = () => {
     e.preventDefault();
 
     const newOrder = {
-      customer,
-      country,
-      province,
-      zipcode,
       phone,
       cartItems,
       subTotal,
       totalAmount,
-      tax,
       payment,
       user: user._id,
     };
 
-    if (customer !== "" || zipcode !== "" || phone !== "") {
+    if (phone !== "") {
       dispatch(orderCreate(newOrder));
       dispatch(clearCart());
       deleteLocalStorageCart();
@@ -123,7 +112,7 @@ const Cart = () => {
                       {product.image ? (
                         <img
                           className="product-image"
-                          src={product.image}
+                          src={"https://justdog.tw/wp-content/uploads/"+ product.image}
                           alt="..."
                         />
                       ) : (
@@ -139,16 +128,6 @@ const Cart = () => {
                     <td>
                       <div className="count">
                         <button
-                          className="increment-btn"
-                          type="button"
-                          onClick={() => {
-                            dispatch(increase(product.id));
-                          }}
-                        >
-                          +
-                        </button>
-                        <span className="amount">{product.quantity}</span>
-                        <button
                           className="decrement-btn"
                           type="button"
                           onClick={() => {
@@ -156,6 +135,16 @@ const Cart = () => {
                           }}
                         >
                           -
+                        </button>
+                        <span className="amount">{product.quantity}</span>
+                        <button
+                          className="increment-btn"
+                          type="button"
+                          onClick={() => {
+                            dispatch(increase(product.id));
+                          }}
+                        >
+                          +
                         </button>
                       </div>
                     </td>
@@ -171,52 +160,11 @@ const Cart = () => {
 
         <div className="cart-summary styled">
           <form onSubmit={handleSubmit}>
-            <div className="item">
-              <div className="customer">
-                <input
-                  className="customer-name"
-                  name="customer"
-                  type="text"
-                  value={customer}
-                  onChange={(e) => setCustomer(e.target.value)}
-                  placeholder="enter customer"
-                />
-                <button>Customer</button>
-              </div>
               <div className="shipping-rate collapse">
                 <div className="has-child expand">
                   <h3>CUSTOMER INFORMATION</h3>
                   <div className="content">
-                    <div className="countries">
-                      <div>
-                        <label htmlFor="country">Country</label>
-                        <select
-                          name="country"
-                          id="country"
-                          value={country}
-                          onChange={(e) => setCountry(e.target.value)}
-                        >
-                          <option defaultValue="Turkey">Turkey</option>
-                          <option defaultValue="Others">Others</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="states">
-                      <div>
-                        <label htmlFor="province">State / Province</label>
-                        <select
-                          name="province"
-                          id="province"
-                          value={province}
-                          onChange={(e) => setProvince(e.target.value)}
-                        >
-                          <option defaultValue="Address 1.">Address 1</option>
-                          <option defaultValue="Address 2.">Address 2</option>
-                          <option defaultValue="Others">Others</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="states">
+                    <div className="payment-method">
                       <div>
                         <label htmlFor="payment">Payment Method</label>
                         <select
@@ -232,23 +180,12 @@ const Cart = () => {
                         </select>
                       </div>
                     </div>
-                    <div className="postal-code">
-                      <div>
-                        <label htmlFor="zipcode">Zipcode</label>
-                        <input
-                          type="number"
-                          name="zipcode"
-                          id="zipcode"
-                          value={zipcode}
-                          onChange={(e) => setZipcode(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="postal-code">
+
+                    <div className="phone">
                       <div>
                         <label htmlFor="phone">Phone Number</label>
                         <input
-                          type="number"
+                          type="tel"
                           name="phone"
                           id="phone"
                           value={phone}
@@ -256,7 +193,7 @@ const Cart = () => {
                         />
                       </div>
                     </div>
-                  </div>
+
                 </div>
               </div>
               <div className="cart-total-table">
@@ -265,10 +202,6 @@ const Cart = () => {
                     <tr>
                       <th>SubTotal:</th>
                       <td>$ {subTotal.toFixed(2)}</td>
-                    </tr>
-                    <tr>
-                      <th>Tax: % 8</th>
-                      <td>$ {tax.toFixed(2)}</td>
                     </tr>
                     <tr className="grand-total">
                       <th>TOTAL:</th>

@@ -1,13 +1,17 @@
 import React from "react";
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { getProducts } from "../features/product/productSlice";
+import { getProducts, syncProducts } from "../features/product/productSlice";
 import ProductItem from "../components/ProductItem";
 import ClipLoader from "react-spinners/ClipLoader";
 
 const Products = () => {
   const { loading, products } = useSelector((state) => state.product);
   const dispatch = useDispatch();
+
+  const sync = () => {
+    dispatch(syncProducts());
+  }
 
   useEffect(() => {
     dispatch(getProducts());
@@ -26,6 +30,7 @@ const Products = () => {
     return (
       <div className="info-details">
         <div className="info">No products found...</div>
+        <button onClick={sync}>Sync</button>
       </div>
     );
   }

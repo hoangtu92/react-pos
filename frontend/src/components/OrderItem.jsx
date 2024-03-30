@@ -19,7 +19,7 @@ const OrderItem = ({ order }) => {
     <div className="order-details" key={order._id}>
       <div className="order-title">
         <span className="order-id">Order Id: # {order._id}</span>
-        <span className="order-time"> Customer: {order.customer} </span>
+        <span className="order-time"> Customer: {order.phone} </span>
       </div>
 
       <div className="order-total">

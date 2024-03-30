@@ -9,8 +9,6 @@ import Register from './pages/Register'
 import Cart from './pages/Cart'
 import Orders from './pages/Orders'
 import Content from './pages/Content'
-import Modal from './components/Modal'
-import CategoryProducts from './pages/CategoryProducts'
 import NotFound from './pages/NotFound'
 import PrivateRoute from './pages/PrivateRoute'
 
@@ -33,9 +31,6 @@ function App() {
             >
               <Route path='' element={<Content />} />
               <Route path='orders' element={<Orders />} />
-              <Route path='form' element={<Modal />} />
-              <Route path='category/:category' element={<CategoryProducts />} />
-             
             </Route>
 
             <Route

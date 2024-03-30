@@ -17,10 +17,10 @@
           ]
         },
         {
-          "source": "/react-pos-management-system-qmcf.vercel.app/(.*)",
+          "source": "/localhost:8000/(.*)",
           "headers": [
             { "key": "Access-Control-Allow-Origin", "value": "*" }
           ]
-        }  
+        }
     ]
   }

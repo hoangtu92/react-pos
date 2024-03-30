@@ -5,15 +5,10 @@ const Product = require('../models/productModel')
 const addOrder = async (req, res) => {
   
     const {
-            customer,
-            country,
-            province,
-            zipcode,
             phone,
             cartItems,
             subTotal,
             totalAmount,
-            tax,
             payment
     } = req.body
 
@@ -22,24 +17,12 @@ const addOrder = async (req, res) => {
     }
     
     const order = await Order.create({
-            customer,
-            country,
-            province,
-            zipcode,
             phone,
             cartItems,
             subTotal,
             totalAmount,
-            tax,
             payment,
             user: req.user._id
-    })
-
-    // product stock update
-    cartItems.forEach(async(product) => {
-        await Product.findOneAndUpdate(
-            {_id: product._id},
-            {$inc: {stock: -product.quantity}})
     })
 
     res.status(201).json(order)  

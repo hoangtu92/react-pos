@@ -1,6 +1,4 @@
 import React from "react";
-import AddProduct from "../pages/AddProduct";
-import AddCategory from "../pages/AddCategory";
 import { useState } from "react";
 import { FaPlusCircle, FaMinus } from "react-icons/fa";
 
@@ -20,7 +18,7 @@ const Modal = () => {
           <FaMinus className="modal-icon" />
         )}
       </button>
-      {openModal ? <AddCategory closeModal={setOpenModal} /> : <AddProduct />}
+
     </>
   );
 };
