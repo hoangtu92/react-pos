@@ -1,9 +1,19 @@
 const Product = require('../models/productModel');
 
-// @route   /api/product/all-products
+// @route   /api/product/search
 // @desc    All Products
-const getAllProducts = async (req, res) => {
-    const products = await Product.find({}, null,  { limit: 10, skip: 0 })
+const searchProducts = async (req, res) => {
+    const { query } = req.query;
+
+    let products;
+    if(typeof query === undefined || query === ""){
+        products = await Product.find({}, null,  { limit: 10, skip: 0 });
+    }
+    else{
+        let reg = new RegExp(query);
+        products = await Product.find({$or: [{sku: query}, {name: reg}]}, null,  { limit: 10, skip: 0 })
+    }
+
     res.status(201).json(products)
 }
 
@@ -77,5 +87,5 @@ const syncProduct = async(req, res) => {
 
 module.exports = {
     syncProduct,
-    getAllProducts
+    searchProducts
 }

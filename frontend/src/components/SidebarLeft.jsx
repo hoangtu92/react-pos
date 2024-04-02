@@ -2,10 +2,9 @@ import React from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   FaHome,
-  FaShoppingCart,
   FaShopify,
   FaUserCircle,
-  FaSignInAlt,
+  FaSignInAlt, FaShoppingBag, FaSync,
 } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { logout, reset } from "../features/auth/authSlice";
@@ -29,14 +28,20 @@ const SidebarLeft = () => {
           <FaHome className="menu-icon" />
           Home
         </Link>
+        <Link to="/dashboard/new-order">
+          <FaShoppingBag className="menu-icon" />
+          Checkout
+        </Link>
         <Link to="/dashboard/orders">
           <FaShopify className="menu-icon" />
           Orders
         </Link>
-        <Link to="/cart">
-          <FaShoppingCart className="menu-icon" />
-          Cart
+
+        <Link to="/dashboard/customers">
+          <FaSync className="menu-icon" />
+          Sync
         </Link>
+
       </div>
 
       <div className="user-info">

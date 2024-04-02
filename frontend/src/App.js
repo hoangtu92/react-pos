@@ -6,11 +6,13 @@ import Dashboard from './pages/Dashboard';
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
-import Cart from './pages/Cart'
 import Orders from './pages/Orders'
 import Content from './pages/Content'
 import NotFound from './pages/NotFound'
 import PrivateRoute from './pages/PrivateRoute'
+import Pos from "./pages/Pos";
+import Customers from "./pages/Customers";
+import Cart from "./pages/Cart";
 
 function App() {
   return (
@@ -31,19 +33,14 @@ function App() {
             >
               <Route path='' element={<Content />} />
               <Route path='orders' element={<Orders />} />
+              <Route path='new-order' element={<Pos />} />
+              <Route path='customers' element={<Customers />} />
+              <Route path='cart' element={<Cart />} />
             </Route>
 
-            <Route
-              path='/cart'
-              element={
-                <PrivateRoute>
-                  <Cart />
-                </PrivateRoute>
-              }
-            />
              <Route path='*' element={<NotFound />}/>
-          </Routes>     
-          
+          </Routes>
+
       </div>
       </Router>
       <ToastContainer />

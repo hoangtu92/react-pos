@@ -5,9 +5,13 @@ const productSync = async () => {
     return response.data
 }
 
-const getProducts = async () => {
-    // localhost:5000/api/product/all-products
-    const response = await httpRequest.get("/product/all-products")
+const getProducts = async (query) => {
+    // localhost:5000/api/product/search
+    let url = "/product/search";
+    if(query){
+        url += "?query=" + query;
+    }
+    const response = await httpRequest.get(url)
     return response.data
 }
 const productService = {

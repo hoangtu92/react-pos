@@ -1,8 +1,17 @@
 import httpRequest from '../../utils/request'
 
 const orderCreate = async (order) => {
-    // localhost:5000/api/order/add-order 
+    // localhost:5000/api/order/add-order
     const response = await httpRequest.post("/order/add-order", order)
+    return response.data
+}
+
+const redeemPoint = async (data) => {
+    const {order_id, points} = data;
+    // /api/coupon/redeem
+    const response = await httpRequest.post("/coupon/redeem", {
+        order_id: order_id, points: points
+    });
     return response.data
 }
 
@@ -21,7 +30,8 @@ const removeOrder = async (order, thunkAPI) => {
 const orderService = {
     orderCreate,
     getOrders,
-    removeOrder
+    removeOrder,
+    redeemPoint
 }
 
 export default orderService

@@ -2,16 +2,32 @@ const mongoose = require("mongoose");
 
 const customerSchema = mongoose.Schema(
 	{
-		id: {
+		user_id: {
 			type: Number
 		},
-		name: {
+		avatar: {
 			type: String,
-			required: [true, "Please add name"],
+		},
+		name: {
+			type: String
 		},
 		phone: {
 			type: String,
-			required: [true, "Please add phone"]
+			required: [true, "Please add phone"],
+			unique: true
+		},
+		email: {
+			type: String
+		},
+		buyer_id: {
+			type: String
+		},
+		carrier_id: {
+			type: String
+		},
+		points: {
+			type: Number,
+			default: 0
 		}
 	}
 )

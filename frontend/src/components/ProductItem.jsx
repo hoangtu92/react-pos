@@ -21,33 +21,28 @@ const ProductItem = ({ product }) => {
   }, [dispatch, cartItems]);
 
   return (
-    <div className="product-cart">
-      {product.image ? (
-        <img className="product-image" src={"https://justdog.tw/wp-content/uploads/"+ product.image} alt="..." />
-      ) : (
-        <img
-          className="default-image"
-          src={require("../images/product.png")}
-          alt="..."
-        />
-      )}
+    <div className="product-cart" onClick={() => {
+        addCart(product);
+    }}>
+      <div className={"image-container"}>
+        {product.image ? (
+            <img className="product-image" src={"https://justdog.tw/wp-content/uploads/"+ product.image} alt="..." />
+        ) : (
+            <img
+                className="default-image"
+                src={require("../images/product.png")}
+                alt="..."
+            />
+        )}
+      </div>
+
 
       <div className="product-cart-detail">
         <h4>{product.name}</h4>
+          <h5>(#{product.sku})</h5>
         <p className="product-price">$ {product.price}</p>
       </div>
 
-      <div className="add-product-cart">
-        <button
-          className="add-cart"
-          type="submit"
-          onClick={() => {
-            addCart(product);
-          }}
-        >
-          Add to Cart
-        </button>
-      </div>
     </div>
   );
 };

@@ -1,47 +1,53 @@
 import React from "react";
-import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { getProducts, syncProducts } from "../features/product/productSlice";
+import {useEffect} from "react";
+import {useSelector, useDispatch} from "react-redux";
+import {getProducts, syncProducts} from "../features/product/productSlice";
 import ProductItem from "../components/ProductItem";
 import ClipLoader from "react-spinners/ClipLoader";
+import ProductSearch from "../components/ProductSearch";
 
 const Products = () => {
-  const { loading, products } = useSelector((state) => state.product);
-  const dispatch = useDispatch();
+    const {loading, products} = useSelector((state) => state.product);
+    const dispatch = useDispatch();
 
-  const sync = () => {
-    dispatch(syncProducts());
-  }
+    const sync = () => {
+        dispatch(syncProducts());
+    }
 
-  useEffect(() => {
-    dispatch(getProducts());
-  }, [dispatch]);
+    let onChange = (e) => {
+        dispatch(getProducts(e.target.value))
+    }
 
-  const override = {
-    display: "block",
-    margin: "0 auto",
-  };
+    useEffect(() => {
+        dispatch(getProducts());
+    }, [dispatch]);
 
-  if (loading) {
-    return <ClipLoader size={60} color="#ecc20e" cssOverride={override} />;
-  }
+    const override = {
+        display: "block",
+        margin: "0 auto",
+    };
 
-  if (products.length === 0) {
     return (
-      <div className="info-details">
-        <div className="info">No products found...</div>
-        <button onClick={sync}>Sync</button>
-      </div>
-    );
-  }
+        <div className={"product-container p-5 d-flex flex-column flex-grow-1"}>
+            <ProductSearch onChange={onChange}/>
+            <div className="product-content">
+                {loading ? (
+                    <ClipLoader size={60} color="#ecc20e" cssOverride={override}/>
+                ) : products.length === 0 ? (
+                    <div className="info-details">
+                        <div className="info">No products found...</div>
+                        <button onClick={sync}>Sync</button>
+                    </div>
+                ) : products.map((product) => (
+                    <ProductItem key={product._id} product={product}/>
+                ))
+                }
 
-  return (
-    <div className="product-content">
-      {products.map((product) => (
-        <ProductItem key={product._id} product={product} />
-      ))}
-    </div>
-  );
+            </div>
+        </div>
+    )
+
+
 };
 
 export default Products;

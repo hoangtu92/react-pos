@@ -8,13 +8,6 @@ const initialState = {
     loading: false,
 }
 
-export const orderCreate = createAsyncThunk('order/orderCreate', async (order, thunkAPI) => {
-    try {
-       return await orderService.orderCreate(order)
-    } catch (error) {
-         return thunkAPI.rejectWithValue(error.response.data)
-    }
-})
 
 export const getOrders = createAsyncThunk('order/getOrders', async (_, thunkAPI) => {
     try {
@@ -37,17 +30,6 @@ export const orderSlice = createSlice({
     initialState,
     extraReducers: (builder) => {
         builder
-        .addCase(orderCreate.pending, (state) => {
-            state.loading = true
-        })
-        .addCase(orderCreate.fulfilled, (state, action) => {
-            state.loading = false
-            toast.success('order created')
-        })
-        .addCase(orderCreate.rejected, (state, action) => {
-            state.loading = false
-            state.error = true
-        })
         .addCase(getOrders.pending, (state) => {
             state.loading = true
         })
@@ -58,7 +40,7 @@ export const orderSlice = createSlice({
         .addCase(getOrders.rejected, (state, action) => {
             state.loading = false
             state.error = true
-        })  
+        })
         .addCase(removeOrder.pending, (state) => {
             state.loading = true
         })
@@ -69,7 +51,7 @@ export const orderSlice = createSlice({
         .addCase(removeOrder.rejected, (state, action) => {
             state.loading = false
             state.error = true
-        }) 
+        })
     }
 })
 

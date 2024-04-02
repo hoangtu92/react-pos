@@ -5,6 +5,8 @@ const { errorHandler} = require('./middleware/errorMiddleware')
 const authRoutes = require('./routes/authRoutes')
 const productRoutes = require('./routes/productRoutes')
 const orderRoutes = require('./routes/orderRoutes')
+const couponRoutes = require('./routes/couponRoutes')
+const customerRoutes = require('./routes/customerRoutes')
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
 
@@ -16,8 +18,8 @@ const app = express()
 const corsOrigin = {
     origin: [
         'http://localhost:3000'
-    ], 
-    credentials:true,            
+    ],
+    credentials:true,
 }
 app.use(cors(corsOrigin))
 app.use(cookieParser())
@@ -32,6 +34,8 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/product', productRoutes)
 app.use('/api/order', orderRoutes)
+app.use('/api/coupon', couponRoutes)
+app.use('/api/customer', customerRoutes)
 
 // Middleware
 app.use(errorHandler)

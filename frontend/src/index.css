@@ -240,7 +240,7 @@ h1 {
   color: #fff;
   text-decoration: none;
 }
-
+/*
 .btn {
   width: 100%;
   height: 50px;
@@ -252,7 +252,7 @@ h1 {
   cursor: pointer;
   margin-top: 20px;
   margin-bottom: 30px;
-}
+}*/
 
 .icons-container {
   display: flex;
@@ -265,12 +265,12 @@ h1 {
 }
 
 /**********CONTAINER*************/
-.container {
+.container-fluid {
   display: flex;
-  /*flex-wrap: wrap;*/
   height: 100vh;
   width: 100%;
   padding: 10px;
+  overflow: hidden;
 }
 
 .sidebarLeft {
@@ -286,23 +286,22 @@ h1 {
 }
 
 .main-content {
-  flex-basis: 75%;
   background-color: rgb(237, 235, 235);
-  padding: 50px;
-  height: 100%;
-  overflow: auto;
+  height: 100vh;
+  width: 100%;
   border-top: 1px solid rgb(216, 216, 216);
   border-bottom: 1px solid rgb(216, 216, 216);
   border-right: 1px solid rgb(222, 219, 219);
+  overflow: hidden;
 }
 
 .sidebarRight {
-  flex-basis: 20%;
+  flex-basis: 25%;
   background-color: rgb(249, 247, 247);
   border-radius: 0 30px 30px 0;
-  /*height: 100%;
-  overflow: auto;*/
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .menu-links {
@@ -379,8 +378,10 @@ a {
 
 /***************CART****************/
 .cart {
+  display: flex;
+  flex-direction: column;
   padding: 25px;
-  height: 60%;
+  height: calc(100vh - 20px);
   overflow: auto;
   background-color: rgb(239, 239, 239);
   border-radius: 0 30px 0 0;
@@ -421,7 +422,6 @@ a {
 .cart .cart-items {
   display: flex;
   width: 100%;
-  margin: 20px 0;
   border-radius: 10px;
   background-color: rgb(244, 244, 244);
   padding: 5px;
@@ -443,8 +443,8 @@ a {
 
 .cart .cart-items .image {
   width: 25%;
-  display: flex;
-  justify-content: center;
+  height: 0;
+  padding-bottom:25%;
 }
 
 .cart .cart-items .image img {
@@ -529,11 +529,6 @@ a {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 400px;
-  position: absolute;
-  bottom: 0px;
-  left: 0px;
-
   padding-left: 20px;
   padding-right: 20px;
 }
@@ -583,6 +578,11 @@ a {
   font-size: 20px;
   font-weight: 500;
   transition: .5s;
+}
+
+.pay-btn:disabled{
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .pay-btn:hover {
@@ -645,13 +645,23 @@ a {
 
 /**************PRODUCT CONTENT******************/
 .product-content {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 250px);
+  grid-column-gap: 20px;
 }
 
 .products-title {
   display: flex;
   margin-top: 2rem;
+}
+
+.cart-container{
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  flex-grow: 1;
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 
 .products-title .products {
@@ -667,11 +677,16 @@ a {
   justify-content: center;
   background-color: rgb(245, 243, 243);
   margin-top: 50px;
-  margin-right: 40px;
-  width: 250px;
   border-radius: 30px;
   position: relative;
   overflow: hidden;
+  cursor: copy;
+  transition: 500ms;
+  -webkit-transition: 500ms;
+}
+
+.product-content .product-cart:hover{
+  box-shadow: 0 0 20px rgb(236, 156, 6);
 }
 
 .product-content .product-cart .product-delete {
@@ -709,14 +724,13 @@ a {
 }
 
 .product-content .product-cart .product-image {
-  width: 250px;
-  height: 250px;
+  width: 100%;
   object-fit: cover;
 }
 
 .product-content .product-cart .add-product-cart {
   width: 60%;
-  margin-bottom: 20px;
+  margin: 0 auto 20px auto;
 }
 
 
@@ -745,6 +759,9 @@ a {
   font-size: 1.2rem;
   font-family: var(--font-family3);
   margin-top: 10px;
+}
+.product-content .product-cart .product-cart-detail h5{
+  margin: 5px 0;
 }
 
 .product-content .product-cart .product-cart-detail .product-price {
@@ -928,8 +945,8 @@ a {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 20px;
-  background-color:#7f9abc;
+  background-color:rgb(236, 156, 6);
+  overflow: auto;
 }
 
 .cart-container .cart-header .logo {
@@ -976,15 +993,13 @@ a {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  padding: 50px 150px;
 }
 
 #cart {
-  width: 50%;
+  flex:1;
 }
 
 #cart table {
-  /*width: 50%;*/
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
@@ -992,42 +1007,11 @@ a {
 }
 
 #cart table img {
-  width: 80px;
+  max-width: 80px;
   margin-bottom: 5px;
 }
 
-#cart table td:nth-child(1) {
-  width: 100px;
-  text-align: center;
-}
-
-#cart table td:nth-child(2) {
-  width: 200px;
-  text-align: center;
-}
-
-#cart table td:nth-child(3) {
-  width: 200px;
-  text-align: center;
-}
-
-#cart table td:nth-child(4) {
-  width: 200px;
-  text-align: center;
-}
-
-#cart table td:nth-child(5) {
-  width: 200px;
-  text-align: center;
-}
-
-#cart table td:nth-child(5) input {
-  width: 70px;
-  padding: 10px 5px 10px 15px;
-}
-
-#cart table td:nth-child(6) {
-  width: 200px;
+#cart table{
   text-align: center;
 }
 
@@ -1038,7 +1022,9 @@ a {
   border-right: none;
   background-color: rgb(232, 232, 232);
 }
-
+#cart table .count .amount{
+  margin: 0 10px;
+}
 #cart table thead td {
   color: gray;
   font-size: 20px;
@@ -1058,7 +1044,7 @@ a {
 }
 
 #cart table tbody tr td {
-  padding-top: 20px;
+  padding: 10px;
 }
 
 #cart table tbody td {
@@ -1094,10 +1080,7 @@ a {
 }
 
 .cart-summary {
-  /*width: 30%;*/
-  /*width: 400px;*/
-  margin-left: 20px;
-  width: 350px;
+
 }
 
 .cart-summary .item {
@@ -1130,13 +1113,36 @@ a {
   color: white;
 }
 
+
+.payment-method label{
+  border-color: orange !important;
+  color: orange !important;
+}
+.order-type label{
+  border-color: black !important;
+  color: black !important;
+}
+
+input.payment-select:checked + label,
+.payment-method label:hover{
+  background-color: orange;
+  color: white !important;
+}
+
+input.type-select:checked + label,
+.order-type label:hover{
+  background-color: black;
+  color: white !important;
+}
+
+
 .cart-summary .shipping-rate {
   padding: 0 2.5em 0 2.5em;
 }
 
 .cart-summary .shipping-rate label {
   color: black;
-  margin-bottom: 10px;
+  margin-bottom: 0;
   font-size: 20px;
   font-family: var(--font-family1);
 }
@@ -1179,27 +1185,9 @@ a {
   margin-bottom: 10px;
 }
 
-/*.cart-summary select, input {
-  padding: 0.75em;
-  outline: 0;
-  background-color: white;
-  border-width: 0 0 3px 0;
-  border-style: solid;
-  border-color: gray;
-  margin-bottom: 10px;
-}*/
-
-/*.styled :where(input, select){
-  padding: 0.75em;
-  outline: 0;
-  background-color: white;
-  border-width: 0 0 3px 0;
-  border-style: solid;
-  border-color: gray;
-}*/
 .cart-summary .cart-total-table {
   padding: 2em;
-  background-color: rgb(218, 218, 218);
+  border: 1px solid orange;
   display: flex;
   flex-direction: column;
   align-items: center;

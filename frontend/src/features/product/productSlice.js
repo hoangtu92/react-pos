@@ -22,9 +22,9 @@ export const syncProducts = createAsyncThunk('product/syncProducts', async (_, t
     }
 })
 
-export const getProducts = createAsyncThunk('product/getProducts', async (_, thunkAPI) => {
+export const getProducts = createAsyncThunk('product/getProducts', async (query, thunkAPI) => {
     try {
-       return await productService.getProducts()
+       return await productService.getProducts(query)
     } catch (error) {
          return thunkAPI.rejectWithValue(error.response.data)
     }
@@ -62,7 +62,7 @@ export const productSlice = createSlice({
         .addCase(syncProducts.fulfilled, (state, action) => {
             state.loading = false
             // update products state
-            toast.success('product successfully deleted')
+            toast.success('product successfully synced')
         })
         .addCase(syncProducts.rejected, (state, action) => {
             state.loading = false
