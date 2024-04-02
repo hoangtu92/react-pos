@@ -1,7 +1,12 @@
 import {createSlice, createAsyncThunk} from "@reduxjs/toolkit"
 import customerService from "./customerService";
 import {toast} from 'react-toastify'
-import {deleteLocalStorageCustomer, getLocalStorageCustomer, setLocalStorageCustomer} from "../../utils/localStorage";
+import {
+    deleteLocalStorageCustomer,
+    deleteLocalStorageOrderId, deleteLocalStorageRedeemValue,
+    getLocalStorageCustomer,
+    setLocalStorageCustomer
+} from "../../utils/localStorage";
 
 const selectedCustomer = getLocalStorageCustomer();
 
@@ -46,10 +51,8 @@ export const customerSlice = createSlice({
             state[name] = value
         },
         clearCustomerValues: (state) => {
+            state.selectedCustomer = guest;
             deleteLocalStorageCustomer();
-            return {
-                ...initialState,
-            }
         }
     },
 

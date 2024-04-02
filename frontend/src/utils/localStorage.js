@@ -41,7 +41,7 @@ export const addLocalStorageOrderId = (order_id) => {
 }
 
 export const getLocalStorageOrderId = () => {
-    return JSON.parse(localStorage.getItem('order_id'))
+    return localStorage.getItem('order_id')
 }
 
 export const deleteLocalStorageOrderId = () => {
@@ -52,7 +52,7 @@ export const addLocalStorageRedeemValue = (order_id) => {
 }
 
 export const getLocalStorageRedeemValue = () => {
-    return JSON.parse(localStorage.getItem('redeem_value'))
+    return localStorage.getItem('redeem_value')
 }
 
 export const deleteLocalStorageRedeemValue = () => {

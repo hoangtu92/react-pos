@@ -21,9 +21,9 @@ const getOrders = async () => {
     return response.data
 }
 
-const removeOrder = async (order, thunkAPI) => {
+const removeOrder = async (order_id, thunkAPI) => {
     // localhost:5000/api/order/delete
-    const response = await httpRequest.delete("/order/delete/" + order._id)
+    const response = await httpRequest.delete("/order/delete/" + order_id)
     return response.data
 }
 

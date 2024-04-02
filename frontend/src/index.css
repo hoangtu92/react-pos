@@ -296,12 +296,14 @@ h1 {
 }
 
 .sidebarRight {
-  flex-basis: 25%;
+  flex-basis: 30%;
   background-color: rgb(249, 247, 247);
   border-radius: 0 30px 30px 0;
   position: relative;
   display: flex;
   flex-direction: column;
+  min-width: 500px;
+  max-width: 500px;
 }
 
 .menu-links {
@@ -498,7 +500,6 @@ a {
   font-family: var(--font-family2);
   font-weight: 600;
   font-size: 18px;
-  margin-bottom: 15px;
 }
 
 .cart .cart-items .details .count {
@@ -647,7 +648,7 @@ a {
 .product-content {
   display: grid;
   grid-template-columns: repeat(auto-fit, 250px);
-  grid-column-gap: 20px;
+  grid-column-gap: 30px;
 }
 
 .products-title {

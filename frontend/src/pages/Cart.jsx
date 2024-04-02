@@ -20,6 +20,7 @@ import CartTable from "../components/CartTable";
 import CustomerItem from "../components/CustomerItem";
 import Button from "react-bootstrap/Button";
 import {clearCustomerValues} from "../features/customer/customerSlice";
+import {removeOrder} from "../features/cart/cartSlice";
 
 const Cart = () => {
     const {selectedCustomer} = useSelector((state) => state.customer);
@@ -60,6 +61,7 @@ const Cart = () => {
     const cleanupSession = () => {
         dispatch(clearCart());
         dispatch(clearCustomerValues())
+        dispatch(removeOrder(order_id))
         navigate("/dashboard/new-order");
     }
 
@@ -105,8 +107,8 @@ const Cart = () => {
                     <span>Order ID: </span><span><Badge pill bg={"warning"}>#{order_id}</Badge></span>
                 </div>
 
-                {selectedCustomer.points > 0 ?
-                    <div className={"redeem-section mb-4 p-3 border border-warning"}>
+                {selectedCustomer.points > 0 && redeem_value === 0 ?
+                    <div className={"redeem-section p-3 border border-warning"}>
                         <Form onSubmit={handleRedeem}>
                             <Form.Group>
                                 <Form.Label htmlFor="inputPoints">Redeem Points</Form.Label>
@@ -125,24 +127,24 @@ const Cart = () => {
                     </div> : null}
 
 
-                <form onSubmit={handleSubmit}>
+                <form className={"mt-2"} onSubmit={handleSubmit}>
                     <div className="has-child expand">
                         <div className="content">
                             <div className={"order-type mb-2"}>
                                 <div className={"d-flex flex-row"}>
                                             <span className={"mr-2"}>
                                                 <input className={"d-none type-select "} id={"instore_type"} checked={orderType === "instore"} onChange={(e) => setOrderType(e.target.value)} type={"radio"} name={"order_type"} value={"instore"}/>
-                                                <label className={"btn btn-outline-secondary btn-lg"} htmlFor="instore_type"><FaStoreAlt/> Store</label>
+                                                <label className={"mb-0 btn btn-outline-secondary btn-lg"} htmlFor="instore_type"><FaStoreAlt/> Store</label>
                                             </span>
 
                                     <span className={"mr-2"}>
                                                 <input className={"d-none type-select "} id={"ubereat_type"} checked={orderType === "ubereat"} onChange={(e) => setOrderType(e.target.value)} type={"radio"} name={"order_type"} value={"ubereat"}/>
-                                                <label className={"btn btn-outline-secondary btn-lg"} htmlFor="ubereat_type"><FaUber/> Ubereat
+                                                <label className={"mb-0 btn btn-outline-secondary btn-lg"} htmlFor="ubereat_type"><FaUber/> Ubereat
                                             </label>
                                             </span>
                                     <span>
                                                 <input className={"d-none type-select "} id={"shopee_type"} checked={orderType === "shopee"} onChange={(e) => setOrderType(e.target.value)} type={"radio"} name={"order_type"} value={"shopee"}/>
-                                                <label className={"btn btn-outline-secondary btn-lg"} htmlFor="shopee_type"><FaShoppingBag/> Shopee
+                                                <label className={"mb-0 btn btn-outline-secondary btn-lg"} htmlFor="shopee_type"><FaShoppingBag/> Shopee
                                             </label>
                                             </span>
 

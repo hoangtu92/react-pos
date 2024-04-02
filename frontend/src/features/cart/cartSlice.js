@@ -1,12 +1,18 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit"
 import {
     addLocalStorageCart,
-    addLocalStorageOrderId, addLocalStorageRedeemValue, deleteLocalStorageCart, deleteLocalStorageOrderId,
+    addLocalStorageOrderId,
+    addLocalStorageRedeemValue,
+    deleteLocalStorageCart,
+    deleteLocalStorageOrderId,
+    deleteLocalStorageRedeemValue,
     getLocalStorageCart,
-    getLocalStorageOrderId, getLocalStorageRedeemValue
+    getLocalStorageOrderId,
+    getLocalStorageRedeemValue
 } from '../../utils/localStorage'
 import orderService from "../order/orderService";
 import {toast} from "react-toastify";
+import {} from "../order/orderSlice";
 
 const cartItems = getLocalStorageCart()
 const order_id = getLocalStorageOrderId()
@@ -33,6 +39,14 @@ export const orderCreate = createAsyncThunk('order/orderCreate', async (order, t
     }
 })
 
+export const removeOrder = createAsyncThunk('order/removeOrder', async (order_id, thunkAPI) => {
+    try {
+        return await orderService.removeOrder(order_id, thunkAPI)
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response.data)
+    }
+})
+
 export const pointRedeem = createAsyncThunk('order/redeemPoint', async (data, thunkAPI) => {
     try {
         return await orderService.redeemPoint(data)
@@ -48,8 +62,10 @@ export const cartSlice = createSlice({
         clearCart: (state) => {
             state.cartItems = [];
             state.order_id = null;
+            state.redeem_value = 0;
             deleteLocalStorageCart();
             deleteLocalStorageOrderId();
+            deleteLocalStorageRedeemValue();
         },
         addToCart: (state, action) => {
             let cartIndex = state.cartItems.findIndex((item) => item.id === action.payload.id)
@@ -98,7 +114,7 @@ export const cartSlice = createSlice({
             })
             .addCase(orderCreate.fulfilled, (state, action) => {
                 state.loading = false
-                state.order_id = action.payload.order_id;
+                state.order_id = action.payload.id;
                 addLocalStorageOrderId(state.order_id);
                 toast.success('Order created')
             })
@@ -118,6 +134,17 @@ export const cartSlice = createSlice({
             .addCase(pointRedeem.rejected, (state, action) => {
                 state.loading = false;
                 toast.error("Error occurred: " + action.payload.msg);
+            })
+            .addCase(removeOrder.pending, (state) => {
+                state.loading = true
+            })
+            .addCase(removeOrder.fulfilled, (state, action) => {
+                state.loading = false
+                toast.success('order successfully deleted')
+            })
+            .addCase(removeOrder.rejected, (state, action) => {
+                state.loading = false
+                state.error = true
             })
     }
 })

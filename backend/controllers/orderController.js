@@ -49,7 +49,6 @@ const addOrder = async (req, res) => {
 
     const result = await api.post("orders", data);
 
-    const response = await result.json();
 
     if(result.status === 200 || result.status === 201){
         /*const order = await Order.create({
@@ -64,7 +63,7 @@ const addOrder = async (req, res) => {
     }
 
 
-    res.status(result.status).json(response)
+    res.status(result.status).json(result.data)
 
 
 }
@@ -108,7 +107,11 @@ const viewInvoice = async(req, res) => {
 const removeOrder = async (req, res) => {
     const {order: orderId} = req.params;
 
-    const order = await Order.findOne({_id: orderId}, {user: 1})
+    const result = await api.delete("orders/"+orderId, {
+        force: true
+    })
+
+    /*const order = await Order.findOne({order_id: orderId}, {user: 1})
 
     if (!order) {
         res.status(400)
@@ -122,8 +125,8 @@ const removeOrder = async (req, res) => {
         }
     }
 
-    await order.deleteOne()
-    res.status(201).json(order)
+    await order.deleteOne()*/
+    res.status(201).json(result.data)
 }
 
 module.exports = {
