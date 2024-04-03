@@ -23,8 +23,11 @@ const getOrders = async () => {
 
 const removeOrder = async (order_id, thunkAPI) => {
     // localhost:5000/api/order/delete
-    const response = await httpRequest.delete("/order/delete/" + order_id)
-    return response.data
+    if(typeof order_id != "undefined"){
+        const response = await httpRequest.delete("/order/delete/" + order_id)
+        return response.data;
+    }
+    else return {};
 }
 
 const orderService = {

@@ -114,7 +114,7 @@ export const cartSlice = createSlice({
             })
             .addCase(orderCreate.fulfilled, (state, action) => {
                 state.loading = false
-                state.order_id = action.payload.id;
+                state.order_id = action.payload.order_id;
                 addLocalStorageOrderId(state.order_id);
                 toast.success('Order created')
             })

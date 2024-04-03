@@ -7,11 +7,20 @@ const OrderSchema = mongoose.Schema(
             type: Number,
             required: true,
         },
+        invoice: {},
         totalAmount: {
             type: Number,
             required: true,
         },
-        payment: {
+        discountAmount: {
+            type: Number,
+            default: 0,
+        },
+        redeemAmount: {
+            type: Number,
+            default: 0,
+        },
+        paymentMethod: {
             type: String,
             require: true
         },
@@ -28,6 +37,10 @@ const OrderSchema = mongoose.Schema(
             type: mongoose.Schema.ObjectId,
             ref: 'Customer',
             required: false,
+        },
+        orderType: {
+            type: String,
+            default: 0
         }
     },
     {timestamps: true}

@@ -46,14 +46,14 @@ const Cart = () => {
                 cartItems,
                 subTotal,
                 totalAmount,
-                payment,
+                paymentMethod,
                 orderType,
                 clerk: user._id,
             }));
 
     }, [dispatch, cartItems]);
 
-    const [payment, setPayment] = useState("cash");
+    const [paymentMethod, setPaymentMethod] = useState("cash");
     const [orderType, setOrderType] = useState("instore");
     const [redeemPoints, setRedeemPoints] = useState(0);
 
@@ -155,12 +155,12 @@ const Cart = () => {
                             <div className="payment-method  mb-3">
                                 <div className={"d-flex flex-row"}>
                                             <span className={"mr-2"}>
-                                                <input className={"d-none payment-select "} id={"cash_payment"} checked={payment === "cash"} onChange={(e) => setPayment(e.target.value)} type={"radio"} name={"payment"} value={"cash"}/>
+                                                <input className={"d-none payment-select "} id={"cash_payment"} checked={paymentMethod === "cash"} onChange={(e) => setPaymentMethod(e.target.value)} type={"radio"} name={"payment"} value={"cash"}/>
                                                 <label className={"btn btn-outline-secondary btn-lg"} htmlFor="cash_payment"><FaMoneyBillAlt/> Cash</label>
                                             </span>
 
                                     <span>
-                                                <input className={"d-none payment-select "} id={"credit_payment"} checked={payment === "credit"} onChange={(e) => setPayment(e.target.value)} type={"radio"} name={"payment"} value={"credit"}/>
+                                                <input className={"d-none payment-select "} id={"credit_payment"} checked={paymentMethod === "credit"} onChange={(e) => setPaymentMethod(e.target.value)} type={"radio"} name={"payment"} value={"credit"}/>
                                                 <label className={"btn btn-outline-secondary btn-lg"} htmlFor="credit_payment"><FaCreditCard/> Credit card
                                             </label>
                                             </span>

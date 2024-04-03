@@ -16,7 +16,9 @@ const addOrder = async (req, res) => {
         cartItems,
         subTotal,
         totalAmount,
-        payment,
+        discountAmount,
+        redeemAmount,
+        paymentMethod,
         orderType,
         clerk
     } = req.body
@@ -31,8 +33,8 @@ const addOrder = async (req, res) => {
 
     const data = {
         customer_id: customer_id,
-        payment_method: payment,
-        payment_method_title: payment,
+        payment_method: paymentMethod,
+        payment_method_title: paymentMethod,
         set_paid: false,
         line_items: lineItems,
         /*meta_data: [
@@ -51,19 +53,22 @@ const addOrder = async (req, res) => {
 
 
     if(result.status === 200 || result.status === 201){
-        /*const order = await Order.create({
+        const order = await Order.create({
             order_id: result.data.id,
             customer,
             clerk,
             cartItems,
             subTotal,
             totalAmount,
-            payment
-        })*/
+            paymentMethod,
+            orderType,
+            discountAmount,
+            redeemAmount
+        })
+        res.status(result.status).json(order)
     }
 
-
-    res.status(result.status).json(result.data)
+    else res.status(result.status).json(result.data)
 
 
 }
@@ -111,22 +116,20 @@ const removeOrder = async (req, res) => {
         force: true
     })
 
-    /*const order = await Order.findOne({order_id: orderId}, {user: 1})
+    if(result.status === 200){
+        const order = await Order.findOne({order_id: orderId}, {user: 1})
 
-    if (!order) {
-        res.status(400)
-        throw new Error('Please fill in the blanks')
-    }
-
-    if (order.user.toString() !== req.user.id) {
-        if (!req.user.isAdmin) {
-            res.status(401)
-            throw new Error('A user can only delete the product they added')
+        if (!order) {
+            res.status(400)
+            throw new Error('Order not found')
         }
+
+        await order.deleteOne();
+        return res.status(200).json(result.data)
     }
 
-    await order.deleteOne()*/
-    res.status(201).json(result.data)
+
+    res.status(result.status).json(result.data)
 }
 
 module.exports = {
