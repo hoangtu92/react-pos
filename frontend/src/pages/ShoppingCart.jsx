@@ -8,9 +8,9 @@ import {
   removeCartItem,
 } from "../features/cart/cartSlice";
 import { useSelector, useDispatch } from "react-redux";
-import CustomerItem from "../components/CustomerItem";
+import {FaTrashAlt} from "react-icons/fa";
 
-const ShoppingCart = ({customer}) => {
+const ShoppingCart = () => {
   const { cartItems, subTotal, totalAmount } = useSelector(
     (state) => state.cart
   );
@@ -22,11 +22,14 @@ const ShoppingCart = ({customer}) => {
     dispatch(productTotalAmount());
   }, [dispatch, cartItems]);
 
+
   return (
     <div className="cart">
 
-      <CustomerItem customer={customer}/>
+      <header className={"mb-2"}>
 
+
+      </header>
         {cartItems.length === 0 && (
             <div className="cart-empty">
           <div className="cart-title">
@@ -35,10 +38,12 @@ const ShoppingCart = ({customer}) => {
             </div>
         )}
 
+
       <div className={"cart-container"}>
+
         {cartItems ? (
             cartItems.map((cart) => (
-                <div className="cart-items" key={cart.id}>
+                <div className="cart-items mb-2" key={cart.id}>
                   <div className="image">
                     {cart.image ? (
                         <img className="product-image" src={"https://justdog.tw/wp-content/uploads/"+ cart.image} alt="..." />
@@ -52,7 +57,7 @@ const ShoppingCart = ({customer}) => {
                   </div>
 
                   <div className="info">
-                    <h4>{cart.name}</h4>
+                    <h4 className={"m-0"}>{cart.name}</h4>
 
                     <button
                         className="remove-item"
@@ -61,12 +66,12 @@ const ShoppingCart = ({customer}) => {
                           dispatch(removeCartItem(cart.id));
                         }}
                     >
-                      X
+                      <FaTrashAlt size={14}/>
                     </button>
 
                     <div className="details">
                       <div className="price">
-                        <p>$ {cart.price}</p>
+                        <span>$ {cart.price}</span>
                       </div>
 
                       <div className="count">
@@ -103,17 +108,17 @@ const ShoppingCart = ({customer}) => {
       <div className="total-card">
         <div className="total-items">
           <span className="items-count">Items ({cartItems.length})</span>
-          <span className="items-price">$ {subTotal.toFixed(2)}</span>
+          <span className="items-price">$ {subTotal}</span>
         </div>
         <div className="divider"></div>
         <div className="total">
           <span className="total-text">Total </span>
-          <span className="total-item-price">$ {totalAmount.toFixed(2)}</span>
+          <span className="total-item-price">$ {totalAmount}</span>
         </div>
 
         <div className="pay">
           <button disabled={cartItems.length === 0} className="pay-btn" onClick={() => navigate("/dashboard/cart")}>
-            Checkout
+            Continue
           </button>
         </div>
       </div>

@@ -5,18 +5,22 @@ const OrderSchema = mongoose.Schema(
         cartItems: [],
         subTotal: {
             type: Number,
-            required: true,
+            default: 0
         },
         invoice: {},
         totalAmount: {
             type: Number,
-            required: true,
+            default: 0
         },
         discountAmount: {
             type: Number,
             default: 0,
         },
         redeemAmount: {
+            type: Number,
+            default: 0,
+        },
+        customTotalAmount: {
             type: Number,
             default: 0,
         },
@@ -37,6 +41,15 @@ const OrderSchema = mongoose.Schema(
             type: mongoose.Schema.ObjectId,
             ref: 'Customer',
             required: false,
+        },
+        carrier_id: {
+            type: String
+        },
+        buyer_id: {
+            type: String
+        },
+        redeem_points: {
+            type: Number
         },
         orderType: {
             type: String,

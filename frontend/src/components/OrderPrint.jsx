@@ -1,18 +1,15 @@
-import React, { useRef } from "react";
-import { useReactToPrint } from "react-to-print";
+import React  from "react";
 
 const OrderPrint = ({ order }) => {
-  const componentRef = useRef();
 
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-    onAfterPrint: () => alert("print success"),
-  });
+  const handlePrint = (e) => {
+
+  }
 
   return (
     <>
       <div style={{ display: "none" }}>
-        <div ref={componentRef} style={{ width: "100%", height: "100vh" }}>
+        <div style={{ width: "100%", height: "100vh" }}>
           <div className="invoice">
             <div className="invoice_left">
               <div className="i_logo">

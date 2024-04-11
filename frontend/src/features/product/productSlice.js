@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
 import productService from '../product/productService'
 import { toast } from 'react-toastify'
+import {addToCart} from "../cart/cartSlice";
+import {getLocalStorageSettings} from "../../utils/localStorage";
 
 const initialState = {
     products: [],
@@ -24,7 +26,13 @@ export const syncProducts = createAsyncThunk('product/syncProducts', async (_, t
 
 export const getProducts = createAsyncThunk('product/getProducts', async (query, thunkAPI) => {
     try {
-       return await productService.getProducts(query)
+       const result =  await productService.getProducts(query);
+       if(result.length === 1){
+            const settings = getLocalStorageSettings();
+            if(settings.scanMode)
+                thunkAPI.dispatch(addToCart(result[0]));
+       }
+        return result;
     } catch (error) {
          return thunkAPI.rejectWithValue(error.response.data)
     }
@@ -50,7 +58,8 @@ export const productSlice = createSlice({
         })
         .addCase(getProducts.fulfilled, (state, action) => {
             state.loading = false
-            state.products = action.payload
+            state.products = action.payload;
+
         })
         .addCase(getProducts.rejected, (state, action) => {
             state.loading = false

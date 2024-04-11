@@ -96,6 +96,23 @@ const syncCustomer = async(req, res) => {
 
 }
 
+/**
+ * @route /api/customer/add
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
+const addCustomer = async(req, res) => {
+
+    const {customer} = req.body;
+
+
+    res.status(200).json([])
+
+}
+
+
+
 module.exports = {
     syncCustomer,
     searchCustomers

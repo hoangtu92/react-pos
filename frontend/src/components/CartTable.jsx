@@ -1,8 +1,9 @@
-import {decrease, increase, removeCartItem} from "../features/cart/cartSlice";
+import {decrease, increase, removeCartItem, updateSubtotal} from "../features/cart/cartSlice";
 import {FaTimes} from "react-icons/fa";
 import {React} from "react";
+import {Form} from "react-bootstrap";
 
-const CartTable = ({cartItems, dispatch}) => {
+const CartTable = ({order_id, cartItems, dispatch}) => {
     return (
         <table>
             <colgroup>
@@ -52,8 +53,10 @@ const CartTable = ({cartItems, dispatch}) => {
                                 />
                             )}
                         </td>
-                        <td>{product.name}</td>
-                        <td>$ {product.price}</td>
+                        <td><span className={"text-black-50"}>{product.name}</span> <br/><small><strong>({product.sku})</strong></small></td>
+                        <td><Form.Group className={"d-flex flex-row align-items-center"}>
+                            <span className={"me-1"}>$ </span><Form.Control onChange={(e) => dispatch(updateSubtotal({id: product.id, price: e.target.value}))} onFocus={e => e.target.select()} type={"number"} value={product.price} />
+                        </Form.Group></td>
                         <td>
                             <div className="count">
                                 <button

@@ -10,12 +10,18 @@ export const deleteLocalStorageUser = () => {
    localStorage.removeItem('user')
 }
 
+
 export const addLocalStorageCart = (product) => {
     localStorage.setItem('cart', JSON.stringify(product))
 }
 
 export const getLocalStorageCart = () => {
-   return JSON.parse(localStorage.getItem('cart'))
+   try{
+       return JSON.parse(localStorage.getItem('cart'))
+   }
+   catch(e){
+       return {};
+   }
 }
 
 export const deleteLocalStorageCart = () => {
@@ -28,7 +34,12 @@ export const setLocalStorageCustomer = (customer) => {
 }
 
 export const getLocalStorageCustomer = () => {
-    return JSON.parse(localStorage.getItem('customer'))
+    try{
+        return JSON.parse(localStorage.getItem('customer'))
+    }
+    catch(e){
+        return null;
+    }
 }
 
 export const deleteLocalStorageCustomer = () => {
@@ -36,26 +47,30 @@ export const deleteLocalStorageCustomer = () => {
 }
 
 
-export const addLocalStorageOrderId = (order_id) => {
-    localStorage.setItem('order_id', order_id)
+export const addLocalStorageOrder = (order) => {
+    localStorage.setItem('order', JSON.stringify(order))
 }
 
-export const getLocalStorageOrderId = () => {
-    return localStorage.getItem('order_id')
+export const getLocalStorageOrder = () => {
+    const order = {paymentMethod: 'cash', orderType: 'instore', redeem_points: 0, discount_value: 0};
+    try{
+        let a = JSON.parse(localStorage.getItem('order'));
+        if(a == null) a = order;
+        return a;
+    }
+    catch(e) {
+        return order;
+    }
 }
 
-export const deleteLocalStorageOrderId = () => {
-    localStorage.removeItem('order_id')
+export const deleteLocalStorageOrder = () => {
+    localStorage.removeItem('order')
 }
-export const addLocalStorageRedeemValue = (order_id) => {
-    localStorage.setItem('redeem_value', order_id)
-}
-
-export const getLocalStorageRedeemValue = () => {
-    return localStorage.getItem('redeem_value')
+export const updateLocalStorageSettings = (settings) => {
+    localStorage.setItem('settings', JSON.stringify(settings))
 }
 
-export const deleteLocalStorageRedeemValue = () => {
-    localStorage.removeItem('redeem_value')
+export const getLocalStorageSettings = () => {
+    return JSON.parse(localStorage.getItem('settings'))
 }
 

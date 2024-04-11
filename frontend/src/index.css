@@ -1,5 +1,4 @@
 * {
-  line-height: 1;
   margin: 0;
   box-sizing: border-box;
   padding: 0;
@@ -11,7 +10,7 @@
   --bg-Color: rgb(234, 233, 233);
   /* Font Family */
   --font-family1: 'Franklin Gothic Medium','Arial Narrow',Arial,sans-serif;
-  --font-family2: 'Gill Sans','Gill Sans MT',Calibri,'Trebuchet MS', sans-serif;
+  --font-family2: Calibri,'Trebuchet MS', sans-serif;
   --font-family3: 'Lucida Sans','Lucida Sans Regular','Lucida Grande','Lucida Sans Unicode', Geneva,Verdana,sans-serif;
   --font-family4: 'Trebuchet MS','Lucida Sans Unicode','Lucida Grande','Lucida Sans', Arial,sans-serif;
 }
@@ -295,21 +294,26 @@ h1 {
   overflow: hidden;
 }
 
+.customer-details{
+  cursor: pointer;
+}
+
 .sidebarRight {
-  flex-basis: 30%;
+  flex-basis: 25%;
   background-color: rgb(249, 247, 247);
   border-radius: 0 30px 30px 0;
   position: relative;
   display: flex;
   flex-direction: column;
-  min-width: 500px;
-  max-width: 500px;
+  min-width: 400px;
+  max-width: 400px;
 }
 
 .menu-links {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding:10px;
 }
 
 .user-info {
@@ -324,20 +328,35 @@ a {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  max-width: 80%;
   padding: 20px;
   color: rgb(167, 163, 163);
   text-decoration: none;
   font-family: var(--font-family2);
   font-size: 18px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+.bg-orange{
+  background-color: orange;
+
 }
 
-.menu-links a:hover {
+.text-white .btn-close{
+  filter: invert(1);
+}
+
+.modal.show .modal-dialog{
+  border-radius: 20px;
+  overflow: hidden;
+}
+.menu-links a:hover, .bg-hover {
   background-color: orange;
   border-radius: 20px;
   color: white;
 }
-
+.menu-links a:hover svg path, .menu-links a.bg-hover svg path{
+  fill: white
+}
 .user-info .user-detail{
   display: flex;
   flex-direction: column;
@@ -441,6 +460,11 @@ a {
   border-radius: 50%;
   width: 30px;
   height: 30px;
+  line-height: 14px;
+}
+
+.cart .cart-items .remove-item:hover{
+  background-color: #ce0505;
 }
 
 .cart .cart-items .image {
@@ -649,6 +673,7 @@ a {
   display: grid;
   grid-template-columns: repeat(auto-fit, 250px);
   grid-column-gap: 30px;
+  padding-bottom: 11em;
 }
 
 .products-title {
@@ -675,7 +700,6 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   background-color: rgb(245, 243, 243);
   margin-top: 50px;
   border-radius: 30px;
@@ -725,15 +749,19 @@ a {
 }
 
 .product-content .product-cart .product-image {
-  width: 100%;
+  width: 250px;
   object-fit: cover;
+  height: 250px;
 }
 
 .product-content .product-cart .add-product-cart {
   width: 60%;
   margin: 0 auto 20px auto;
 }
-
+.form-check-input:checked {
+  background-color: orange;
+  border-color: orange;
+}
 
 .product-content .product-cart .add-product-cart .add-cart {
   cursor: pointer;
@@ -760,6 +788,7 @@ a {
   font-size: 1.2rem;
   font-family: var(--font-family3);
   margin-top: 10px;
+  PADDING: 0 15px;
 }
 .product-content .product-cart .product-cart-detail h5{
   margin: 5px 0;
@@ -777,13 +806,10 @@ a {
 /**********************ORDER************************/
 .order-details {
   background-color: white;
-  padding: 50px;
+  padding: 1rem;
   border-radius: 20px;
   border:1px solid orange;
-
-  margin-left: 50px;
-  margin-right: 50px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 
   position: relative;
 }
@@ -1051,8 +1077,15 @@ a {
 #cart table tbody td {
   color: rgb(160, 160, 160);
   font-weight: 600;
-  font-size: 20px;
+  font-size: 1.2rem;
   font-family: var(--font-family2);
+  white-space: pre-line;
+  word-break: break-word;
+
+}
+
+#cart table tbody td:nth-child(3){
+  text-align: left;
 }
 
 /*#cart .count .amount {
@@ -1070,6 +1103,7 @@ a {
   cursor: pointer;
 }
 
+
 #cart .count .decrement-btn {
   width: 30px;
   height: 30px;
@@ -1078,6 +1112,12 @@ a {
   color: gray;
   background-color: rgb(236, 235, 235);
   cursor: pointer;
+}
+
+
+.cart .cart-items .details .count .increment-btn:hover, .decrement-btn:hover{
+  box-shadow: 0 0 10px orange;
+  color: orange;
 }
 
 .cart-summary {

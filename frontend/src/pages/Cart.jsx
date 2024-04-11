@@ -1,30 +1,34 @@
 import {React, useEffect, useState} from "react";
 import {
-    FaCreditCard,
+    FaCheckCircle,
+    FaCreditCard, FaEraser,
     FaHome,
-    FaMoneyBillAlt, FaShoppingBag,
-    FaStoreAlt,
+    FaMoneyBillAlt, FaPrint, FaShoppingBag,
+    FaStoreAlt, FaTrashAlt,
     FaUber
 } from "react-icons/fa"
-import {Badge, Form} from "react-bootstrap"
-import {toast} from "react-toastify";
+import {Badge, Form, Modal, Spinner} from "react-bootstrap"
+import InputGroup from "react-bootstrap/InputGroup"
 import {useNavigate, Link} from "react-router-dom";
 import {
-    clearCart, pointRedeem,
+    calcPoint,
+    clearCart, clearOrder, getOrder, hideCalculator, issueInvoice, orderCreate, printInvoice,
     productSubTotal,
-    productTotalAmount,
+    productTotalAmount, removeOrder, updateOrder, updateOrderDetail, updateSettings, validateCarrierID,
 } from "../features/cart/cartSlice";
-import {orderCreate} from "../features/cart/cartSlice";
 import {useSelector, useDispatch} from "react-redux";
 import CartTable from "../components/CartTable";
 import CustomerItem from "../components/CustomerItem";
 import Button from "react-bootstrap/Button";
-import {clearCustomerValues} from "../features/customer/customerSlice";
-import {removeOrder} from "../features/cart/cartSlice";
+import {clearCustomerValues,
+    getCustomers,
+    handleCustomerChange} from "../features/cart/cartSlice";
+import {FaTriangleExclamation} from "react-icons/fa6";
+import {toast} from "react-toastify";
 
 const Cart = () => {
-    const {selectedCustomer} = useSelector((state) => state.customer);
-    const {cartItems, subTotal, totalAmount, order_id, redeem_value, discount_value} = useSelector(
+
+    const {loading, error, customers, selectedCustomer, cartItems, subTotal, totalAmount, orderObj, order, show_calculator, settings} = useSelector(
         (state) => state.cart
     );
     const {user} = useSelector((state) => state.auth);
@@ -32,119 +36,238 @@ const Cart = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    useEffect(() => {
 
-        if(cartItems.length === 0) navigate("/dashboard/new-order")
+    const [receivedCash, setReceiveCash] = useState(0);
+    const [showCustomAmountModal, setShowCustomAmountModal] = useState(false);
+
+    useEffect(() => {
 
         dispatch(productSubTotal());
         dispatch(productTotalAmount());
 
-        if(!order_id)
+    }, [dispatch, cartItems, orderObj]);
+
+
+    useEffect(() => {
+        if (typeof orderObj.order_id === 'undefined') {
             dispatch(orderCreate({
-                customer: selectedCustomer._id,
-                customer_id: selectedCustomer.user_id,
-                cartItems,
-                subTotal,
-                totalAmount,
-                paymentMethod,
-                orderType,
+                paymentMethod: "cash",
+                orderType: "instore",
                 clerk: user._id,
             }));
+        }
+    }, [dispatch, user._id, orderObj.order_id]);
 
-    }, [dispatch, cartItems]);
 
-    const [paymentMethod, setPaymentMethod] = useState("cash");
-    const [orderType, setOrderType] = useState("instore");
-    const [redeemPoints, setRedeemPoints] = useState(0);
+    useEffect(() => {
+        if(typeof orderObj.order_id != 'undefined' && orderObj.order_id != null)
+            dispatch(getOrder(orderObj.order_id));
+    }, [dispatch, orderObj.order_id]);
 
+
+    useEffect(() => {
+        if (typeof orderObj.order_id === "undefined") {
+            if (typeof selectedCustomer.user_id === "undefined") showCustomerModal();
+        }
+    }, [selectedCustomer.user_id, orderObj.order_id]);
+
+    const showCustomerModal = () => {
+        dispatch(updateSettings({name: "showCustomerModal", value: true}))
+    }
+    const hideCustomerModal = () => {
+        dispatch(updateSettings({name: "showCustomerModal", value: false}))
+    }
+
+    /**
+     *
+     * @param e
+     */
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        if(selectedCustomer.is_b2b && (typeof selectedCustomer.buyer_id === 'undefined' || !/[0-9]{8}/.test(selectedCustomer.buyer_id))){
+            toast.error("Tax ID is required for B2B Customer")
+            return;
+        }
+        if(orderObj.orderType === "ubereat" && (typeof orderObj.customTotalAmount === 'undefined' || orderObj.customTotalAmount <= 0)){
+            toast.error("Custom total amount is required for Ubereat order")
+            return;
+        }
+
+        dispatch(updateOrder({
+            order_id: orderObj.order_id,
+            cartItems,
+            subTotal,
+            totalAmount,
+            paymentMethod: orderObj.paymentMethod,
+            orderType: orderObj.orderType,
+            customTotalAmount: orderObj.customTotalAmount,
+            redeemAmount: orderObj.redeem_value,
+            redeem_points: orderObj.redeem_points,
+            discountAmount: orderObj.discount_value,
+            customer: selectedCustomer._id,
+            carrier_id: !selectedCustomer.is_b2b ? selectedCustomer.carrier_id : undefined,
+            buyer_id: selectedCustomer.is_b2b ? selectedCustomer.buyer_id: undefined,
+            enableInvoice: settings.enableInvoice
+        }))
+
+    };
+
+    const handleUpdatePayment = (e) => {
+        dispatch(updateOrderDetail({name: "paymentMethod", value: e.target.value}));
+    }
+
+    const handleUpdateOrderType = (e) => {
+        dispatch(updateOrderDetail({name: "orderType", value: e.target.value}));
+        if(e.target.value === 'instore'){
+            dispatch(updateOrderDetail({name: 'customTotalAmount', value: 0}))
+        }
+        else{
+            if(e.target.value === "ubereat"){
+                dispatch(getCustomers({query: "0923110978", order_id: orderObj.order_id}))
+            }
+            setShowCustomAmountModal(true);
+        }
+    }
+
+    const onRedeemPointChange = e => {
+        dispatch(updateOrderDetail({name: 'redeem_points', value: e.target.value}));
+    }
+    const handleCalcPointValue = (e) => {
+        dispatch(calcPoint({points: orderObj.redeem_points, customer_id: selectedCustomer.user_id}));
+    }
+
+    const handleDiscountValue = e => {
+        dispatch(updateOrderDetail({name: "discount_value", value: e.target.value}))
+    }
 
     const cleanupSession = () => {
         dispatch(clearCart());
         dispatch(clearCustomerValues())
-        dispatch(removeOrder(order_id))
-        navigate("/dashboard/new-order");
+        dispatch(removeOrder(orderObj.order_id));
+        navigate("/dashboard");
     }
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
 
-        // Todo Create order
-
-        // Todo Print invoice
-
+    const finishOrder = () => {
+        dispatch(hideCalculator());
+        dispatch(clearCustomerValues());
         dispatch(clearCart());
-        navigate("/dashboard/orders");
-    };
-
-    const handleRedeem = (e) => {
-        if(!order_id) return;
-        dispatch(pointRedeem({order_id: order_id, points: redeemPoints}));
-        dispatch(productTotalAmount());
-        e.preventDefault();
+        dispatch(clearOrder());
+        navigate("/dashboard");
     }
+
+    const handleBuyerIDChange = (e) => {
+        dispatch(handleCustomerChange({name: "buyer_id" ,value: e.target.value}))
+    }
+
+    const handleCarrierIDChange = (e) => {
+        dispatch(handleCustomerChange({name: "carrier_id" ,value: e.target.value}))
+    }
+
+    const handleCloseCustomerModal = e => {
+
+        if(selectedCustomer.is_b2b){
+            if((typeof selectedCustomer.buyer_id === 'undefined' || !/^[0-9]{8}$/.test(selectedCustomer.buyer_id))){
+                toast.error("Invalid Tax ID");
+                dispatch(handleCustomerChange({name: "buyer_id" ,value: null}))
+            }
+            else{
+                hideCustomerModal();
+            }
+        }
+        else{
+            dispatch(validateCarrierID(selectedCustomer.carrier_id))
+        }
+
+        // Todo save customer to database
+
+    }
+
+    const onCustomerSearch = e => {
+        const isValidPhone = (/\d+/.test(e.target.value) && (e.target.value.length === 10 || e.target.value.length === 11));
+        if( isValidPhone
+            || (/[\w\s]+/.test(e.target.value) && e.target.value.length > 3))
+            dispatch(getCustomers({query: e.target.value, order_id: orderObj.order_id}));
+
+        if(isValidPhone){
+            dispatch(handleCustomerChange({name: "phone", value: e.target.value}))
+        }
+
+    }
+
+    const handlePrintInvoice = () => {
+        if(typeof order.invoice !== "undefined")
+            dispatch(printInvoice(orderObj.order_id))
+        else dispatch(issueInvoice(orderObj.order_id))
+    }
+
+
 
     return (
         <div className={"cart-page d-flex"}>
             <section id="cart" className={"p-5"}>
-                {(cartItems.length > 0) ? <CartTable dispatch={dispatch} cartItems={cartItems}/> : <div className="info-details">
-                    <div className={"icon-info d-flex w-100 justify-content-center flex-row align-items-center"}>
-                        <div className="icon">
-                            <Link to="/dashboard/new-order">
-                                <FaHome className="icon-cart"/>
-                            </Link>
+                {(cartItems.length > 0) ?
+                    <CartTable dispatch={dispatch} order_id={orderObj.order_id} cartItems={cartItems}/> :
+                    <div className="info-details">
+                        <div className={"icon-info d-flex w-100 justify-content-center flex-row align-items-center"}>
+                            <div className="icon">
+                                <Link to="/dashboard">
+                                    <FaHome className="icon-cart"/>
+                                </Link>
+                            </div>
+                            <span>Return to the main page and add products to the cart.</span>
                         </div>
-                        <span>Return to the main page and add products to the cart.</span>
                     </div>
-                </div>
                 }
             </section>
 
             <div className="cart-summary sidebarRight styled mt-4 p-4">
 
-                <Button variant={"danger"} onClick={cleanupSession}>Cleanup Session</Button>
-                <CustomerItem customer={selectedCustomer}/>
-                <div className={"d-flex flex-row align-items-center justify-content-between border border-warning p-3 bg-warning"}>
-                    <span>Order ID: </span><span><Badge pill bg={"warning"}>#{order_id}</Badge></span>
-                </div>
+                <form onSubmit={handleSubmit}>
 
-                {selectedCustomer.points > 0 && redeem_value === 0 ?
-                    <div className={"redeem-section p-3 border border-warning"}>
-                        <Form onSubmit={handleRedeem}>
-                            <Form.Group>
-                                <Form.Label htmlFor="inputPoints">Redeem Points</Form.Label>
-                                <Form.Control
-                                    name={"redeemPoints"}
-                                    onChange={e => setRedeemPoints(e.target.value)}
-                                    value={redeemPoints}
-                                    min={0}
-                                    max={selectedCustomer.points}
-                                    type="number"
-                                    id="inputPoints"
-                                />
-                                <Button variant={"success"} type={"submit"}>Redeem</Button>
-                            </Form.Group>
-                        </Form>
-                    </div> : null}
+                    <div
+                        className={"d-flex flex-row align-items-center justify-content-between border border-warning mb-3 p-2 bg-warning"} style={{borderRadius: 5}}>
+                        {loading ? <Spinner animation="border" variant="dark" /> : error ? <FaTriangleExclamation size={32} color={"red"}/> : <FaCheckCircle size={32} color={"green"}/>}
+
+                        <div>
+                            <Button variant={"danger"} className={"float-end mb-2"} onClick={cleanupSession}><FaTrashAlt/></Button>
+                            <span><Badge pill bg={"warning text-black"}>#{orderObj.order_id}</Badge></span>
+                        </div>
+
+                    </div>
+                    <CustomerItem onClose={() => dispatch(clearCustomerValues())} onClick={() => showCustomerModal()} customer={selectedCustomer}/>
 
 
-                <form className={"mt-2"} onSubmit={handleSubmit}>
-                    <div className="has-child expand">
+                    <div className="has-child expand mt-3">
                         <div className="content">
                             <div className={"order-type mb-2"}>
                                 <div className={"d-flex flex-row"}>
-                                            <span className={"mr-2"}>
-                                                <input className={"d-none type-select "} id={"instore_type"} checked={orderType === "instore"} onChange={(e) => setOrderType(e.target.value)} type={"radio"} name={"order_type"} value={"instore"}/>
-                                                <label className={"mb-0 btn btn-outline-secondary btn-lg"} htmlFor="instore_type"><FaStoreAlt/> Store</label>
+                                            <span className={"me-2"}>
+                                                <input className={"d-none type-select "} id={"instore_type"}
+                                                       checked={orderObj.orderType === "instore"}
+                                                       onChange={handleUpdateOrderType} type={"radio"}
+                                                       name={"order_type"} value={"instore"}/>
+                                                <label className={"mb-0 btn btn-outline-secondary btn-lg"}
+                                                       htmlFor="instore_type"><FaStoreAlt/> Store</label>
                                             </span>
 
-                                    <span className={"mr-2"}>
-                                                <input className={"d-none type-select "} id={"ubereat_type"} checked={orderType === "ubereat"} onChange={(e) => setOrderType(e.target.value)} type={"radio"} name={"order_type"} value={"ubereat"}/>
-                                                <label className={"mb-0 btn btn-outline-secondary btn-lg"} htmlFor="ubereat_type"><FaUber/> Ubereat
+                                    <span className={"me-2"}>
+                                                <input className={"d-none type-select "} id={"ubereat_type"}
+                                                       checked={orderObj.orderType === "ubereat"}
+                                                       onClick={handleUpdateOrderType} type={"radio"}
+                                                       onChange={() => {}}
+                                                       name={"order_type"} value={"ubereat"}/>
+                                                <label className={"mb-0 btn btn-outline-secondary btn-lg"}
+                                                       htmlFor="ubereat_type"><FaUber/> Ubereat
                                             </label>
                                             </span>
                                     <span>
-                                                <input className={"d-none type-select "} id={"shopee_type"} checked={orderType === "shopee"} onChange={(e) => setOrderType(e.target.value)} type={"radio"} name={"order_type"} value={"shopee"}/>
-                                                <label className={"mb-0 btn btn-outline-secondary btn-lg"} htmlFor="shopee_type"><FaShoppingBag/> Shopee
+                                                <input className={"d-none type-select "} id={"shopee_type"}
+                                                       onChange={e => window.open("https://seller.shopee.tw", "_blank")}
+                                                       type={"radio"} name={"order_type"} value={"shopee"}/>
+                                                <label className={"mb-0 btn btn-outline-secondary btn-lg"}
+                                                       htmlFor="shopee_type"><FaShoppingBag/> Shopee
                                             </label>
                                             </span>
 
@@ -152,16 +275,23 @@ const Cart = () => {
                                 </div>
                             </div>
 
-                            <div className="payment-method  mb-3">
+                            <div className="payment-method  mb-4">
                                 <div className={"d-flex flex-row"}>
-                                            <span className={"mr-2"}>
-                                                <input className={"d-none payment-select "} id={"cash_payment"} checked={paymentMethod === "cash"} onChange={(e) => setPaymentMethod(e.target.value)} type={"radio"} name={"payment"} value={"cash"}/>
-                                                <label className={"btn btn-outline-secondary btn-lg"} htmlFor="cash_payment"><FaMoneyBillAlt/> Cash</label>
+                                            <span className={"me-2"}>
+                                                <input className={"d-none payment-select "} id={"cash_payment"}
+                                                       checked={orderObj.paymentMethod === "cash"} onChange={handleUpdatePayment}
+                                                       type={"radio"} name={"payment"} value={"cash"}/>
+                                                <label className={"btn btn-outline-secondary btn-lg"}
+                                                       htmlFor="cash_payment"><FaMoneyBillAlt/> Cash</label>
                                             </span>
 
                                     <span>
-                                                <input className={"d-none payment-select "} id={"credit_payment"} checked={paymentMethod === "credit"} onChange={(e) => setPaymentMethod(e.target.value)} type={"radio"} name={"payment"} value={"credit"}/>
-                                                <label className={"btn btn-outline-secondary btn-lg"} htmlFor="credit_payment"><FaCreditCard/> Credit card
+                                                <input className={"d-none payment-select "} id={"credit_payment"}
+                                                       checked={orderObj.paymentMethod === "credit"}
+                                                       onChange={handleUpdatePayment} type={"radio"} name={"payment"}
+                                                       value={"credit"}/>
+                                                <label className={"btn btn-outline-secondary btn-lg"}
+                                                       htmlFor="credit_payment"><FaCreditCard/> Credit card
                                             </label>
                                             </span>
                                 </div>
@@ -172,30 +302,62 @@ const Cart = () => {
                     <div className="cart-total-table p-3">
                         <table>
                             <tbody>
-                            <tr>
+                            <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
                                 <th>SubTotal:</th>
                                 <td>${subTotal}</td>
                             </tr>
-                            {discount_value > 0 ? <tr>
+                            {orderObj.discount_value > 0 ? <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
                                 <th>Discount:</th>
-                                <td>-$15</td>
+                                <td>-${orderObj.discount_value}</td>
                             </tr> : null}
-                            {redeem_value > 0 ? <tr>
+                            {orderObj.redeem_value > 0 ? <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
                                 <th>Redeem:</th>
-                                <td>-${parseInt(redeem_value)}</td>
+                                <td>-${orderObj.redeem_value}</td>
                             </tr> : null}
-                            <tr className="grand-total border-top border-warning pt-2">
+                            <tr className="grand-total border-top border-warning pt-2" style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
                                 <th>TOTAL:</th>
                                 <td>
                                     <strong>${totalAmount}</strong>
                                 </td>
                             </tr>
-                            <tr><td></td></tr>
-                            <tr><td></td></tr>
+                            {orderObj.customTotalAmount > 0 ? <tr className="custom-total border-top border-warning pt-2">
+                                <th>CUSTOM:</th>
+                                <td>
+                                    <strong>${orderObj.customTotalAmount}</strong>
+                                </td>
+                            </tr> : null }
+                            <tr>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <Form.Group>
+                                        <div>
+                                            <Form.Check // prettier-ignore
+                                                type="switch"
+                                                className={"align-items-end flex-row justify-content-end"}
+                                                id="issueInvoice"
+                                                checked={settings.enableInvoice}
+                                                onChange={e => {
+                                                    dispatch(updateSettings({name: "enableInvoice", value: e.target.checked}))
+                                                }}
+                                            />
+                                        </div>
+                                    </Form.Group>
+                                </td>
+                                <td><Form.Label htmlFor={"issueInvoice"}>Auto Invoice</Form.Label></td>
+                            </tr>
                             <tr>
                                 <td></td>
                                 <td>
-                                    <Button variant={"warning"} size={"lg"} type="submit">Create Order</Button>
+                                    <Button variant={"warning"} size={"lg"} type="submit" onClick={handleSubmit} disabled={cartItems.length === 0 || loading}
+                                            className={'d-flex align-items-center'}>
+                                        {settings.enableInvoice ? <span><FaPrint className={"me-1"}/> Checkout & Print Invoice</span> : <span><FaShoppingBag className={"me-1"}/> Checkout</span> }
+                                            </Button>
                                 </td>
                             </tr>
                             </tbody>
@@ -203,6 +365,211 @@ const Cart = () => {
                     </div>
                 </form>
             </div>
+
+
+            <Modal show={settings.showCustomerModal} backdrop={"static"}>
+                <Form onSubmit={e => {e.preventDefault()}} className={"bg-dark text-white"}>
+                    <Modal.Header>
+                        <Modal.Title>Customer details</Modal.Title>
+                    </Modal.Header>
+
+                    <Modal.Body>
+
+                        <Form.Group className="mb-3" controlId="searchCustomer.ControlInput1">
+                            <Form.Control
+                                type="phone"
+                                size={"lg"}
+                                className={"mb-2"}
+                                onChange={onCustomerSearch}
+                                placeholder={selectedCustomer.phone}
+                                autoFocus
+                                onFocus={e => e.target.select()}
+                            />
+
+                            {customers != null && customers.length > 0 ? <CustomerItem onClose={() => {dispatch(clearCustomerValues())}} customer={customers[0]} />
+                                : selectedCustomer.phone ?
+                                    <Form.Group>
+                                        <Form.Label htmlFor={"customerName"}>Name</Form.Label>
+                                        <Form.Control autoFocus onFocus={e => e.target.select()} id={"customerName"} value={selectedCustomer.name} type={"text"} size={"lg"} onChange={e => dispatch(handleCustomerChange({name: "name", value: e.target.value}))} className={"mb-2"} />
+                                    </Form.Group>
+                                     :null}
+                        </Form.Group>
+
+                        <div>
+                            <Form.Group className="mb-3">
+                                <div className={"mb-2"}>
+                                    <Form.Check // prettier-ignore
+                                        type="switch"
+                                        id="b2b"
+                                        checked={selectedCustomer.is_b2b}
+                                        onChange={e => {
+                                            dispatch(handleCustomerChange({name: "is_b2b", value: e.target.checked}))
+                                        }}
+                                        label="B2B"
+                                    />
+                                </div>
+
+                                <InputGroup className="mb-3">
+
+                                {selectedCustomer.is_b2b ? <Form.Control
+                                    id={"buyer_id"}
+                                    type="number"
+                                    size={"lg"}
+                                    onChange={handleBuyerIDChange}
+                                    name={"buyer_id"}
+                                    placeholder={typeof selectedCustomer.buyer_id != "undefined" && selectedCustomer.buyer_id !== null ? selectedCustomer.buyer_id : "Buyer Tax ID"}
+                                /> : <Form.Control
+                                    id={"carrier_id"}
+                                    type="text"
+                                    size={"lg"}
+                                    onChange={handleCarrierIDChange}
+                                    placeholder={typeof selectedCustomer.carrier_id != "undefined" && selectedCustomer.carrier_id !== null ? selectedCustomer.carrier_id : "Carrier ID"}
+                                    name={"carrier_id"}
+
+                                />}
+
+                                <InputGroup.Text id="govid"><Button variant={"secondary"} onClick={e => dispatch(handleCustomerChange({name: selectedCustomer.is_b2b ? "buyer_id" : "carrier_id", value: ""}))}><FaEraser/></Button></InputGroup.Text>
+
+                                </InputGroup>
+                            </Form.Group>
+
+                            {selectedCustomer.points > 0 ?
+                                <Form.Group className={"mb-2"}>
+                                    <Form.Label htmlFor="inputPoints" className={"me-2"}>Redeem Points
+                                        (max: {selectedCustomer.points} points)</Form.Label>
+                                    {orderObj.redeem_value > 0 ? <Badge bg="success">Off -NT$ {orderObj.redeem_value}</Badge> : null}
+                                    <div className={"d-flex flex-row"}>
+                                        <Form.Control
+                                            name={"redeem_points"}
+                                            onChange={onRedeemPointChange}
+                                            placeholder={orderObj.redeem_points}
+                                            min={0}
+                                            size={"lg"}
+                                            max={selectedCustomer.points}
+                                            type="number"
+                                            id="inputPoints"
+                                            className={"me-2"}
+                                            onFocus={e => e.target.select()}
+                                            onBlur={handleCalcPointValue}
+                                        />
+
+                                    </div>
+
+                                </Form.Group> : null}
+
+                            <Form.Group>
+                                <Form.Label htmlFor="inputDiscount" className={"me-2"}>Discount</Form.Label>
+                                <div className={"d-flex flex-row"}>
+                                    <Form.Control
+                                        name={"discount_value"}
+                                        onChange={handleDiscountValue}
+                                        placeholder={orderObj.discount_value}
+                                        min={0}
+                                        size={"lg"}
+                                        max={orderObj.totalAmount}
+                                        type="number"
+                                        id="inputDiscount"
+                                        className={"me-2"}
+                                        onFocus={e => e.target.select()}
+                                        onBlur={handleDiscountValue}
+                                    />
+
+                                </div>
+
+                            </Form.Group>
+                        </div>
+
+                    </Modal.Body>
+
+                    <Modal.Footer>
+                        <Button variant="warning" type={"button"} onClick={handleCloseCustomerModal}>Save & Close</Button>
+                    </Modal.Footer>
+                </Form>
+            </Modal>
+
+
+            <Modal show={showCustomAmountModal} backdrop={"static"} onHide={e => setShowCustomAmountModal(false)} keyboard={true}>
+                <Form  className={"bg-dark text-white"}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Custom order amount</Modal.Title>
+                    </Modal.Header>
+
+                    <Modal.Body>
+
+                        <Form.Group className="mb-3" controlId="searchCustomer.ControlInput2">
+                            <Form.Label>Order Amount</Form.Label>
+                            <Form.Control
+                                type="number"
+                                size={"lg"}
+                                min={totalAmount}
+                                onChange={(e) => {dispatch(updateOrderDetail({name: 'customTotalAmount', value: e.target.value}))}}
+                                onFocus={e => e.target.select()}
+                                className={"mb-2"}
+                                placeholder={orderObj.customTotalAmount}
+                                autoFocus
+                            />
+                        </Form.Group>
+
+                    </Modal.Body>
+
+                    <Modal.Footer>
+                        <Button variant="primary" type={"button"} onClick={e => setShowCustomAmountModal(false)}>Save & Close</Button>
+                    </Modal.Footer>
+                </Form>
+            </Modal>
+
+
+            <Modal show={show_calculator} backdrop={"static"}>
+                <Form  className={"bg-dark text-white"}>
+                    <Modal.Header>
+                        <Modal.Title className={"text-success"}>Congratulation on new order!</Modal.Title>
+
+                    </Modal.Header>
+
+                    <Modal.Body>
+                        <Form.Group className="mb-3" controlId="searchCustomer.ControlInput1">
+                            <Form.Label>Total Amount</Form.Label>
+                            <Form.Control
+                                type="text"
+                                size={"lg"}
+                                value={"NT$ " + totalAmount}
+                                className={"mb-2 bg-warning"}
+                                readOnly
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3" controlId="searchCustomer.ControlInput2">
+                            <Form.Label>Received Amount</Form.Label>
+                            <Form.Control
+                                type="number"
+                                size={"lg"}
+                                value={receivedCash}
+                                min={totalAmount}
+                                onChange={(e) => {setReceiveCash(e.target.value)}}
+                                onFocus={e => e.target.select()}
+                                className={"mb-2"}
+                                autoFocus
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3" controlId="searchCustomer.ControlInput2">
+                            <Form.Label>Return</Form.Label>
+                            <Form.Control
+                                type="text"
+                                size={"lg"}
+                                value={"NT$ " + (receivedCash - totalAmount)}
+                                className={"mb-2 bg-success text-white"}
+                                readOnly
+                            />
+                        </Form.Group>
+                    </Modal.Body>
+
+                    <Modal.Footer>
+                        <Button variant={"secondary"} size={"lg"} onClick={handlePrintInvoice}><FaPrint/></Button>
+                        <Button variant="success" size={"lg"} type={"button"} disabled={loading} onClick={finishOrder}>Finish</Button>
+                    </Modal.Footer>
+                </Form>
+            </Modal>
         </div>
     );
 };

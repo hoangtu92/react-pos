@@ -25,6 +25,10 @@ const customerSchema = mongoose.Schema(
 		carrier_id: {
 			type: String
 		},
+		is_b2b: {
+			type: Boolean,
+			default: false
+		},
 		points: {
 			type: Number,
 			default: 0

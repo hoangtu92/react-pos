@@ -1,10 +1,7 @@
 import { React, useEffect } from "react";
 import { addToCart } from "../features/cart/cartSlice";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  productSubTotal,
-  productTotalAmount,
-} from "../features/cart/cartSlice";
+
 
 const ProductItem = ({ product }) => {
   const dispatch = useDispatch();
@@ -12,13 +9,6 @@ const ProductItem = ({ product }) => {
   const addCart = (product) => {
     dispatch(addToCart(product));
   };
-
-  const { cartItems } = useSelector((state) => state.cart);
-
-  useEffect(() => {
-    dispatch(productSubTotal());
-    dispatch(productTotalAmount());
-  }, [dispatch, cartItems]);
 
   return (
     <div className="product-cart" onClick={() => {

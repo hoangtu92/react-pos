@@ -1,13 +1,27 @@
 import React from "react";
 import Form from 'react-bootstrap/Form';
+import {updateSettings} from "../features/cart/cartSlice";
 
-const ProductSearch = (props) => {
+const ProductSearch = ({settings, onChange, dispatch}) => {
 
     return (
         <>
-            <Form className={"pr-5"}>
-                <Form.Group className="mb-3" controlId="form.search">
-                    <Form.Control onChange={props.onChange} type="search" size={"lg"} placeholder="SKU, Title..." />
+            <Form className={"d-flex flex-column align-items-start"}>
+                <Form.Group>
+                    <div className={"mb-2"}>
+                        <Form.Check // prettier-ignore
+                            type="switch"
+                            id="autoCart"
+                            checked={settings.scanMode}
+                            onChange={e => {
+                                dispatch(updateSettings({name: "scanMode", value: e.target.checked}))
+                            }}
+                            label={"Scan Mode"}
+                        />
+                    </div>
+                </Form.Group>
+                <Form.Group className="mb-3 flex-grow-1 w-100" controlId="form.search">
+                    <Form.Control autoFocus={true} onFocus={e => e.target.select()} onChange={onChange} type="search" size={"lg"} placeholder={settings.scanMode ? "SKU..." : "SKU, Title..."} />
                 </Form.Group>
             </Form>
         </>

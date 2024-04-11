@@ -1,0 +1,273 @@
+<html lang="en">
+<head>
+    <title>Invoice of #<%= order.order_id %></title>
+    <style>
+        * {
+            -webkit-text-size-adjust: none;
+        }
+
+        table {
+            width: 100%;
+            table-layout: fixed;
+            font-size: 0.65rem
+        }
+
+        table td {
+            padding: 0;
+        }
+
+        html {
+            background: gray;
+        }
+
+        body {
+            width: 57mm;
+            font-family: Roboto, "Noto Sans TC", "微軟正黑體", "Microsoft JhengHei", sans-serif;
+            margin: 0 auto;
+            background: white;
+            box-sizing: border-box;
+            font-size: 0;
+        }
+
+        img {
+            max-width: 100%;
+        }
+
+        body * {
+            color: black;
+        }
+
+        .invoice-header {
+            font-size: 1.375rem;
+            font-weight: 600;
+            line-height: 107%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap
+        }
+
+        .invoice-content {
+            font-size: 0.75rem;
+            font-weight: 400;
+            line-height: 120%;
+            letter-spacing: 0px;
+        }
+
+        .invoice-footer {
+            white-space: nowrap;
+            display: inline-block;
+            text-align: center
+        }
+
+        .qrcode {
+            width: 74px
+        }
+
+        @media print {
+            @page {
+                size: 58mm 95mm;
+                margin: 0;
+            }
+
+            body {
+                margin: 0;
+                width: 100%;
+            }
+        }
+
+    </style>
+</head>
+<body>
+<table class="PaperCSS" style="width: 48mm; border-spacing: 0 2mm;
+    border-collapse: separate;margin: 0 auto;">
+    <tbody>
+    <tr>
+        <td align="center">
+            <span class="invoice-header" style="font-size:1.2rem">JUST DOG 寵物選品店</span>
+        </td>
+    </tr>
+    <tr>
+        <td align="center"><b><font class="bt invoice-header"
+                                    id="InvoiceTitle">電子發票證明聯</font></b></td>
+    </tr>
+    <tr>
+        <td align="center"><b>
+            <font class="bt invoice-header"><%= order.invoice.date.toYear() %>
+                年<%= month_invoice[ order.invoice.date.toMonth() ] %>月</font></b>
+
+        </td>
+    </tr>
+    <tr>
+        <td align="center"><b><font class="bt invoice-header"><%= order.invoice.invno.formatInvoice() %></font></b>
+        </td>
+    </tr>
+    <tr>
+        <td class="invoice_item" align="left">
+            <table class="invoice-content" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td colSpan="2"><%= order.invoice.date.replaceAll("\/", "-") %> <%= order.invoice.time %></td>
+                </tr>
+                <tr>
+                    <td>隨機碼:<%= order.invoice.rdno %></td>
+                    <td style="text-align: right">總計:<%=  orderTotalAmount.format() %></td>
+                </tr>
+                <tr>
+                    <td>賣方:59290455</td>
+                    <% if(order.invoice.buyer_id){ %>
+                        <td style="text-align: right">買方:<%= order.invoice.buyer_id %></td>
+                    <% } %>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+    <tr>
+        <td align="center">
+            <img style="margin-left: 0; "
+                 src="<%= barcode.toDataURL() %>">
+        </td>
+
+    </tr>
+
+    <tr>
+        <td class="invoice_item" style="padding: 0">
+
+            <table style="width: 100%; border-spacing: 0; border-collapse: collapse">
+                <tr>
+                    <td style="">
+                        <img class="qrcode"
+                             src="<%= qr_left %>"
+                             alt="qr_code1">
+
+                    </td>
+                    <td style="text-align: right; padding: 0">
+                            <img class="qrcode"
+                                 src="<%= qr_right %>"
+                                 alt="qr_code2">
+
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <% if(order.invoice.buyer_id) { %>
+        <tr align="center" class="bt">
+            <td>
+                ------------------✂------------------
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <table border="0" width="100%" rules="none" class="PaperCSS">
+                    <tbody>
+                    <tr class="invoice_item">
+                        <td colSpan="3">
+                            <span class="bt invoice-header">銷售明細</span>
+                        </td>
+                    </tr>
+                    <tr class="invoice_item">
+                        <td colSpan="3">
+                            品名
+                        </td>
+                    </tr>
+                    <tr class="invoice_item">
+                        <td>單價</td>
+                        <td>數量</td>
+                        <td>金額</td>
+                    </tr>
+                    <tr>
+                        <td colSpan="3">
+                            <hr style="border-style: dashed;border-width: 1px;"/>
+                        </td>
+                    </tr>
+                    <% order.cartItems.forEach(function(item){ %>
+                        <tr>
+                            <td colSpan="3"><%= item.name %></td>
+                        </tr>
+                        <tr>
+                            <td><%= item.price.format() %></td>
+                            <td><%= item.quantity %></td>
+                            <td><%= (item.quantity * item.price).format() %></td>
+                        </tr>
+                    <% }) %>
+
+                    <% if(order.discountAmount + order.redeemAmount > 0) { %>
+                        <tr>
+                            <td colSpan="3">折扣</td>
+                        </tr>
+                        <tr>
+                            <td>-<%= (order.discountAmount + order.redeemAmount).format() %></td>
+                            <td>1</td>
+                            <td>-<%= (order.discountAmount + order.redeemAmount).format() %></td>
+                        </tr>
+                    <% } %>
+                    <tr>
+                        <td colSpan="3">
+                            <hr style="border-style: dashed;border-width: 1px;"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colSpan="3" style="padding: 10px 0">
+                            <table style="border-collapse: collapse;">
+                                <tr>
+                                    <td>銷售額(應稅)：</td>
+                                    <td><%= (Math.round(orderTotalAmount / 1.05)).format() %></td>
+                                </tr>
+                                <tr>
+                                    <td>稅額：</td>
+                                    <td><%= (Math.round((orderTotalAmount / 1.05) * 0.05)).format() %></td>
+                                </tr>
+                                <tr>
+                                    <td>總計：</td>
+                                    <td><%= orderTotalAmount %></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colSpan="3">台北市大安區建國南路二段223號1樓</td>
+                    </tr>
+                    <tr>
+                        <td colSpan="3">TEL：02-27010226</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+        <tr align="center" class="bt">
+            <td>
+                ------------------✂------------------
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div align="center">
+                    <span class="invoice-footer">退換貨憑電子發票證明聯正本辦理</span>
+                </div>
+
+            </td>
+        </tr>
+
+    <% } %>
+    </tbody>
+</table>
+<script>
+    window.onload = function (){
+        window.print();
+    }
+
+    window.onafterprint = function (){
+        window.opener.postMessage("Print success", "*");
+        window.close();
+    }
+
+
+</script>
+</body>
+</html>
+
+
+
+

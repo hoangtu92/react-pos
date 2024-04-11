@@ -1,39 +1,34 @@
-/**
- * @route /api/coupon/redeem
- * @param req
- * @param res
- * @returns {Promise<void>}
- */
-const pointRedeem = async (req, res) => {
 
-    const {order_id, points} = req.body;
 
-    let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/points/redeem`, {
-        method: "POST",
+const calcCouponValue = async (req, res) => {
+    const {points, customer_id} = req.body;
+    console.log(customer_id, points);
+    const result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/coupon/calc?points=${points}&customer_id=${customer_id}`, {
+        method: "GET",
         headers: {
             'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
             'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            order_id: order_id,
-            points: points
-        })
+        }
     });
-    if(result.ok){
+    if(result.ok) {
         const data = await result.json();
-        if(data.status)
+        if(data.status){
             res.status(201).json(data);
-        else res.status(403).json(data)
-    }else{
+        }
+        else{
+            res.status(403).json(data);
+        }
+
+    }
+    else{
         res.status(400).json({
             status: false,
             msg: result.statusText
         })
     }
 
-
 }
 
 module.exports = {
-    pointRedeem
+    calcCouponValue,
 }

@@ -6,7 +6,7 @@ const Dashboard = () => {
     <>
       <div className="container-fluid">
         <div className="sidebarLeft">
-          <SidebarLeft />
+          <SidebarLeft/>
         </div>
 
         {/* Dynamic Page */}

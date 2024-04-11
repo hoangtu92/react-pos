@@ -1,7 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const { verifyToken } = require('../middleware/authMiddleware')
-const {pointRedeem} = require("../controllers/couponController");
+const {calcCouponValue} = require("../controllers/couponController");
 
-router.post('/redeem', verifyToken, pointRedeem)
+
+router.post('/calc', verifyToken, calcCouponValue)
+
 module.exports = router

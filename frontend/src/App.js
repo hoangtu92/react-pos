@@ -10,7 +10,6 @@ import Orders from './pages/Orders'
 import Content from './pages/Content'
 import NotFound from './pages/NotFound'
 import PrivateRoute from './pages/PrivateRoute'
-import Pos from "./pages/Pos";
 import Customers from "./pages/Customers";
 import Cart from "./pages/Cart";
 
@@ -33,7 +32,6 @@ function App() {
             >
               <Route path='' element={<Content />} />
               <Route path='orders' element={<Orders />} />
-              <Route path='new-order' element={<Pos />} />
               <Route path='customers' element={<Customers />} />
               <Route path='cart' element={<Cart />} />
             </Route>

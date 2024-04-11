@@ -1,22 +1,34 @@
 const Product = require('../models/productModel');
 
-// @route   /api/product/search
-// @desc    All Products
+/**
+ * @route /api/product/search
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
 const searchProducts = async (req, res) => {
     const { query } = req.query;
 
     let products;
-    if(typeof query === undefined || query === ""){
+    if(typeof query == 'undefined' || query === ""){
         products = await Product.find({}, null,  { limit: 10, skip: 0 });
     }
     else{
-        let reg = new RegExp(query);
-        products = await Product.find({$or: [{sku: query}, {name: reg}]}, null,  { limit: 10, skip: 0 })
+        let reg = new RegExp(query.replace(/\W/, ""), 'i');
+        products = await Product.find({$or: [{sku: query}, {name: reg}]}, null,  { limit: 12, skip: 0 })
     }
 
     res.status(201).json(products)
 }
 
+/**
+ *
+ * @param results
+ * @param page
+ * @param cb
+ * @param perpage
+ * @returns {Promise<void>}
+ */
 const do_sync = async (results, page = 1, cb, perpage = 100) => {
 
     let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/product/get?page=${page}&perpage=${perpage}`, {
@@ -69,8 +81,12 @@ const do_sync = async (results, page = 1, cb, perpage = 100) => {
 
 }
 
-// @route /api/product/sync
-// @desc Sync product with justdog
+/**
+ * Sync product
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
 const syncProduct = async(req, res) => {
 
     let results = [];

@@ -1,7 +1,6 @@
 import React from "react";
-import { useNavigate, Link } from "react-router-dom";
+import {useNavigate, Link, useLocation} from "react-router-dom";
 import {
-  FaHome,
   FaShopify,
   FaUserCircle,
   FaSignInAlt, FaShoppingBag, FaSync,
@@ -14,6 +13,8 @@ const SidebarLeft = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
+
 
   const logoutUser = () => {
     dispatch(logout());
@@ -24,20 +25,16 @@ const SidebarLeft = () => {
   return (
     <>
       <div className="menu-links">
-        <Link to="/dashboard">
-          <FaHome className="menu-icon" />
+        <Link to="/dashboard" className={location.pathname === "/dashboard" ? "bg-hover" : null}>
+          <FaShoppingBag className="menu-icon" />
           Home
         </Link>
-        <Link to="/dashboard/new-order">
-          <FaShoppingBag className="menu-icon" />
-          Checkout
-        </Link>
-        <Link to="/dashboard/orders">
+        <Link to="/dashboard/orders" className={location.pathname === "/dashboard/orders" ? "bg-hover" : null}>
           <FaShopify className="menu-icon" />
           Orders
         </Link>
 
-        <Link to="/dashboard/customers">
+        <Link to="/dashboard/customers" className={location.pathname === "/dashboard/customers" ? "bg-hover" : null}>
           <FaSync className="menu-icon" />
           Sync
         </Link>
