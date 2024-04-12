@@ -1,5 +1,9 @@
-
-
+/**
+ * @route /api/coupon/calc
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
 const calcCouponValue = async (req, res) => {
     const {points, customer_id} = req.body;
     console.log(customer_id, points);
@@ -29,6 +33,7 @@ const calcCouponValue = async (req, res) => {
 
 }
 
+
 module.exports = {
-    calcCouponValue,
+    calcCouponValue
 }

@@ -25,6 +25,7 @@ import {clearCustomerValues,
     handleCustomerChange} from "../features/cart/cartSlice";
 import {FaTriangleExclamation} from "react-icons/fa6";
 import {toast} from "react-toastify";
+import {addCustomer} from "../features/customer/customerSlice";
 
 const Cart = () => {
 
@@ -38,6 +39,7 @@ const Cart = () => {
 
 
     const [receivedCash, setReceiveCash] = useState(0);
+    const [customerUpdated, setCustomerUpdated] = useState(false);
     const [showCustomAmountModal, setShowCustomAmountModal] = useState(false);
 
     useEffect(() => {
@@ -70,6 +72,11 @@ const Cart = () => {
             if (typeof selectedCustomer.user_id === "undefined") showCustomerModal();
         }
     }, [selectedCustomer.user_id, orderObj.order_id]);
+
+    // Update customer when 1 or many field updated
+    useEffect(() => {
+        setCustomerUpdated(true)
+    }, [selectedCustomer.phone, selectedCustomer.name, selectedCustomer.carrier_id, selectedCustomer.buyer_id]);
 
     const showCustomerModal = () => {
         dispatch(updateSettings({name: "showCustomerModal", value: true}))
@@ -158,32 +165,32 @@ const Cart = () => {
     }
 
     const handleBuyerIDChange = (e) => {
-        dispatch(handleCustomerChange({name: "buyer_id" ,value: e.target.value}))
+        if(selectedCustomer.is_b2b){
+            if((typeof e.target.value === 'undefined' || !/^[0-9]{8}$/.test(e.target.value))){
+                toast.error("Invalid Tax ID");
+            }
+            else{
+                dispatch(handleCustomerChange({name: "buyer_id" ,value: e.target.value}))
+            }
+        }
     }
 
     const handleCarrierIDChange = (e) => {
-        dispatch(handleCustomerChange({name: "carrier_id" ,value: e.target.value}))
+        if(e.target.value.length > 0){
+            dispatch(validateCarrierID(e.target.value))
+        }
     }
 
     const handleCloseCustomerModal = e => {
-
-        if(selectedCustomer.is_b2b){
-            if((typeof selectedCustomer.buyer_id === 'undefined' || !/^[0-9]{8}$/.test(selectedCustomer.buyer_id))){
-                toast.error("Invalid Tax ID");
-                dispatch(handleCustomerChange({name: "buyer_id" ,value: null}))
-            }
-            else{
-                hideCustomerModal();
-            }
-        }
-        else if(typeof selectedCustomer.carrier_id !== 'undefined' && selectedCustomer.carrier_id.length > 0){
-            dispatch(validateCarrierID(selectedCustomer.carrier_id))
-        }
-        else{
             hideCustomerModal();
-        }
 
         // Todo save customer to database
+
+        if(customerUpdated && /^0[0-9]{9,10}$/.test(selectedCustomer.phone)){
+            setCustomerUpdated(false);
+            dispatch(addCustomer(selectedCustomer));
+        }
+
 
     }
 
@@ -370,7 +377,7 @@ const Cart = () => {
             </div>
 
 
-            <Modal show={settings.showCustomerModal} backdrop={"static"}>
+            <Modal show={settings.showCustomerModal} backdrop={"static"} size={"lg"}>
                 <Form onSubmit={e => {e.preventDefault()}} className={"bg-dark text-white"}>
                     <Modal.Header>
                         <Modal.Title>Customer details</Modal.Title>
@@ -416,14 +423,16 @@ const Cart = () => {
                                     id={"buyer_id"}
                                     type="number"
                                     size={"lg"}
-                                    onChange={handleBuyerIDChange}
+                                    onChange={() => {}}
+                                    onBlur={handleBuyerIDChange}
                                     name={"buyer_id"}
                                     placeholder={typeof selectedCustomer.buyer_id != "undefined" && selectedCustomer.buyer_id !== null ? selectedCustomer.buyer_id : "Buyer Tax ID"}
                                 /> : <Form.Control
                                     id={"carrier_id"}
                                     type="text"
                                     size={"lg"}
-                                    onChange={handleCarrierIDChange}
+                                    onChange={() => {}}
+                                    onBlur={handleCarrierIDChange}
                                     placeholder={typeof selectedCustomer.carrier_id != "undefined" && selectedCustomer.carrier_id !== null ? selectedCustomer.carrier_id : "Carrier ID"}
                                     name={"carrier_id"}
 
@@ -483,13 +492,13 @@ const Cart = () => {
                     </Modal.Body>
 
                     <Modal.Footer>
-                        <Button variant="warning" type={"button"} onClick={handleCloseCustomerModal}>Save & Close</Button>
+                        <Button size={"lg"} variant="warning" type={"button"} onClick={handleCloseCustomerModal}>Save & Close</Button>
                     </Modal.Footer>
                 </Form>
             </Modal>
 
 
-            <Modal show={showCustomAmountModal} backdrop={"static"} onHide={e => setShowCustomAmountModal(false)} keyboard={true}>
+            <Modal size={"lg"}  show={showCustomAmountModal} backdrop={"static"} onHide={e => setShowCustomAmountModal(false)} keyboard={true}>
                 <Form  className={"bg-dark text-white"}>
                     <Modal.Header closeButton>
                         <Modal.Title>Custom order amount</Modal.Title>
@@ -514,13 +523,13 @@ const Cart = () => {
                     </Modal.Body>
 
                     <Modal.Footer>
-                        <Button variant="primary" type={"button"} onClick={e => setShowCustomAmountModal(false)}>Save & Close</Button>
+                        <Button size={"lg"}  variant="primary" type={"button"} onClick={e => setShowCustomAmountModal(false)}>Save & Close</Button>
                     </Modal.Footer>
                 </Form>
             </Modal>
 
 
-            <Modal show={show_calculator} backdrop={"static"}>
+            <Modal size={"lg"}  show={show_calculator} backdrop={"static"}>
                 <Form  className={"bg-dark text-white"}>
                     <Modal.Header>
                         <Modal.Title className={"text-success"}>Congratulation on new order!</Modal.Title>
@@ -566,8 +575,8 @@ const Cart = () => {
                     </Modal.Body>
 
                     <Modal.Footer>
-                        <Button variant={"secondary"} size={"lg"} onClick={handlePrintInvoice}><FaPrint/></Button>
-                        <Button variant="success" size={"lg"} type={"button"} disabled={loading} onClick={finishOrder}>Finish</Button>
+                        <Button size={"lg"}  variant={"secondary"} onClick={handlePrintInvoice}><FaPrint/></Button>
+                        <Button size={"lg"}  variant="success" type={"button"} disabled={loading} onClick={finishOrder}>Finish</Button>
                     </Modal.Footer>
                 </Form>
             </Modal>

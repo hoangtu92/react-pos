@@ -1401,3 +1401,11 @@ input.type-select:checked + label,
 .invoice .invoice_right .terms {
   margin: 0;
 }
+
+
+/*CSS MOD*/
+.form-control-lg {
+  min-height: calc(1.5em + 1.5rem + calc(var(--bs-border-width) * 2));
+  padding: 1rem 1.5rem;
+  font-size: 1.7rem;
+}

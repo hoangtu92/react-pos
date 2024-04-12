@@ -1,5 +1,13 @@
 const Customer = require("../models/customerModel");
 
+const WooCommerceRestApi = require("@woocommerce/woocommerce-rest-api").default;
+const api = new WooCommerceRestApi({
+    url: process.env.JD_HOST,
+    consumerKey: process.env.JD_CK,
+    consumerSecret: process.env.JD_CS,
+    version: "wc/v3"
+});
+
 // @route   /api/customer/search
 // @desc    All Customer
 const searchCustomers = async (req, res) => {
@@ -97,23 +105,157 @@ const syncCustomer = async(req, res) => {
 }
 
 /**
- * @route /api/customer/add
+ * SYnc customer info between POS and justdog (create of none exists)
+ * @route /api/customer/instant-sync
  * @param req
  * @param res
  * @returns {Promise<void>}
  */
-const addCustomer = async(req, res) => {
+const instantSync = async(req, res) => {
 
-    const {customer} = req.body;
+    let {name, phone, user_id, carrier_id, buyer_id} = req.body;
 
 
-    res.status(200).json([])
+    const customer = {
+        first_name: name,
+        last_name: name,
+        meta_data: [
+            {
+                key: "billing_first_name",
+                value: name,
+            },
+            {
+                key: "billing_phone",
+                value: phone.toString()
+            }
+        ]
+    };
+
+    if(carrier_id) customer.meta_data.push({
+        key: "smilepayei_carrier_id",
+        value: carrier_id
+    })
+
+    if(buyer_id) customer.meta_data.push({
+        key: "smilepayei_buyer_id",
+        value: buyer_id
+    });
+
+    if(!user_id){
+        let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/customer/get-by-phone?phone=${phone}`, {
+            method: "GET",
+            headers: {
+                'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
+                'Content-Type': 'application/json'
+            }
+        })
+        if(result.ok) {
+            const userResult = await result.json();
+            if(userResult.data){
+                user_id = userResult.data.user_id;
+            }
+        }
+    }
+
+    if(user_id){
+        try {
+            const result = await api.put("customers/" + user_id, customer);
+
+            if(result.status === 200 || result.status === 201){
+                res.status(200).json({
+                    status: true,
+                    data: result.data,
+                    msg: "Update user success"
+                })
+            }
+        }
+        catch (e){
+            res.status(400).json({
+                status: false,
+                msg: e.message,
+                data: customer
+            });
+        }
+    }
+    else{
+        customer.email = `_customer_no_email_${phone}@justdog.tw`
+        customer.password = `123456`
+        customer.username = phone.toString();
+        try{
+            const result = await api.post("customers", customer);
+
+            if(result.status){
+                res.status(201).json({
+                    status: true,
+                    data: result.data,
+                    msg: "New user created!"
+                })
+
+            }
+            else{
+                res.status(400).json({
+                    status: false,
+                    data: result.data,
+                    msg: "Could not create new user"
+                });
+            }
+        }
+        catch (e){
+            res.status(400).json({
+                status: false,
+                msg: e.message,
+                data: customer
+            });
+        }
+    }
+
+    await Customer.updateOne({phone: phone}, {
+        name, phone, user_id, carrier_id, buyer_id
+    }, {upsert: true});
+
 
 }
 
 
 
+/**
+ * @route /api/customer/points
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
+const getPoints = async (req, res) => {
+    const {customer_id} = req.query;
+    const result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/coupon/points?customer_id=${customer_id}`, {
+        method: "GET",
+        headers: {
+            'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
+            'Content-Type': 'application/json'
+        }
+    });
+    if(result.ok) {
+        const data = await result.json();
+        if(data.status){
+            res.status(201).json(data);
+        }
+        else{
+            res.status(403).json(data);
+        }
+
+    }
+    else{
+        res.status(400).json({
+            status: false,
+            msg: result.statusText
+        })
+    }
+
+}
+
+
 module.exports = {
     syncCustomer,
-    searchCustomers
+    searchCustomers,
+    instantSync,
+    getPoints
 }

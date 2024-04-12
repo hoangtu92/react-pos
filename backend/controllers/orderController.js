@@ -54,9 +54,17 @@ const addCustomer = async (req, res) => {
     const {order_id, customer_id} = req.body;
     if(order_id && customer_id){
         const result = await api.put("orders/" + order_id, {customer_id});
-        res.status(201).json(result.data)
+        res.status(201).json({
+            status: true,
+            data: result.data,
+            msg: "Success"
+        })
     }
-    else res.status(400).json({order_id, customer_id})
+    else res.status(400).json({
+        status: false,
+        data: {order_id, customer_id},
+        msg: "Invalid request"
+    })
 }
 /**
  * @route /api/order/validate-carrier-id

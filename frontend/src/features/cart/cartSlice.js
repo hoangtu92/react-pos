@@ -70,7 +70,8 @@ export const getCustomers = createAsyncThunk('customer/getCustomers', async (dat
     try {
         const result =  await customerService.getCustomers(data.query);
         if(result.length > 0){
-            //thunkAPI.dispatch(addCustomer({customer_id: result[0].user_id, order_id: data.order_id}))
+            // Quickly add first customer to the order
+            thunkAPI.dispatch(addCustomer({customer_id: result[0].user_id, order_id: data.order_id}))
         }
         else {
             thunkAPI.dispatch(clearCustomerValues());
@@ -87,18 +88,23 @@ export const getCustomers = createAsyncThunk('customer/getCustomers', async (dat
 // Update customer to order in justdog
 export const addCustomer = createAsyncThunk('order/addCustomer', async (data, thunkAPI) => {
     try {
-        return await orderService.addCustomer(data)
+        const result = await orderService.addCustomer(data);
+        if(result.status){
+            thunkAPI.dispatch(getPoints(data.customer_id));
+
+        }
+        return result;
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response.data)
     }
 })
 
-// Update customer to order in justdog
+// Validate carrier id
 export const validateCarrierID = createAsyncThunk('order/validateCarrierID', async (carrier_id, thunkAPI) => {
     try {
         const result =  await orderService.validateCarrierID(carrier_id);
-        if(!result.status){
-            thunkAPI.dispatch(handleCustomerChange({name: "carrier_id" ,value: null}));
+        if(result.status){
+            thunkAPI.dispatch(handleCustomerChange({name: "carrier_id" ,value: carrier_id}));
         }
         return result;
     } catch (error) {
@@ -137,7 +143,13 @@ export const calcPoint = createAsyncThunk('coupon/calc', async (data, thunkAPI) 
     }
 })
 
-
+export const getPoints = createAsyncThunk('customer/getPoints', async (customer_id, thunkAPI) => {
+    try {
+        return await customerService.getPoints(customer_id)
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response.data)
+    }
+})
 
 /**
  * Update finalization order data to local POS
@@ -403,6 +415,19 @@ export const cartSlice = createSlice({
                 cartSlice.caseReducers.productTotalAmount(state, action);
             })
 
+            // Get point
+            .addCase(getPoints.pending, (state, action) => {
+                state.loading = true;
+
+            }).addCase(getPoints.rejected, (state, action) => {
+                state.loading = false;
+            }).addCase(getPoints.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = false;
+                state.selectedCustomer.points = action.payload.points;
+
+        })
+
             // Issue invoice
             .addCase(issueInvoice.pending, (state) => {
                 state.loading = true
@@ -425,7 +450,7 @@ export const cartSlice = createSlice({
             }).addCase(validateCarrierID.fulfilled, (state, action) => {
                 state.loading = false;
                 toast.success("Carrier ID is valid");
-                state.settings.showCustomerModal = false;
+                //state.settings.showCustomerModal = false;
                 updateSettings(state.settings);
             }).addCase(validateCarrierID.rejected, (state, action) => {
                 state.loading = false
