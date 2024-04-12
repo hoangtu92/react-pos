@@ -176,8 +176,11 @@ const Cart = () => {
                 hideCustomerModal();
             }
         }
-        else{
+        else if(typeof selectedCustomer.carrier_id !== 'undefined' && selectedCustomer.carrier_id.length > 0){
             dispatch(validateCarrierID(selectedCustomer.carrier_id))
+        }
+        else{
+            hideCustomerModal();
         }
 
         // Todo save customer to database
@@ -386,13 +389,11 @@ const Cart = () => {
                                 onFocus={e => e.target.select()}
                             />
 
-                            {customers != null && customers.length > 0 ? <CustomerItem onClose={() => {dispatch(clearCustomerValues())}} customer={customers[0]} />
-                                : selectedCustomer.phone ?
-                                    <Form.Group>
-                                        <Form.Label htmlFor={"customerName"}>Name</Form.Label>
-                                        <Form.Control autoFocus onFocus={e => e.target.select()} id={"customerName"} value={selectedCustomer.name} type={"text"} size={"lg"} onChange={e => dispatch(handleCustomerChange({name: "name", value: e.target.value}))} className={"mb-2"} />
-                                    </Form.Group>
-                                     :null}
+                            <Form.Group>
+                                <Form.Label htmlFor={"customerName"}>Name</Form.Label>
+                                <Form.Control autoFocus onFocus={e => e.target.select()} id={"customerName"} value={selectedCustomer.name} type={"text"} size={"lg"} onChange={e => dispatch(handleCustomerChange({name: "name", value: e.target.value}))} className={"mb-2"} />
+                            </Form.Group>
+
                         </Form.Group>
 
                         <div>

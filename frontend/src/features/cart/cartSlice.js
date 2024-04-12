@@ -70,7 +70,13 @@ export const getCustomers = createAsyncThunk('customer/getCustomers', async (dat
     try {
         const result =  await customerService.getCustomers(data.query);
         if(result.length > 0){
-            thunkAPI.dispatch(addCustomer({customer_id: result[0].user_id, order_id: data.order_id}))
+            //thunkAPI.dispatch(addCustomer({customer_id: result[0].user_id, order_id: data.order_id}))
+        }
+        else {
+            thunkAPI.dispatch(clearCustomerValues());
+            if(/^0[0-9]{9,10}$/.test(data.query)){
+                thunkAPI.dispatch(handleCustomerChange({name: "phone", value: data.query}));
+            }
         }
         return result;
     } catch (error) {
@@ -420,6 +426,7 @@ export const cartSlice = createSlice({
                 state.loading = false;
                 toast.success("Carrier ID is valid");
                 state.settings.showCustomerModal = false;
+                updateSettings(state.settings);
             }).addCase(validateCarrierID.rejected, (state, action) => {
                 state.loading = false
                 state.error = true;
