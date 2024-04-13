@@ -236,12 +236,12 @@ const getPoints = async (req, res) => {
     if(result.ok) {
         const data = await result.json();
         if(data.status){
+            await Customer.updateOne({user_id: customer_id}, {points: data.points})
             res.status(201).json(data);
         }
         else{
             res.status(403).json(data);
         }
-
     }
     else{
         res.status(400).json({

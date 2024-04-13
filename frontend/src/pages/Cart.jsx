@@ -23,7 +23,7 @@ import Button from "react-bootstrap/Button";
 import {clearCustomerValues,
     getCustomers,
     handleCustomerChange} from "../features/cart/cartSlice";
-import {FaTriangleExclamation} from "react-icons/fa6";
+import {FaCircleCheck, FaTriangleExclamation} from "react-icons/fa6";
 import {toast} from "react-toastify";
 import {addCustomer} from "../features/customer/customerSlice";
 
@@ -141,7 +141,7 @@ const Cart = () => {
         dispatch(updateOrderDetail({name: 'redeem_points', value: e.target.value}));
     }
     const handleCalcPointValue = (e) => {
-        dispatch(calcPoint({points: orderObj.redeem_points, customer_id: selectedCustomer.user_id}));
+        if(orderObj.redeem_points > 0) dispatch(calcPoint({points: orderObj.redeem_points, customer_id: selectedCustomer.user_id}));
     }
 
     const handleDiscountValue = e => {
@@ -176,7 +176,7 @@ const Cart = () => {
     }
 
     const handleCarrierIDChange = (e) => {
-        if(e.target.value.length > 0){
+        if(e.target.value.length > 0 && e.target.value !== selectedCustomer.carrier_id){
             dispatch(validateCarrierID(e.target.value))
         }
     }
@@ -426,6 +426,7 @@ const Cart = () => {
                                     onChange={() => {}}
                                     onBlur={handleBuyerIDChange}
                                     name={"buyer_id"}
+                                    onFocus={e => e.target.select()}
                                     placeholder={typeof selectedCustomer.buyer_id != "undefined" && selectedCustomer.buyer_id !== null ? selectedCustomer.buyer_id : "Buyer Tax ID"}
                                 /> : <Form.Control
                                     id={"carrier_id"}
@@ -433,12 +434,16 @@ const Cart = () => {
                                     size={"lg"}
                                     onChange={() => {}}
                                     onBlur={handleCarrierIDChange}
+                                    onFocus={e => e.target.select()}
                                     placeholder={typeof selectedCustomer.carrier_id != "undefined" && selectedCustomer.carrier_id !== null ? selectedCustomer.carrier_id : "Carrier ID"}
                                     name={"carrier_id"}
 
                                 />}
 
-                                <InputGroup.Text id="govid"><Button variant={"secondary"} onClick={e => dispatch(handleCustomerChange({name: selectedCustomer.is_b2b ? "buyer_id" : "carrier_id", value: ""}))}><FaEraser/></Button></InputGroup.Text>
+                                <InputGroup.Text id="govid">
+                                    <Button variant={"secondary"} onClick={e => dispatch(handleCustomerChange({name: selectedCustomer.is_b2b ? "buyer_id" : "carrier_id", value: ""}))}><FaEraser/></Button>
+                                    <Button className={"ms-2"} variant={"success"} onClick={() => {}}><FaCircleCheck/></Button>
+                                </InputGroup.Text>
 
                                 </InputGroup>
                             </Form.Group>
