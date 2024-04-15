@@ -30,7 +30,7 @@ import SmoothScroll from "../components/SmoothScroll";
 
 const Cart = () => {
 
-    const {loading, error, customers, selectedCustomer, cartItems, subTotal, totalAmount, orderObj, order, show_calculator, settings} = useSelector(
+    const {loading, error, selectedCustomer, cartItems, subTotal, totalAmount, orderObj, order, show_calculator, settings} = useSelector(
         (state) => state.cart
     );
     const {user} = useSelector((state) => state.auth);
@@ -362,14 +362,14 @@ const Cart = () => {
                                         </div>
                                     </Form.Group>
                                 </td>
-                                <td><Form.Label htmlFor={"issueInvoice"}>Auto Invoice</Form.Label></td>
+                                <td><Form.Label htmlFor={"issueInvoice"}>自動印發票</Form.Label></td>
                             </tr>
                             <tr>
                                 <td></td>
                                 <td>
                                     <Button variant={"warning"} size={"lg"} type="submit" onClick={handleSubmit} disabled={cartItems.length === 0 || loading || error}
                                             className={'d-flex align-items-center'}>
-                                        {settings.enableInvoice ? <span><FaPrint className={"me-1"}/> Checkout & Print Invoice</span> : <span><FaShoppingBag className={"me-1"}/> Checkout</span> }
+                                        {settings.enableInvoice ? <span><FaPrint className={"me-1"}/> 結帳</span> : <span><FaShoppingBag className={"me-1"}/> 結帳</span> }
                                             </Button>
                                 </td>
                             </tr>
@@ -383,12 +383,13 @@ const Cart = () => {
             <Modal show={settings.showCustomerModal} backdrop={"static"} size={"lg"}>
                 <Form onSubmit={e => {e.preventDefault()}} className={"bg-dark text-white"}>
                     <Modal.Header>
-                        <Modal.Title>Customer details</Modal.Title>
+                        <Modal.Title>顧客資訊Customer details</Modal.Title>
                     </Modal.Header>
 
                     <Modal.Body>
 
                         <Form.Group className="mb-3" controlId="searchCustomer.ControlInput1">
+                            <Form.Label>電話號碼Phone</Form.Label>
                             <Form.Control
                                 type="phone"
                                 size={"lg"}
@@ -400,7 +401,7 @@ const Cart = () => {
                             />
 
                             <Form.Group>
-                                <Form.Label htmlFor={"customerName"}>Name</Form.Label>
+                                <Form.Label htmlFor={"customerName"}>顧客姓名Name</Form.Label>
                                 <Form.Control autoFocus onFocus={e => e.target.select()} id={"customerName"} value={selectedCustomer.name} type={"text"} size={"lg"} onChange={e => dispatch(handleCustomerChange({name: "name", value: e.target.value}))} className={"mb-2"} />
                             </Form.Group>
 
@@ -430,7 +431,7 @@ const Cart = () => {
                                     onBlur={handleBuyerIDChange}
                                     name={"buyer_id"}
                                     onFocus={e => e.target.select()}
-                                    placeholder={typeof selectedCustomer.buyer_id != "undefined" && selectedCustomer.buyer_id !== null ? selectedCustomer.buyer_id : "Buyer Tax ID"}
+                                    placeholder={typeof selectedCustomer.buyer_id != "undefined" && selectedCustomer.buyer_id !== null ? selectedCustomer.buyer_id : "統一編號Buyer Tax ID"}
                                 /> : <Form.Control
                                     id={"carrier_id"}
                                     type="text"
@@ -438,7 +439,7 @@ const Cart = () => {
                                     onChange={() => {}}
                                     onBlur={handleCarrierIDChange}
                                     onFocus={e => e.target.select()}
-                                    placeholder={typeof selectedCustomer.carrier_id != "undefined" && selectedCustomer.carrier_id !== null ? selectedCustomer.carrier_id : "Carrier ID"}
+                                    placeholder={typeof selectedCustomer.carrier_id != "undefined" && selectedCustomer.carrier_id !== null ? selectedCustomer.carrier_id : "載具號碼Carrier ID"}
                                     name={"carrier_id"}
 
                                 />}
@@ -476,7 +477,7 @@ const Cart = () => {
                                 </Form.Group> : null}
 
                             <Form.Group>
-                                <Form.Label htmlFor="inputDiscount" className={"me-2"}>Discount</Form.Label>
+                                <Form.Label htmlFor="inputDiscount" className={"me-2"}>折扣Discount</Form.Label>
                                 <div className={"d-flex flex-row"}>
                                     <Form.Control
                                         name={"discount_value"}
@@ -540,13 +541,13 @@ const Cart = () => {
             <Modal size={"lg"}  show={show_calculator} backdrop={"static"}>
                 <Form  className={"bg-dark text-white"}>
                     <Modal.Header>
-                        <Modal.Title className={"text-success"}>Congratulation on new order!</Modal.Title>
+                        <Modal.Title className={"text-success"}>訂單完成!</Modal.Title>
 
                     </Modal.Header>
 
                     <Modal.Body>
                         <Form.Group className="mb-3" controlId="searchCustomer.ControlInput1">
-                            <Form.Label>Total Amount</Form.Label>
+                            <Form.Label>總金額Total Amount</Form.Label>
                             <Form.Control
                                 type="text"
                                 size={"lg"}
@@ -557,7 +558,7 @@ const Cart = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3" controlId="searchCustomer.ControlInput2">
-                            <Form.Label>Received Amount</Form.Label>
+                            <Form.Label>收到金額Received Amount</Form.Label>
                             <Form.Control
                                 type="number"
                                 size={"lg"}
@@ -571,7 +572,7 @@ const Cart = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3" controlId="searchCustomer.ControlInput2">
-                            <Form.Label>Return</Form.Label>
+                            <Form.Label>找零Return</Form.Label>
                             <Form.Control
                                 type="text"
                                 size={"lg"}
