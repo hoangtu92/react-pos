@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import {syncCustomers} from "../features/customer/customerSlice";
 import Button from "react-bootstrap/Button";
 import {getCustomers} from "../features/cart/cartSlice";
@@ -8,9 +8,6 @@ import {syncProducts} from "../features/product/productSlice";
 
 const Customers = () => {
 
-    const {loading, error} = useSelector(
-        (state) => state.product
-    );
     const dispatch = useDispatch();
 
   useEffect(() => {
