@@ -255,6 +255,7 @@ export const cartSlice = createSlice({
             if(typeof state.orderObj.discount_value != "undefined") state.totalAmount -= state.orderObj.discount_value;
 
             state.totalAmount = Math.round(state.totalAmount);
+            if(state.totalAmount < 0) state.error = true;
         },
         increase: (state, action) => {
             const product = state.cartItems.find((item) => item.id === action.payload)
@@ -306,6 +307,9 @@ export const cartSlice = createSlice({
                 window.removeEventListener("message", msgListener, false);
             }
             window.addEventListener("message", msgListener, false);
+        },
+        setError: (state) => {
+            
         }
     },
     extraReducers: (builder) => {

@@ -5,7 +5,7 @@ import {Form} from "react-bootstrap";
 
 const CartTable = ({order_id, cartItems, dispatch}) => {
     return (
-        <table>
+        <table className={"mb-5"}>
             <colgroup>
                 <col width={"5%"}/>
                 <col width={"15%"}/>

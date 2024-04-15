@@ -26,6 +26,7 @@ import {clearCustomerValues,
 import {FaCircleCheck, FaTriangleExclamation} from "react-icons/fa6";
 import {toast} from "react-toastify";
 import {addCustomer} from "../features/customer/customerSlice";
+import SmoothScroll from "../components/SmoothScroll";
 
 const Cart = () => {
 
@@ -217,19 +218,21 @@ const Cart = () => {
     return (
         <div className={"cart-page d-flex"}>
             <section id="cart" className={"p-5"}>
-                {(cartItems.length > 0) ?
-                    <CartTable dispatch={dispatch} order_id={orderObj.order_id} cartItems={cartItems}/> :
-                    <div className="info-details">
-                        <div className={"icon-info d-flex w-100 justify-content-center flex-row align-items-center"}>
-                            <div className="icon">
-                                <Link to="/dashboard">
-                                    <FaHome className="icon-cart"/>
-                                </Link>
+                <SmoothScroll>
+                    {(cartItems.length > 0) ?
+                        <CartTable dispatch={dispatch} order_id={orderObj.order_id} cartItems={cartItems}/> :
+                        <div className="info-details">
+                            <div className={"icon-info d-flex w-100 justify-content-center flex-row align-items-center"}>
+                                <div className="icon">
+                                    <Link to="/dashboard">
+                                        <FaHome className="icon-cart"/>
+                                    </Link>
+                                </div>
+                                <span>Return to the main page and add products to the cart.</span>
                             </div>
-                            <span>Return to the main page and add products to the cart.</span>
                         </div>
-                    </div>
-                }
+                    }
+                </SmoothScroll>
             </section>
 
             <div className="cart-summary sidebarRight styled mt-4 p-4">
@@ -364,7 +367,7 @@ const Cart = () => {
                             <tr>
                                 <td></td>
                                 <td>
-                                    <Button variant={"warning"} size={"lg"} type="submit" onClick={handleSubmit} disabled={cartItems.length === 0 || loading}
+                                    <Button variant={"warning"} size={"lg"} type="submit" onClick={handleSubmit} disabled={cartItems.length === 0 || loading || error}
                                             className={'d-flex align-items-center'}>
                                         {settings.enableInvoice ? <span><FaPrint className={"me-1"}/> Checkout & Print Invoice</span> : <span><FaShoppingBag className={"me-1"}/> Checkout</span> }
                                             </Button>
