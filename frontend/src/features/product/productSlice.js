@@ -29,18 +29,18 @@ export const getProducts = createAsyncThunk('product/getProducts', async (query,
     try {
        const result =  await productService.getProducts(query);
         const settings = getLocalStorageSettings();
-       if(result.length === 1){
 
-            if(settings.scanMode){
+        if(settings.scanMode){
+            if(result.length === 1){
                 thunkAPI.dispatch(addToCart(result[0]));
-                thunkAPI.dispatch(handleChange({name: "query", value: ""}));
             }
+            else if(result.length === 0 && settings.scanMode){
+                toast.warn("無此商品請重新搜尋");
+            }
+            thunkAPI.dispatch(handleChange({name: "query", value: ""}));
+        }
 
 
-       }
-       else if(result.length === 0 && settings.scanMode){
-           toast.warn("無此商品請重新搜尋")
-       }
         return result;
     } catch (error) {
          return thunkAPI.rejectWithValue(error.response.data)
