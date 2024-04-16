@@ -26,7 +26,13 @@ export const syncProducts = createAsyncThunk('product/syncProducts', async (_, t
 
 export const getProducts = createAsyncThunk('product/getProducts', async (query, thunkAPI) => {
     try {
-       return  await productService.getProducts(query);
+       const result =  await productService.getProducts(query);
+       if(result.length === 1){
+            const settings = getLocalStorageSettings();
+            if(settings.scanMode)
+                thunkAPI.dispatch(addToCart(result[0]));
+       }
+        return result;
     } catch (error) {
          return thunkAPI.rejectWithValue(error.response.data)
     }

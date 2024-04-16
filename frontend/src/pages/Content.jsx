@@ -5,13 +5,11 @@ import ShoppingCart from "./ShoppingCart";
 import {getProducts} from "../features/product/productSlice";
 import ProductSearch from "../components/ProductSearch";
 import SmoothScroll from "../components/SmoothScroll";
-import {addToCart} from "../features/cart/cartSlice";
 
 const Content = () => {
 
     const dispatch = useDispatch();
     const {settings} = useSelector((state) => state.cart);
-    const {products} = useSelector((state) => state.product);
 
 
     const [query, setQuery] = useState("");
@@ -21,8 +19,12 @@ const Content = () => {
     }, [dispatch, query]);
 
     const onSubmit = (e) => {
-        if(products.length > 0)
-            dispatch(addToCart(products[0]))
+        setQuery(e.target.search.value)
+    }
+
+    const onChange = (e) => {
+        if(!settings.scanMode)
+            setQuery(e.target.value)
     }
 
 
@@ -30,8 +32,7 @@ const Content = () => {
         <>
             <div className={"d-flex"}>
                 <div className={"p-5 flex-grow-1"}>
-                    <ProductSearch dispatch={dispatch} settings={settings} onSubmit={onSubmit}
-                                   onChange={e => setQuery(e.target.value)}/>
+                    <ProductSearch dispatch={dispatch} settings={settings} onChange={onChange} onSubmit={onSubmit}/>
                     <SmoothScroll>
                         <Products/>
                     </SmoothScroll>
