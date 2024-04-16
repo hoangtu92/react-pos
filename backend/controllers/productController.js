@@ -14,8 +14,8 @@ const searchProducts = async (req, res) => {
         products = await Product.find({}, null,  { limit: 10, skip: 0 });
     }
     else{
-        let reg = new RegExp(query.replace(/\W/, ""), 'i');
-        products = await Product.find({$or: [{sku: query}, {name: reg}]}, null,  { limit: 12, skip: 0 })
+        const reg = new RegExp(query.replace(/\W/, ""), 'i');
+        products = await Product.find({$or: [{sku: new RegExp(query, "i")}, {name: reg}]}, null,  { limit: 12, skip: 0 })
     }
 
     res.status(201).json(products)
