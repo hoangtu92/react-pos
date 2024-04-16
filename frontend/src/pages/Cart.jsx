@@ -454,7 +454,7 @@ const Cart = () => {
 
                             {selectedCustomer.points > 0 ?
                                 <Form.Group className={"mb-2"}>
-                                    <Form.Label htmlFor="inputPoints" className={"me-2"}>Redeem Points
+                                    <Form.Label htmlFor="inputPoints" className={"me-2"}>使用狗狗幣Redeem Points
                                         (max: {selectedCustomer.points} points)</Form.Label>
                                     {orderObj.redeem_value > 0 ? <Badge bg="success">Off -NT$ {orderObj.redeem_value}</Badge> : null}
                                     <div className={"d-flex flex-row"}>
