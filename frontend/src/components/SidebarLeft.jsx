@@ -34,7 +34,7 @@ const SidebarLeft = () => {
           Orders
         </Link>
 
-        <Link to="/dashboard/customers" className={location.pathname === "/dashboard/customers" ? "bg-hover" : null}>
+        <Link to="/dashboard/sync" className={location.pathname === "/dashboard/sync" ? "bg-hover" : null}>
           <FaSync className="menu-icon" />
           Sync
         </Link>

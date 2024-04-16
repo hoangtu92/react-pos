@@ -3,9 +3,12 @@ const mongoose = require('mongoose');
 const ProductSchema = new mongoose.Schema(
 	{
 		sku: {
-			type: String,
-			required: [true, "SKU is required"]
+			type: String
 		},
+		barcode: {
+			type: String
+		},
+		categories: [],
 		name: {
 			type: String,
 			trim: true,

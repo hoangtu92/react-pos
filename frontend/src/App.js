@@ -10,8 +10,8 @@ import Orders from './pages/Orders'
 import Content from './pages/Content'
 import NotFound from './pages/NotFound'
 import PrivateRoute from './pages/PrivateRoute'
-import Customers from "./pages/Customers";
 import Cart from "./pages/Cart";
+import Sync from "./pages/Sync";
 
 function App() {
   return (
@@ -32,7 +32,7 @@ function App() {
             >
               <Route path='' element={<Content />} />
               <Route path='orders' element={<Orders />} />
-              <Route path='customers' element={<Customers />} />
+              <Route path='sync' element={<Sync />} />
               <Route path='cart' element={<Cart />} />
             </Route>
 

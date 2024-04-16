@@ -74,3 +74,13 @@ export const getLocalStorageSettings = () => {
     return JSON.parse(localStorage.getItem('settings'))
 }
 
+
+export const updateLocalStorageProductSync = (product_sync) => {
+    localStorage.setItem('product_sync', JSON.stringify(product_sync))
+}
+
+export const getLocalStorageProductSync = () => {
+    let result = JSON.parse(localStorage.getItem('product_sync'));
+    return result ?? {total_products: 0, synced_products: 0, synced_percent: 0, page: 1, look_back: 0, playing: false}
+}
+

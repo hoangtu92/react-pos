@@ -22,16 +22,47 @@ const searchProducts = async (req, res) => {
 }
 
 /**
- *
- * @param results
- * @param page
- * @param cb
- * @param perpage
+ * @route /api/product/count
+ * @param req
+ * @param res
  * @returns {Promise<void>}
  */
-const do_sync = async (results, page = 1, cb, perpage = 100) => {
+const countProducts = async (req, res) => {
+    let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/product/count`, {
+        method: "GET",
+        headers: {
+            'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
+            'Content-Type': 'application/json'
+        }
+    })
+    if(result.ok) {
+        const data = await result.json();
+        res.status(201).json({
+            status: false,
+            data:data,
+            msg: "Success"
+        })
+    }
+    else{
+        res.status(201).json({
+            status: false,
+            msg: result.statusText
+        })
+    }
 
-    let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/product/get?page=${page}&perpage=${perpage}`, {
+}
+
+/**
+ *
+ * @param page
+ * @param count
+ * @param look_back
+ * @param cb
+ * @returns {Promise<void>}
+ */
+const do_sync = async (page = 1, count,  look_back = 0, cb) => {
+
+    let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/product/get?page=${page}&perpage=20&count=${count}&look_back=${look_back}`, {
         method: "GET",
         headers: {
             'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
@@ -40,42 +71,50 @@ const do_sync = async (results, page = 1, cb, perpage = 100) => {
     })
     if(result.ok){
         const products = await result.json();
-        let created = [], updated = [];
 
-        for(let i=0; i< products.length; i++){
+        if(count > 0){
+            cb({
+                total: products.total_products
+            });
+        }
+        else{
+            let created = [], updated = [];
 
-            let {sku, name, price, image} = products[i];
+            for(let i=0; i< products.length; i++){
 
-            const exists = await Product.findOne({"sku": sku});
-            if(!exists){
-                const product = await Product.create({
-                    sku,
-                    name,
-                    price,
-                    image
-                });
-                created.push(product)
+                let {sku, name, price, image, barcode} = products[i];
+
+                const exists = await Product.findOne({"sku": sku});
+                if(!exists){
+                    const product = await Product.create({
+                        sku,
+                        barcode,
+                        name,
+                        price,
+                        image
+                    });
+                    created.push(product)
+                }
+                else{
+                    await Product.updateOne({"sku": sku},{
+                        name: name,
+                        price: price,
+                        image: image
+                    });
+                    updated.push(products[i]);
+                }
             }
-            else{
-                await Product.updateOne({"sku": sku},{
-                    name: name,
-                    price: price,
-                    image: image
-                });
-                updated.push(products[i]);
-            }
+
+            cb({
+                created: created,
+                updated: updated,
+                page: page,
+                total: created.length + updated.length
+            });
         }
 
-        results.push({
-            created: created,
-            updated: updated
-        });
 
-        if(products.length >= perpage){
-            page++;
-            await do_sync(results, page, cb, perpage)
-        }
-        else cb(true);
+
     }
     else cb(false);
 
@@ -88,10 +127,9 @@ const do_sync = async (results, page = 1, cb, perpage = 100) => {
  * @returns {Promise<void>}
  */
 const syncProduct = async(req, res) => {
-
-    let results = [];
-    await do_sync(results, 1, (status) => {
-      if(status){
+    const { page, look_back, count } = req.query;
+    await do_sync(page, count, look_back,  (results) => {
+      if(results){
           res.status(200).json(results)
       }
       else {
@@ -103,5 +141,6 @@ const syncProduct = async(req, res) => {
 
 module.exports = {
     syncProduct,
-    searchProducts
+    searchProducts,
+    countProducts
 }

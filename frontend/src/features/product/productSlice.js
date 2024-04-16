@@ -2,24 +2,60 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
 import productService from '../product/productService'
 import { toast } from 'react-toastify'
 import {addToCart} from "../cart/cartSlice";
-import {getLocalStorageSettings} from "../../utils/localStorage";
+import {
+    getLocalStorageProductSync,
+    getLocalStorageSettings,
+    updateLocalStorageProductSync
+} from "../../utils/localStorage";
+
+const syncObj = getLocalStorageProductSync();
 
 const initialState = {
     products: [],
-    filterProduct: [],
+    syncObj: syncObj,
     query: "",
-    name: '',
-    image: '',
-    price: '',
     error: false,
     loading: false,
-    isEditing: false,
-    editProductId: '',
 }
 
-export const syncProducts = createAsyncThunk('product/syncProducts', async (_, thunkAPI) => {
+export const syncProducts = createAsyncThunk('product/syncProducts', async (args, thunkAPI) => {
     try {
-        return await productService.productSync()
+        const result = await productService.productSync(args.page, args.look_back);
+
+        if(result.created.length > 0 || result.updated.length){
+
+            const syncObj = getLocalStorageProductSync();
+            if(syncObj.playing){
+                const next_page = args.page + 1;
+                thunkAPI.dispatch(syncProducts({page: next_page, look_back: args.look_back}))
+            }
+
+        }
+        return result
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response.data)
+    }
+})
+
+export const countProducts = createAsyncThunk('product/countProducts', async (_, thunkAPI) => {
+    try {
+
+        const syncObj = getLocalStorageProductSync();
+
+        const result = await productService.productCount( syncObj.look_back);
+
+        if(result.total > 0){
+            if(syncObj.page > 0){
+                thunkAPI.dispatch(syncProducts({page: syncObj.page, look_back: syncObj.look_back}))
+            }
+            else{
+                thunkAPI.dispatch(clearValues())
+                thunkAPI.dispatch(syncProducts({page: 1, look_back: syncObj.look_back}))
+            }
+        }
+
+
+        return result;
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response.data)
     }
@@ -58,37 +94,50 @@ export const productSlice = createSlice({
             return {
                 ...initialState,
             }
+        },
+        updateSyncProduct: (state, {payload: {name, value}}) => {
+             state.syncObj[name] = value;
+             updateLocalStorageProductSync(state.syncObj);
         }
     },
     extraReducers: (builder) => {
         builder
         .addCase(getProducts.pending, (state) => {
             state.loading = true
-        })
-        .addCase(getProducts.fulfilled, (state, action) => {
+        }).addCase(getProducts.fulfilled, (state, action) => {
             state.loading = false
             state.products = action.payload;
+        }).addCase(getProducts.rejected, (state, action) => {
+            state.loading = false
+            state.error = true
+        })
 
-        })
-        .addCase(getProducts.rejected, (state, action) => {
-            state.loading = false
-            state.error = true
-        })
         .addCase(syncProducts.pending, (state) => {
-            state.loading = true
-        })
-        .addCase(syncProducts.fulfilled, (state, action) => {
-            state.loading = false
+        }).addCase(syncProducts.fulfilled, (state, action) => {
             // update products state
-            toast.success('product successfully synced')
+            state.syncObj.synced_products += action.payload.total;
+            state.syncObj.page = parseInt(action.payload.page);
+            state.syncObj.synced_percent = (state.syncObj.synced_products/state.syncObj.total_products)*100;
+
+            if(state.syncObj.synced_percent === 100){
+                state.syncObj.page = 1;
+                state.syncObj.playing = false;
+                if(action.payload.total > 0)
+                    toast.success("Product syncing is completed!")
+            }
+            updateLocalStorageProductSync(state.syncObj);
+
+        }).addCase(syncProducts.rejected, (state, action) => {
+            toast.error("Error occurred while syncing!")
         })
-        .addCase(syncProducts.rejected, (state, action) => {
-            state.loading = false
-            state.error = true
+
+        .addCase(countProducts.fulfilled, (state, action) => {
+            state.syncObj.total_products = action.payload.total;
+            updateLocalStorageProductSync(state.syncObj);
         })
     }
 })
 
-export const { handleChange, clearValues } = productSlice.actions;
+export const { handleChange, clearValues, updateSyncProduct } = productSlice.actions;
 export default productSlice.reducer
 

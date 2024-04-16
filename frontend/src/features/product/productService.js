@@ -1,7 +1,12 @@
 import httpRequest from '../../utils/request'
 
-const productSync = async () => {
-    const response = await httpRequest.get("/product/sync")
+const productSync = async (page = 0, look_back = 0) => {
+    const response = await httpRequest.get(`/product/sync?page=${page}&look_back=${look_back}&count=0`)
+    return response.data
+}
+
+const productCount = async (look_back) => {
+    const response = await httpRequest.get(`/product/sync?look_back=${look_back}&count=1`)
     return response.data
 }
 
@@ -16,7 +21,8 @@ const getProducts = async (query) => {
 }
 const productService = {
     productSync,
-    getProducts
+    getProducts,
+    productCount
 }
 
 export default productService
