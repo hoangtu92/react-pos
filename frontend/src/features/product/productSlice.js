@@ -7,6 +7,7 @@ import {getLocalStorageSettings} from "../../utils/localStorage";
 const initialState = {
     products: [],
     filterProduct: [],
+    query: "",
     name: '',
     image: '',
     price: '',
@@ -27,10 +28,18 @@ export const syncProducts = createAsyncThunk('product/syncProducts', async (_, t
 export const getProducts = createAsyncThunk('product/getProducts', async (query, thunkAPI) => {
     try {
        const result =  await productService.getProducts(query);
+        const settings = getLocalStorageSettings();
        if(result.length === 1){
-            const settings = getLocalStorageSettings();
-            if(settings.scanMode)
+
+            if(settings.scanMode){
                 thunkAPI.dispatch(addToCart(result[0]));
+                thunkAPI.dispatch(handleChange({name: "query", value: ""}));
+            }
+
+
+       }
+       else if(result.length === 0 && settings.scanMode){
+           toast.warn("無此商品請重新搜尋")
        }
         return result;
     } catch (error) {
