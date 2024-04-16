@@ -21,6 +21,7 @@ const Content = () => {
     const onSubmit = (e) => {
         e.preventDefault();
         setQuery(e.target.search.value);
+        e.target.reset()
         return false;
     }
 
