@@ -19,7 +19,9 @@ const Content = () => {
     }, [dispatch, query]);
 
     const onSubmit = (e) => {
-        setQuery(e.target.search.value)
+        e.preventDefault();
+        setQuery(e.target.search.value);
+        return false;
     }
 
     const onChange = (e) => {
