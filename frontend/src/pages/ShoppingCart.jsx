@@ -5,10 +5,11 @@ import {
   decrease,
   productSubTotal,
   productTotalAmount,
-  removeCartItem,
+  removeCartItem, clearCart,
 } from "../features/cart/cartSlice";
 import { useSelector, useDispatch } from "react-redux";
 import {FaTrashAlt} from "react-icons/fa";
+import Button from "react-bootstrap/Button";
 
 const ShoppingCart = () => {
   const { cartItems, subTotal, totalAmount } = useSelector(
@@ -26,82 +27,77 @@ const ShoppingCart = () => {
   return (
     <div className="cart">
 
-      <header className={"mb-2"}>
-
+      <header className={"mb-2 d-flex justify-content-end"}>
+        {cartItems.length === 0 ? (
+            <div className="cart-empty">
+              <div className="cart-title">
+                <span>There are no products in the cart.</span>
+              </div>
+            </div>
+        ) : <Button variant={"danger"} className={""} size={"sm"} onClick={() => dispatch(clearCart())}><FaTrashAlt/></Button>}
 
       </header>
-        {cartItems.length === 0 && (
-            <div className="cart-empty">
-          <div className="cart-title">
-            <span>There are no products in the cart.</span>
-          </div>
-            </div>
-        )}
 
 
       <div className={"cart-container"}>
 
-        {cartItems ? (
-            cartItems.map((cart) => (
-                <div className="cart-items mb-2" key={cart.id}>
-                  <div className="image">
-                    {cart.image ? (
-                        <img className="product-image" src={"https://justdog.tw/wp-content/uploads/"+ cart.image} alt="..." />
-                    ) : (
-                        <img
-                            className="default-image"
-                            src={require("../images/product.png")}
-                            alt="..."
-                        />
-                    )}
-                  </div>
+        {cartItems ? cartItems.map((cart) => (
+              <div className="cart-items mb-2" key={cart.id}>
+                <div className="image">
+                  {cart.image ? (
+                      <img className="product-image" src={"https://justdog.tw/wp-content/uploads/"+ cart.image} alt="..." />
+                  ) : (
+                      <img
+                          className="default-image"
+                          src={require("../images/product.png")}
+                          alt="..."
+                      />
+                  )}
+                </div>
 
-                  <div className="info">
-                    <h4 className={"m-0"}>{cart.name}</h4>
+                <div className="info">
+                  <h4 className={"m-0"}>{cart.name}</h4>
 
-                    <button
-                        className="remove-item"
-                        type="button"
-                        onClick={() => {
-                          dispatch(removeCartItem(cart.id));
-                        }}
-                    >
-                      <FaTrashAlt size={14}/>
-                    </button>
+                  <button
+                      className="remove-item"
+                      type="button"
+                      onClick={() => {
+                        dispatch(removeCartItem(cart.id));
+                      }}
+                  >
+                    <FaTrashAlt size={14}/>
+                  </button>
 
-                    <div className="details">
-                      <div className="price">
-                        <span>$ {cart.price}</span>
-                      </div>
+                  <div className="details">
+                    <div className="price">
+                      <span>$ {cart.price}</span>
+                    </div>
 
-                      <div className="count">
-                        <button
-                            className="decrement-btn"
-                            type="button"
-                            onClick={() => {
-                              dispatch(decrease(cart.id));
-                            }}
-                        >
-                          -
-                        </button>
-                        <span className="amount">{cart.quantity}</span>
-                        <button
-                            className="increment-btn"
-                            type="button"
-                            onClick={() => {
-                              dispatch(increase(cart.id));
-                            }}
-                        >
-                          +
-                        </button>
-                      </div>
+                    <div className="count">
+                      <button
+                          className="decrement-btn"
+                          type="button"
+                          onClick={() => {
+                            dispatch(decrease(cart.id));
+                          }}
+                      >
+                        -
+                      </button>
+                      <span className="amount">{cart.quantity}</span>
+                      <button
+                          className="increment-btn"
+                          type="button"
+                          onClick={() => {
+                            dispatch(increase(cart.id));
+                          }}
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
                 </div>
-            ))
-        ) : (
-            <div>Products Loading...</div>
-        )}
+              </div>
+          )) : null}
 
       </div>
 
