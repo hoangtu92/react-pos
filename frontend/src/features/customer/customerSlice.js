@@ -2,16 +2,55 @@ import {createSlice, createAsyncThunk} from "@reduxjs/toolkit"
 import customerService from "./customerService";
 import {toast} from 'react-toastify'
 import {handleCustomerChange} from "../cart/cartSlice";
+import {
+    getLocalStorageCustomerSync,
+    updateLocalStorageCustomerSync,
+} from "../../utils/localStorage";
 
-
+const syncObj = getLocalStorageCustomerSync();
 const initialState = {
+    syncObj: syncObj ?? [],
     error: false,
     loading: false,
 }
 
-export const syncCustomers = createAsyncThunk('customer/syncCustomer', async (_, thunkAPI) => {
+export const syncCustomers = createAsyncThunk('customer/syncCustomer', async (args, thunkAPI) => {
     try {
-        return await customerService.customerSync()
+        const result = await customerService.customerSync(args);
+
+        if(result.created.length > 0 || result.updated.length){
+
+            const syncObj = getLocalStorageCustomerSync();
+            if(syncObj.playing){
+                const next_page = args.page + 1;
+                thunkAPI.dispatch(syncCustomers({page: next_page}))
+            }
+        }
+        return result
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response.data)
+    }
+});
+
+export const countCustomers = createAsyncThunk('customer/countCustomers', async (_, thunkAPI) => {
+    try {
+
+        const syncObj = getLocalStorageCustomerSync();
+
+        const result = await customerService.customerCount();
+
+        if(result.total > 0){
+            if(syncObj.page > 0){
+                thunkAPI.dispatch(syncCustomers({page: syncObj.page}))
+            }
+            else{
+                thunkAPI.dispatch(clearValues())
+                thunkAPI.dispatch(syncCustomers({page: 1}))
+            }
+        }
+
+
+        return result;
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response.data)
     }
@@ -35,20 +74,39 @@ export const customerSlice = createSlice({
     name: 'customer',
     initialState,
     reducers: {
-
+        clearValues: () => {
+            return {
+                ...initialState,
+            }
+        },
+        updateSyncCustomer: (state, {payload: {name, value}}) => {
+            state.syncObj[name] = value;
+            updateLocalStorageCustomerSync(state.syncObj);
+        }
     },
 
     extraReducers: (builder) => {
         builder
-            .addCase(syncCustomers.pending, (state) => {
-                state.loading = true
-            }).addCase(syncCustomers.fulfilled, (state, action) => {
-                state.loading = false
-                // update customers state
-                toast.success('customer successfully synced')
+            .addCase(syncCustomers.fulfilled, (state, action) => {
+                state.syncObj.synced_customers += action.payload.total;
+                state.syncObj.page = parseInt(action.payload.page);
+                state.syncObj.synced_percent = (state.syncObj.synced_customers/state.syncObj.total_customers)*100;
+
+                if(state.syncObj.synced_percent === 100){
+                    state.syncObj.page = 1;
+                    state.syncObj.playing = false;
+                    if(action.payload.total > 0)
+                        toast.success('customer successfully synced!')
+                }
+                updateLocalStorageCustomerSync(state.syncObj);
+
             }).addCase(syncCustomers.rejected, (state, action) => {
-                state.loading = false
-                state.error = true
+                toast.error("Error occurred while syncing!")
+            })
+
+            .addCase(countCustomers.fulfilled, (state, action) => {
+                state.syncObj.total_customers = action.payload.total;
+                updateLocalStorageCustomerSync(state.syncObj);
             })
 
             .addCase(addCustomer.pending, (state) => {
@@ -65,6 +123,6 @@ export const customerSlice = createSlice({
     }
 })
 
-//export const {} = customerSlice.actions;
+export const {updateSyncCustomer, clearValues} = customerSlice.actions;
 export default customerSlice.reducer
 

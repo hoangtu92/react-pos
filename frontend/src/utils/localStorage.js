@@ -84,3 +84,13 @@ export const getLocalStorageProductSync = () => {
     return result ?? {total_products: 0, synced_products: 0, synced_percent: 0, page: 1, look_back: 0, playing: false}
 }
 
+
+export const updateLocalStorageCustomerSync = (product_sync) => {
+    localStorage.setItem('customer_sync', JSON.stringify(product_sync))
+}
+
+export const getLocalStorageCustomerSync = () => {
+    let result = JSON.parse(localStorage.getItem('customer_sync'));
+    return result ?? {total_customers: 0, synced_customers: 0, synced_percent: 0, page: 1, playing: false}
+}
+

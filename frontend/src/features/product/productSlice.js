@@ -112,8 +112,7 @@ export const productSlice = createSlice({
             state.error = true
         })
 
-        .addCase(syncProducts.pending, (state) => {
-        }).addCase(syncProducts.fulfilled, (state, action) => {
+        .addCase(syncProducts.fulfilled, (state, action) => {
             // update products state
             state.syncObj.synced_products += action.payload.total;
             state.syncObj.page = parseInt(action.payload.page);

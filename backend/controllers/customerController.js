@@ -25,9 +25,9 @@ const searchCustomers = async (req, res) => {
     res.status(201).json(customers)
 }
 
-const do_sync = async (results, page = 1, cb, perpage = 100) => {
+const do_sync = async (page = 1, count, cb) => {
 
-    let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/customer/get?page=${page}&per_page=${perpage}`, {
+    let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/customer/get?page=${page}&per_page=20&count=${count}`, {
         method: "GET",
         headers: {
             'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
@@ -36,53 +36,58 @@ const do_sync = async (results, page = 1, cb, perpage = 100) => {
     })
     if(result.ok){
         const customers = await result.json();
-        let created = [], updated = [];
 
-        for(let i=0; i< customers.length; i++){
+        if(count > 0){
+            cb({
+                total: customers.total_customers
+            });
+        }
+        else{
+            let created = [], updated = [];
 
-            let {phone, name , avatar, user_id, email, buyer_id, carrier_id, points} = customers[i];
+            for(let i=0; i< customers.length; i++){
 
-            if(phone){
-                const exists = await Customer.findOne({"phone": phone});
-                if(!exists){
-                    const customer = await Customer.create({
-                        user_id,
-                        avatar,
-                        name,
-                        phone,
-                        email,
-                        buyer_id,
-                        carrier_id,
-                        points
-                    });
-                    created.push(customer)
-                }
-                else{
-                    await Customer.updateOne({"phone": phone},{
-                        user_id,
-                        avatar,
-                        name,
-                        phone,
-                        email,
-                        buyer_id,
-                        carrier_id,
-                        points
-                    });
-                    updated.push(customers[i]);
+                let {phone, name , avatar, user_id, email, buyer_id, carrier_id, points} = customers[i];
+
+                if(phone){
+                    const exists = await Customer.findOne({"phone": phone});
+                    if(!exists){
+                        const customer = await Customer.create({
+                            user_id,
+                            avatar,
+                            name,
+                            phone,
+                            email,
+                            buyer_id,
+                            carrier_id,
+                            points
+                        });
+                        created.push(customer)
+                    }
+                    else{
+                        await Customer.updateOne({"phone": phone},{
+                            user_id,
+                            avatar,
+                            name,
+                            phone,
+                            email,
+                            buyer_id,
+                            carrier_id,
+                            points
+                        });
+                        updated.push(customers[i]);
+                    }
                 }
             }
+            cb({
+                created: created,
+                updated: updated,
+                page: page,
+                total: created.length + updated.length
+            });
         }
 
-        results.push({
-            created: created,
-            updated: updated
-        });
 
-        if(customers.length >= perpage){
-            page++;
-            await do_sync(results, page, cb, perpage)
-        }
-        else cb(true);
     }
     else cb(false);
 
@@ -91,10 +96,9 @@ const do_sync = async (results, page = 1, cb, perpage = 100) => {
 // @route /api/customer/sync
 // @desc Sync customer with justdog
 const syncCustomer = async(req, res) => {
-
-    let results = [];
-    await do_sync(results, 1, (status) => {
-        if(status){
+    const { page, count } = req.query;
+    await do_sync(page, count, (results) => {
+        if(results){
             res.status(200).json(results)
         }
         else {
