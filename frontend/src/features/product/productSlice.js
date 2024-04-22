@@ -118,16 +118,16 @@ export const productSlice = createSlice({
             state.syncObj.page = parseInt(action.payload.page);
             state.syncObj.synced_percent = (state.syncObj.synced_products/state.syncObj.total_products)*100;
 
-            if(state.syncObj.synced_percent === 100){
+            if(Math.round(state.syncObj.synced_percent) === 100){
                 state.syncObj.page = 1;
                 state.syncObj.playing = false;
-                if(action.payload.total > 0)
-                    toast.success("Product syncing is completed!")
+                toast.success("Product syncing is completed!")
             }
             updateLocalStorageProductSync(state.syncObj);
 
         }).addCase(syncProducts.rejected, (state, action) => {
-            toast.error("Error occurred while syncing!")
+            toast.error("Error occurred while syncing!");
+            state.syncObj.playing = false;
         })
 
         .addCase(countProducts.fulfilled, (state, action) => {

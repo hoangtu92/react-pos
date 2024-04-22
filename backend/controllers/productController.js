@@ -15,7 +15,7 @@ const searchProducts = async (req, res) => {
     }
     else{
         const reg = new RegExp(query.replace(/\W/, ""), 'i');
-        products = await Product.find({$or: [{sku: new RegExp(query, "i")}, {name: reg}]}, null,  { limit: 12, skip: 0 })
+        products = await Product.find({$or: [{sku: new RegExp(query, "i")}, {barcode: new RegExp(query, "i")}, {name: reg}]}, null,  { limit: 12, skip: 0 })
     }
 
     res.status(201).json(products)
@@ -98,6 +98,7 @@ const do_sync = async (page = 1, count,  look_back = 0, cb) => {
                 else{
                     await Product.updateOne({"sku": sku},{
                         name: name,
+                        barcode: barcode,
                         price: price,
                         image: image
                     });
