@@ -428,6 +428,13 @@ const syncOrder = async(req, res) => {
             }
         }
 
+        if(order.orderType === "ubereat"){
+            data["meta_data"].push({
+                "key": "_billing_first_name",
+                "value": "ubereat"
+            });
+        }
+
         //console.log(data);
         try {
             const result = await api.put("orders/" + order_id, data);
