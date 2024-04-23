@@ -14,8 +14,11 @@ const searchProducts = async (req, res) => {
         products = await Product.find({}, null,  { limit: 20, skip: 0 }).sort('-date');
     }
     else{
-        const reg = new RegExp(query.replace(new RegExp("\\\\", "g"), ""), "i");
-        products = await Product.find({$or: [{sku: reg}, {barcode: reg}, {name: reg}]}, null,  { limit: 20, skip: 0 })
+        const filtered_query = query.replace(new RegExp("\\\\", "g"), "");
+        const reg_1 = new RegExp(`^${filtered_query}\$`, "i");
+        const reg_2 = new RegExp(filtered_query, "i");
+
+        products = await Product.find({$or: [{sku: reg_1}, {barcode: reg_1}, {name: reg_2}]}, null,  { limit: 20, skip: 0 })
     }
 
     res.status(201).json(products)
