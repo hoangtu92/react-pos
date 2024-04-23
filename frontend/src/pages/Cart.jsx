@@ -38,7 +38,7 @@ const Cart = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-
+    const [carrierId, setCarrierId] = useState("");
     const [receivedCash, setReceiveCash] = useState(0);
     const [customerUpdated, setCustomerUpdated] = useState(false);
     const [showCustomAmountModal, setShowCustomAmountModal] = useState(false);
@@ -176,9 +176,9 @@ const Cart = () => {
         }
     }
 
-    const handleCarrierIDChange = (e) => {
-        if(e.target.value.length > 0 && e.target.value !== selectedCustomer.carrier_id){
-            dispatch(validateCarrierID(e.target.value))
+    const handleCarrierIDChange = () => {
+        if(carrierId.length > 0){
+            dispatch(validateCarrierID(carrierId))
         }
     }
 
@@ -355,6 +355,7 @@ const Cart = () => {
                                                 className={"align-items-end flex-row justify-content-end"}
                                                 id="issueInvoice"
                                                 checked={settings.enableInvoice}
+                                                disabled={selectedCustomer.carrier_id.length > 0}
                                                 onChange={e => {
                                                     dispatch(updateSettings({name: "enableInvoice", value: e.target.checked}))
                                                 }}
@@ -436,17 +437,18 @@ const Cart = () => {
                                     id={"carrier_id"}
                                     type="text"
                                     size={"lg"}
-                                    onChange={() => {}}
+                                    onChange={(e) => setCarrierId(e.target.value)}
                                     onBlur={handleCarrierIDChange}
                                     onFocus={e => e.target.select()}
-                                    placeholder={typeof selectedCustomer.carrier_id != "undefined" && selectedCustomer.carrier_id !== null ? selectedCustomer.carrier_id : "載具號碼Carrier ID"}
+                                    value={carrierId}
+                                    placeholder={typeof selectedCustomer.carrier_id != "undefined" ? selectedCustomer.carrier_id : "載具號碼Carrier ID"}
                                     name={"carrier_id"}
 
                                 />}
 
                                 <InputGroup.Text id="govid">
                                     <Button variant={"secondary"} onClick={e => dispatch(handleCustomerChange({name: selectedCustomer.is_b2b ? "buyer_id" : "carrier_id", value: ""}))}><FaEraser/></Button>
-                                    <Button className={"ms-2"} variant={"success"} onClick={() => {}}><FaCircleCheck/></Button>
+                                    <Button className={"ms-2"} variant={"success"} onClick={handleCarrierIDChange}><FaCircleCheck/></Button>
                                 </InputGroup.Text>
 
                                 </InputGroup>

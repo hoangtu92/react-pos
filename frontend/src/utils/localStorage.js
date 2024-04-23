@@ -34,11 +34,14 @@ export const setLocalStorageCustomer = (customer) => {
 }
 
 export const getLocalStorageCustomer = () => {
+    const customer = {name: "Guest checkout", user_id: "", phone: "", email: "", points: 0, is_b2b: false, carrier_id: "", buyer_id: ""};
     try{
-        return JSON.parse(localStorage.getItem('customer'))
+        let a = JSON.parse(localStorage.getItem('customer'));
+        if(a == null) a = customer;
+        return a;
     }
     catch(e){
-        return null;
+        return customer;
     }
 }
 

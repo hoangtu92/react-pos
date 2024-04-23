@@ -19,12 +19,11 @@ const cartItems = getLocalStorageCart()
 const orderObj = getLocalStorageOrder()
 const settings = getLocalStorageSettings()
 const selectedCustomer = getLocalStorageCustomer();
-const guest = {name: "Guest checkout", phone: "", email: "", points: 0, is_b2b: false};
 
 const initialState = {
     cartItems: cartItems ?? [],
     customers: [],
-    selectedCustomer: selectedCustomer ?? guest,
+    selectedCustomer: selectedCustomer,
     orderObj: orderObj,
     order: {},
     totalCount: 0,
@@ -217,7 +216,7 @@ export const cartSlice = createSlice({
             setLocalStorageCustomer(state.selectedCustomer)
         },
         clearCustomerValues: (state) => {
-            state.selectedCustomer = guest;
+            state.selectedCustomer = {name: "Guest checkout", user_id: "", phone: "", email: "", points: 0, is_b2b: false, carrier_id: "", buyer_id: ""};
             state.customers = [];
             deleteLocalStorageCustomer();
         },
@@ -451,15 +450,17 @@ export const cartSlice = createSlice({
             .addCase(validateCarrierID.pending, (state) => {
                 state.loading = true
                 state.error = false
-            }).addCase(validateCarrierID.fulfilled, (state) => {
+            }).addCase(validateCarrierID.fulfilled, (state, action) => {
                 state.loading = false;
                 toast.success("Carrier ID is valid");
-                //state.settings.showCustomerModal = false;
+                state.settings.enableInvoice = false;
+                console.log(action.payload)
+                state.selectedCustomer.carrier_id = action.payload.carrier_id
                 updateSettings(state.settings);
             }).addCase(validateCarrierID.rejected, (state) => {
                 state.loading = false
                 state.error = true;
-                toast.error("Invalid Carrier ID");
+                toast.error("載具號碼錯誤");
             })
     }
 })

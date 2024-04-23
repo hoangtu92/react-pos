@@ -91,6 +91,7 @@ const validateCarrierId = async (req, res) => {
             if(data.Status === "0"){
                 res.status(201).json({
                     status: true,
+                    carrier_id: carrier_id,
                     msg: data.Desc,
                     data: data
                 })
