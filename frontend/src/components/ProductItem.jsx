@@ -1,6 +1,6 @@
-import { React, useEffect } from "react";
+import { React } from "react";
 import { addToCart } from "../features/cart/cartSlice";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 
 
 const ProductItem = ({ product }) => {
@@ -29,8 +29,8 @@ const ProductItem = ({ product }) => {
 
       <div className="product-cart-detail">
         <h4>{product.name}</h4>
-          <h5>(#{product.sku})</h5>
-        <p className="product-price">$ {product.price}</p>
+          <h5 className={"text-body-emphasis"}>(#{product.sku})</h5>
+        {product.price > 0 ? <p className="product-price">{product.original_price > 0 && product.price !== product.original_price ? <del className={"text-secondary pe-2"}>${product.original_price}</del> : null}${product.price}</p> : null}
       </div>
 
     </div>

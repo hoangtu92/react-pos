@@ -11,7 +11,7 @@ const Products = () => {
     };
 
     return (
-        <div className={"product-container pt-5 d-flex flex-column flex-grow-1 pe-3 ps-3"}>
+        <div className={"product-container pt-5 pb-5 d-flex flex-column flex-grow-1 pe-3 ps-3"}>
 
             <div className="product-content">
                 {loading ? (

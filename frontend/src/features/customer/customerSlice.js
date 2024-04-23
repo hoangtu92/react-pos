@@ -92,15 +92,14 @@ export const customerSlice = createSlice({
                 state.syncObj.page = parseInt(action.payload.page);
                 state.syncObj.synced_percent = (state.syncObj.synced_customers/state.syncObj.total_customers)*100;
 
-                if(state.syncObj.synced_percent === 100){
+                if(Math.round(state.syncObj.synced_percent) === 100 && action.payload.total === 0){
                     state.syncObj.page = 1;
                     state.syncObj.playing = false;
-                    if(action.payload.total > 0)
-                        toast.success('customer successfully synced!')
+                    toast.success('customer successfully synced!')
                 }
                 updateLocalStorageCustomerSync(state.syncObj);
 
-            }).addCase(syncCustomers.rejected, (state, action) => {
+            }).addCase(syncCustomers.rejected, () => {
                 toast.error("Error occurred while syncing!")
             })
 
@@ -111,11 +110,11 @@ export const customerSlice = createSlice({
 
             .addCase(addCustomer.pending, (state) => {
                 state.loading = true
-            }).addCase(addCustomer.fulfilled, (state, action) => {
+            }).addCase(addCustomer.fulfilled, (state) => {
                 state.loading = false
                 // update customers state
                 //toast.success('New customer successfully added')
-            }).addCase(addCustomer.rejected, (state, action) => {
+            }).addCase(addCustomer.rejected, (state) => {
                 state.loading = false
                 state.error = true
             })

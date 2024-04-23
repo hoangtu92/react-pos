@@ -8,15 +8,18 @@ const ProductSchema = new mongoose.Schema(
 		barcode: {
 			type: String
 		},
-		categories: [],
+		categories_ids: [],
+		product_ids: [],
 		name: {
 			type: String,
-			trim: true,
-			required: [true, 'Please provide product name'],
+			trim: true
 		},
 		price: {
 			type: Number,
-			required: [true, 'Please provide product price'],
+			default: 0,
+		},
+		original_price: {
+			type: Number,
 			default: 0,
 		},
 		image: {

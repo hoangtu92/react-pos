@@ -11,7 +11,7 @@ const searchProducts = async (req, res) => {
 
     let products;
     if(typeof query == 'undefined' || query === ""){
-        products = await Product.find({}, null,  { limit: 10, skip: 0 });
+        products = await Product.find({}, null,  { limit: 20, skip: 0 }).sort('-date');
     }
     else{
         const reg = new RegExp(query.replace(/\W/, ""), 'i');
@@ -82,7 +82,7 @@ const do_sync = async (page = 1, count,  look_back = 0, cb) => {
 
             for(let i=0; i< products.length; i++){
 
-                let {sku, name, price, image, barcode} = products[i];
+                let {sku, name, price, image, barcode, original_price} = products[i];
 
                 const exists = await Product.findOne({"sku": sku});
                 if(!exists){
@@ -91,6 +91,7 @@ const do_sync = async (page = 1, count,  look_back = 0, cb) => {
                         barcode,
                         name,
                         price,
+                        original_price,
                         image
                     });
                     created.push(product)
@@ -100,6 +101,7 @@ const do_sync = async (page = 1, count,  look_back = 0, cb) => {
                         name: name,
                         barcode: barcode,
                         price: price,
+                        original_price,
                         image: image
                     });
                     updated.push(products[i]);

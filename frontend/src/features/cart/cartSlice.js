@@ -238,17 +238,17 @@ export const cartSlice = createSlice({
             } else {
                 // index -1
                 // New product to cart add
-                state.cartItems.push({...action.payload, quantity: 1})
+                state.cartItems.push({...action.payload, quantity: 1});
             }
             addLocalStorageCart(state.cartItems)
         },
-        productSubTotal: (state, action) => {
+        productSubTotal: (state) => {
             state.subTotal = state.cartItems.reduce((subTotal, product) => {
                 const {price, quantity} = product
                 return subTotal + price * quantity
             }, 0)
         },
-        productTotalAmount: (state, action) => {
+        productTotalAmount: (state) => {
             state.totalAmount = state.subTotal;
 
             if(typeof state.orderObj.redeem_value != "undefined") state.totalAmount -=  state.orderObj.redeem_value;
@@ -281,7 +281,7 @@ export const cartSlice = createSlice({
             state.cartItems = state.cartItems.filter((item) => item.id !== action.payload)
             addLocalStorageCart(state.cartItems)
         },
-        hideCalculator: (state, action) => {
+        hideCalculator: (state) => {
             state.show_calculator = false;
         },
         updateOrderDetail: (state, {payload: {name, value}}) => {
@@ -308,8 +308,8 @@ export const cartSlice = createSlice({
             }
             window.addEventListener("message", msgListener, false);
         },
-        setError: (state) => {
-            
+        setError: () => {
+
         }
     },
     extraReducers: (builder) => {
@@ -322,27 +322,27 @@ export const cartSlice = createSlice({
                 state.error = false;
                 state.orderObj.order_id = action.payload.order_id;
                 addLocalStorageOrder(state.orderObj);
-            }).addCase(orderCreate.rejected, (state, action) => {
+            }).addCase(orderCreate.rejected, (state) => {
                 state.loading = false
                 state.error = true
             })
             // update order to local pos
             .addCase(updateOrder.pending, (state) => {
                 state.loading = true;
-            }).addCase(updateOrder.fulfilled, (state, action) => {
+            }).addCase(updateOrder.fulfilled, (state) => {
                 state.error = false;
                 state.show_calculator = true;
-            }).addCase(updateOrder.rejected, (state, action) => {
+            }).addCase(updateOrder.rejected, (state) => {
                 state.loading = false
                 state.error = true
             })
             // sync order with justdog
             .addCase(syncOrder.pending, (state) => {
                 state.loading = true;
-            }).addCase(syncOrder.fulfilled, (state, action) => {
+            }).addCase(syncOrder.fulfilled, (state) => {
                 state.loading = false;
                 state.error = false;
-            }).addCase(syncOrder.rejected, (state, action) => {
+            }).addCase(syncOrder.rejected, (state) => {
                 state.loading = false
                 state.error = true
             })
@@ -356,7 +356,7 @@ export const cartSlice = createSlice({
                 if(!result.jd_order.is_editable){
                     state.show_calculator = true;
                 }
-            }).addCase(getOrder.rejected, (state, action) => {
+            }).addCase(getOrder.rejected, (state) => {
                 state.loading = false
                 state.error = true
             })
@@ -372,7 +372,7 @@ export const cartSlice = createSlice({
                     state.selectedCustomer = state.customers[0];
                     setLocalStorageCustomer(state.selectedCustomer)
                 }
-            }).addCase(getCustomers.rejected, (state, action) => {
+            }).addCase(getCustomers.rejected, (state) => {
                 state.loading = false
                 state.error = true
             })
@@ -380,10 +380,10 @@ export const cartSlice = createSlice({
             // Add customer to order in justdog
             .addCase(addCustomer.pending, (state) => {
                 state.loading = true
-            }).addCase(addCustomer.fulfilled, (state, action) => {
+            }).addCase(addCustomer.fulfilled, (state) => {
                 state.loading = false;
                 state.error = false;
-            }).addCase(addCustomer.rejected, (state, action) => {
+            }).addCase(addCustomer.rejected, (state) => {
                 state.loading = false
                 state.error = true
             })
@@ -391,17 +391,17 @@ export const cartSlice = createSlice({
             // Remove order
             .addCase(removeOrder.pending, (state) => {
                 state.loading = true;
-            }).addCase(removeOrder.fulfilled, (state, action) => {
+            }).addCase(removeOrder.fulfilled, (state) => {
                 state.loading = false;
                 state.error = false;
                 //toast.success('order successfully deleted')
-            }).addCase(removeOrder.rejected, (state, action) => {
+            }).addCase(removeOrder.rejected, (state) => {
                 state.loading = false
                 state.error = true
             })
 
             // Calc point
-            .addCase(calcPoint.pending, (state, action) => {
+            .addCase(calcPoint.pending, (state) => {
                 state.loading = true;
 
             }).addCase(calcPoint.rejected, (state, action) => {
@@ -420,10 +420,10 @@ export const cartSlice = createSlice({
             })
 
             // Get point
-            .addCase(getPoints.pending, (state, action) => {
+            .addCase(getPoints.pending, (state) => {
                 state.loading = true;
 
-            }).addCase(getPoints.rejected, (state, action) => {
+            }).addCase(getPoints.rejected, (state) => {
                 state.loading = false;
             }).addCase(getPoints.fulfilled, (state, action) => {
                 state.loading = false;
@@ -448,15 +448,15 @@ export const cartSlice = createSlice({
                 toast.error(action.payload.msg)
             })
 
-            .addCase(validateCarrierID.pending, (state, action) => {
+            .addCase(validateCarrierID.pending, (state) => {
                 state.loading = true
                 state.error = false
-            }).addCase(validateCarrierID.fulfilled, (state, action) => {
+            }).addCase(validateCarrierID.fulfilled, (state) => {
                 state.loading = false;
                 toast.success("Carrier ID is valid");
                 //state.settings.showCustomerModal = false;
                 updateSettings(state.settings);
-            }).addCase(validateCarrierID.rejected, (state, action) => {
+            }).addCase(validateCarrierID.rejected, (state) => {
                 state.loading = false
                 state.error = true;
                 toast.error("Invalid Carrier ID");

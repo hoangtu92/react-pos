@@ -3,7 +3,7 @@ import {FaTimes} from "react-icons/fa";
 import {React} from "react";
 import {Form} from "react-bootstrap";
 
-const CartTable = ({order_id, cartItems, dispatch}) => {
+const CartTable = ({cartItems, dispatch}) => {
     return (
         <table className={"mb-5"}>
             <colgroup>
@@ -80,7 +80,7 @@ const CartTable = ({order_id, cartItems, dispatch}) => {
                                 </button>
                             </div>
                         </td>
-                        <td>$ {(product.price * product.quantity)}</td>
+                        <td>{product.original_price > 0 && product.price !== product.original_price ? <del className={"text-secondary pe-2"}>${product.original_price}</del> : null}${(product.price * product.quantity)}</td>
                     </tr>
                 ))
             ) : (

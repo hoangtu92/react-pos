@@ -107,7 +107,7 @@ export const productSlice = createSlice({
         }).addCase(getProducts.fulfilled, (state, action) => {
             state.loading = false
             state.products = action.payload;
-        }).addCase(getProducts.rejected, (state, action) => {
+        }).addCase(getProducts.rejected, (state) => {
             state.loading = false
             state.error = true
         })
@@ -118,14 +118,14 @@ export const productSlice = createSlice({
             state.syncObj.page = parseInt(action.payload.page);
             state.syncObj.synced_percent = (state.syncObj.synced_products/state.syncObj.total_products)*100;
 
-            if(Math.round(state.syncObj.synced_percent) === 100){
+            if(Math.round(state.syncObj.synced_percent) === 100 && action.payload.total === 0){
                 state.syncObj.page = 1;
                 state.syncObj.playing = false;
                 toast.success("Product syncing is completed!")
             }
             updateLocalStorageProductSync(state.syncObj);
 
-        }).addCase(syncProducts.rejected, (state, action) => {
+        }).addCase(syncProducts.rejected, (state) => {
             toast.error("Error occurred while syncing!");
             state.syncObj.playing = false;
         })

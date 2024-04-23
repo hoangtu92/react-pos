@@ -69,9 +69,9 @@ const ShoppingCart = () => {
                   </button>
 
                   <div className="details">
-                    <div className="price">
-                      <span>$ {cart.price}</span>
-                    </div>
+                    {cart.price > 0 ? <div className="price">
+                      {cart.original_price > 0 && cart.price !== cart.original_price ? <del className={"text-secondary pe-2"}>${cart.original_price}</del> : null}<span>${cart.price}</span>
+                    </div> : null }
 
                     <div className="count">
                       <button
