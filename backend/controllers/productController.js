@@ -145,8 +145,23 @@ const syncProduct = async(req, res) => {
 
 }
 
+/**
+ * @route /api/product/truncate
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
+const truncateProduct = async(req, res) => {
+    await Product.deleteMany({});
+    res.status(200).json({
+        status: true,
+        msg: "Success"
+    })
+}
+
 module.exports = {
     syncProduct,
     searchProducts,
-    countProducts
+    countProducts,
+    truncateProduct
 }

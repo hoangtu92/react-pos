@@ -19,10 +19,16 @@ const getProducts = async (query) => {
     const response = await httpRequest.get(url)
     return response.data
 }
+const truncateProduct = async() => {
+    //api/product/truncate
+    const response = await httpRequest.get("/product/truncate");
+    return response.data;
+}
 const productService = {
     productSync,
     getProducts,
-    productCount
+    productCount,
+    truncateProduct
 }
 
 export default productService

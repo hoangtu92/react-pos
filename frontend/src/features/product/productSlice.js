@@ -81,7 +81,15 @@ export const getProducts = createAsyncThunk('product/getProducts', async (query,
     } catch (error) {
          return thunkAPI.rejectWithValue(error.response.data)
     }
-})
+});
+
+export const truncateProduct = createAsyncThunk('product/truncateProduct', async (_, thunkAPI) => {
+    try {
+       return await productService.truncateProduct();
+    } catch (error) {
+         return thunkAPI.rejectWithValue(error.response.data)
+    }
+});
 
 export const productSlice = createSlice({
     name: 'product',
@@ -134,6 +142,11 @@ export const productSlice = createSlice({
             state.syncObj.total_products = action.payload.total;
             updateLocalStorageProductSync(state.syncObj);
         })
+        .addCase(truncateProduct.fulfilled, (state, action) => {
+            toast.success("All products have been removed. Please sync again to have newest product data.")
+        })
+
+
     }
 })
 

@@ -1,7 +1,7 @@
 import React, {useEffect} from "react";
 import {useDispatch, useSelector} from "react-redux";
 import Button from "react-bootstrap/Button";
-import {countProducts, updateSyncProduct} from "../features/product/productSlice";
+import {countProducts, truncateProduct, updateSyncProduct} from "../features/product/productSlice";
 import {Form, OverlayTrigger, ProgressBar, Tooltip} from "react-bootstrap";
 import {FaQuestionCircle} from "react-icons/fa";
 
@@ -70,6 +70,15 @@ const ProductSync = () => {
                                 <Button variant={"primary"} onClick={startSyncProduct}>Start</Button>
                         }
                         <Button className={"ms-2"} onClick={resetSyncProduct} variant={"danger"}>Reset</Button>
+                        <OverlayTrigger
+                            placement="right"
+                            delay={{ show: 250, hide: 400 }}
+                            overlay={<Tooltip id="button-tooltip">
+                                Wipe all products in the POS. You need to sync product again. (for switching from dev to live environment or vice versa)
+                            </Tooltip>}
+                        ><Button className={"ms-2"} onClick={e => dispatch(truncateProduct())} variant={"dark"}>Wipe</Button></OverlayTrigger>
+
+
                     </div>
                 </div>
                 <div className={"mb-2"}>
