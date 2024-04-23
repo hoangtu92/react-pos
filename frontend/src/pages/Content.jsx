@@ -1,10 +1,12 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import Products from "./Products";
 import {useDispatch, useSelector} from "react-redux";
 import ShoppingCart from "./ShoppingCart";
 import {getProducts, handleChange} from "../features/product/productSlice";
 import ProductSearch from "../components/ProductSearch";
 import SmoothScroll from "../components/SmoothScroll";
+import Form from "react-bootstrap/Form";
+import {updateSettings} from "../features/cart/cartSlice";
 
 const Content = () => {
 
@@ -34,6 +36,19 @@ const Content = () => {
         <>
             <div className={"d-flex"}>
                 <div className={"p-5 flex-grow-1"}>
+                    <Form.Group>
+                        <div className={"mb-2"}>
+                            <Form.Check // prettier-ignore
+                                type="switch"
+                                id="autoCart"
+                                checked={settings.scanMode}
+                                onChange={e => {
+                                    dispatch(updateSettings({name: "scanMode", value: e.target.checked}))
+                                }}
+                                label={"Scan Mode"}
+                            />
+                        </div>
+                    </Form.Group>
                     <ProductSearch dispatch={dispatch} settings={settings} onChange={onChange} onSubmit={onSubmit}/>
                     <SmoothScroll>
                         <Products/>
