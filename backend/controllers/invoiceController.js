@@ -322,7 +322,7 @@ const issueInvoice = async(req, res) => {
         }
 
 
-        let result = await fetch(`${process.env.E_INVOICE_TEST}`, {
+        let result = await fetch(`${process.env.E_INVOICE_URL}`, {
             method: "POST",
             body: formData
         })
