@@ -1409,3 +1409,12 @@ input.type-select:checked + label,
   padding: 1rem 1.5rem;
   font-size: 1.7rem;
 }
+
+
+.Toastify__toast-body {
+  padding: 15px 20px;
+  font-size: 1.2rem;
+}
+.Toastify__toast-icon {
+  width: 24px;
+}
