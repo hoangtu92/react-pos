@@ -85,11 +85,12 @@ const do_sync = async (page = 1, count,  look_back = 0, cb) => {
 
             for(let i=0; i< products.length; i++){
 
-                let {sku, name, price, image, barcode, original_price} = products[i];
+                let {sku, name, price, image, barcode, original_price, id: product_id} = products[i];
 
-                const exists = await Product.findOne({"sku": sku});
+                const exists = await Product.findOne({"product_id": product_id});
                 if(!exists){
                     const product = await Product.create({
+                        product_id,
                         sku,
                         barcode,
                         name,
@@ -100,7 +101,8 @@ const do_sync = async (page = 1, count,  look_back = 0, cb) => {
                     created.push(product)
                 }
                 else{
-                    await Product.updateOne({"sku": sku},{
+                    await Product.updateOne({"product_id": product_id},{
+                        product_id,
                         name: name,
                         barcode: barcode,
                         price: price,
@@ -159,9 +161,236 @@ const truncateProduct = async(req, res) => {
     })
 }
 
+
+/**
+ *
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
+const getCarts = async(req, res) => {
+
+    const {cookie} = req.body
+
+    const result = await fetch(`${process.env.JD_HOST}/wp-json/wc/store/cart`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+            'Content-Type': 'application/json',
+            "Cookie": cookie
+        }
+    });
+
+    const nonce = result.headers.get("Nonce")
+    if(result.ok) {
+        const data = await result.json();
+        res.status(201).json({
+            status: true,
+            data: data,
+            nonce: nonce,
+            msg: "Success"
+        });
+    }
+    else{
+        res.status(400).json({
+            status: false,
+            msg: result.statusText,
+            nonce: nonce,
+        })
+    }
+}
+
+/**
+ *
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
+const addCartItem = async (req, res) => {
+    const {nonce, cookie, cart_item} = req.body;
+
+    let formData = new FormData();
+    formData.append("id", cart_item.product_id);
+    formData.append("quantity", cart_item.quantity)
+    formData.append("variation", []);
+
+    const result = await fetch(`${process.env.JD_HOST}/wp-json/wc/store/cart/add-item`, {
+        method: "POST",
+        headers: {
+            'Nonce': nonce,
+            "Cookie": cookie,
+        },
+        mode: 'cors',
+        credentials: "include",
+        body: formData
+    });
+
+    if(result.ok) {
+        const data = await result.json();
+        res.status(200).json({
+            status: true,
+            cookie: result.headers.getSetCookie(),
+            data: data
+        })
+    }
+    else{
+        res.status(200).json({
+            status: false,
+            msg: "Failed to add to cart",
+        })
+    }
+
+}
+
+/**
+ *
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
+const addCartItems = async (req, res) => {
+    const {nonce, cartItems} = req.body;
+
+    const batch = cartItems.reduce((t, e) => {
+        t.push({
+            "path": "/wc/store/cart/add-item",
+            "method": "POST",
+            "cache": "no-store",
+            "body": {
+                "id": e.product_id,
+                "quantity": e.quantity
+            },
+            "headers": {
+                "Nonce": nonce
+            }
+        })
+        return t;
+    }, []);
+
+
+    const request = {requests: batch}
+
+
+    const result = await fetch(`${process.env.JD_HOST}/wp-json/wc/store/batch`, {
+        method: "POST",
+        headers: {
+            'Nonce': nonce,
+            //"Cookie": cookie,
+            "Content-Type": "application/json"
+        },
+        mode: 'cors',
+        credentials: "include",
+        body: JSON.stringify(request)
+    });
+
+    if(result.ok) {
+        const data = await result.json();
+        res.status(200).json({
+            status: true,
+            cookie: result.headers.getSetCookie(),
+            data: data
+        })
+    }
+    else{
+        res.status(200).json({
+            status: false,
+            msg: "Failed to add to cart",
+            data: result.statusText
+        })
+    }
+
+}
+
+/**
+ * @route
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
+const editCartItem = async(req, res) => {
+
+    const {nonce, cookie, cart_item} = req.body;
+
+    let formData = new FormData();
+    formData.append("key", cart_item.key);
+    formData.append("quantity", cart_item.quantity)
+
+    const result = await fetch(`${process.env.JD_HOST}/wp-json/wc/store/cart/update-item`, {
+        method: "POST",
+        headers: {
+            'Nonce': nonce,
+            "Cookie": cookie,
+        },
+        mode: 'cors',
+        credentials: "include",
+        body: formData
+    });
+
+
+    if(result.ok) {
+        const data = await result.json();
+
+        res.status(200).json({
+            status: true,
+            data: data
+        })
+    }
+    else{
+        res.status(200).json({
+            status: false,
+            msg: "Failed to edit cart item",
+        })
+    }
+}
+/**
+ *
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
+const removeCartItem = async(req, res) => {
+
+    const {nonce, cookie, cart_item} = req.body;
+
+    let formData = new FormData();
+    formData.append("key", cart_item.key);
+
+    const result = await fetch(`${process.env.JD_HOST}/wp-json/wc/store/cart/remove-item`, {
+        method: "POST",
+        headers: {
+            'Nonce': nonce,
+            "Cookie": cookie,
+        },
+        mode: 'cors',
+        credentials: "include",
+        body: formData
+    });
+
+
+    if(result.ok) {
+        const data = await result.json();
+
+        res.status(200).json({
+            status: true,
+            data: data
+        })
+    }
+    else{
+        res.status(200).json({
+            status: false,
+            msg: "Failed to edit cart item",
+        })
+    }
+}
+
 module.exports = {
     syncProduct,
     searchProducts,
     countProducts,
-    truncateProduct
+    truncateProduct,
+    addCartItem,
+    addCartItems,
+    editCartItem,
+    removeCartItem,
+    getCarts
 }

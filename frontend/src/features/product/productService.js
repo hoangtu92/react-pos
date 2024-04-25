@@ -24,11 +24,47 @@ const truncateProduct = async() => {
     const response = await httpRequest.get("/product/truncate");
     return response.data;
 }
+
+const getCarts = async(cookie = "") => {
+    //api/product/cart
+    const response = await httpRequest.post("/product/cart", {cookie: cookie});
+    return response.data;
+}
+
+const addCartItem = async(data) => {
+    //api/product/addCart
+    const response = await httpRequest.post("/product/addCart", data);
+    return response.data;
+}
+
+const batch = async(data) => {
+    //api/product/batch
+    const response = await httpRequest.post("/product/batch", data);
+    return response.data;
+}
+
+const editCartItem = async(data) => {
+    //api/product/editCart
+    const response = await httpRequest.post("/product/editCart", data);
+    return response.data;
+}
+const removeCartItem = async(data) => {
+    //api/product/removeCartItem
+    const response = await httpRequest.post("/product/removeCartItem", data);
+    return response.data;
+}
+
+
 const productService = {
     productSync,
     getProducts,
     productCount,
-    truncateProduct
+    truncateProduct,
+    batch,
+    getCarts,
+    addCartItem,
+    editCartItem,
+    removeCartItem
 }
 
 export default productService

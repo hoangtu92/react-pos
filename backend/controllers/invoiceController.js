@@ -303,13 +303,13 @@ const issueInvoice = async(req, res) => {
             }
         }
 
-        if(order.buyer_id != null){
+        if(typeof order.buyer_id !== "undefined" && order.buyer_id != null && order.buyer_id.length > 0){
             data["Buyer_id"] = order.buyer_id;
             data["TaxAmount"] = Math.round((parseInt(order.totalAmount)/1.05) * 0.05);
             data["CompanyName"] = "";
             //data["RandomNumber"] = "";
         }
-        else if(order.carrier_id!= null){
+        else if(typeof order.carrier_id !== "undefined" && order.carrier_id!= null && order.carrier_id.length > 0){
             data["CarrierType"] = "3J0002";
             data["CarrierID"] =  order.carrier_id;
             data["CarrierID2"] = order.carrier_id;

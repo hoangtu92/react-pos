@@ -8,8 +8,9 @@ const ProductSchema = new mongoose.Schema(
 		barcode: {
 			type: String
 		},
-		categories_ids: [],
-		product_ids: [],
+		product_id: {
+			type: Number
+		},
 		name: {
 			type: String,
 			trim: true

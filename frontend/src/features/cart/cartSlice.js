@@ -9,11 +9,12 @@ import {
     getLocalStorageSettings,
     updateLocalStorageSettings,
     setLocalStorageCustomer,
-    deleteLocalStorageCustomer, getLocalStorageCustomer
+    deleteLocalStorageCustomer, getLocalStorageCustomer, resetLocalStorageSettings
 } from '../../utils/localStorage'
 import orderService from "../order/orderService";
 import {toast} from "react-toastify";
 import customerService from "../customer/customerService";
+import productService from "../product/productService";
 
 const cartItems = getLocalStorageCart()
 const orderObj = getLocalStorageOrder()
@@ -32,9 +33,66 @@ const initialState = {
     loading: false,
     show_calculator: false,
     settings: settings ?? {scanMode: true, enableInvoice: false},
-    error: false
+    addCartItem: false,
+    updatedCartItem: false,
+    deletedCartItem: false,
+    needRefreshCart: false,
+    error: false,
+    resetCarrierID: false,
+    coupons: [],
 }
 
+/**
+ * Get cart from justdog
+ */
+export const getCart = createAsyncThunk('cart/get', async (cookie = "", thunkAPI) => {
+    try {
+        return await productService.getCarts(cookie);
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response.data)
+    }
+})
+/**
+ * Add cart item cart to justdog
+ */
+export const batch = createAsyncThunk('cart/batch', async (data, thunkAPI) => {
+    try {
+        return await productService.batch(data)
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response.data)
+    }
+})
+/**
+ * Add cart item cart to justdog
+ */
+export const addCart = createAsyncThunk('cart/add', async (data, thunkAPI) => {
+    try {
+        return await productService.addCartItem(data)
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response.data)
+    }
+})
+
+/**
+ * edit cart item
+ */
+export const editCartItem = createAsyncThunk('cart/editCartItem', async (data, thunkAPI) => {
+    try {
+        return await productService.editCartItem(data);
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response.data)
+    }
+})
+/**
+ * edit cart item
+ */
+export const deleteCartItem = createAsyncThunk('cart/deleteCartItem', async (data, thunkAPI) => {
+    try {
+        return await productService.removeCartItem(data);
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response.data)
+    }
+})
 
 /**
  * Create new blank order to get order_id reference from justdog.tw
@@ -119,9 +177,9 @@ export const removeOrder = createAsyncThunk('order/removeOrder', async (order_id
     try {
         const result = await orderService.removeOrder(order_id, thunkAPI);
 
-        thunkAPI.dispatch(clearCart())
-        thunkAPI.dispatch(clearCustomerValues())
+
         thunkAPI.dispatch(clearOrder())
+        resetLocalStorageSettings()
 
         return result;
 
@@ -211,6 +269,9 @@ export const cartSlice = createSlice({
     name: 'cart',
     initialState,
     reducers: {
+        handleChange: (state, { payload: { name, value } }) => {
+            state[name] = value
+        },
         handleCustomerChange: (state, {payload: {name, value}}) => {
             state.selectedCustomer[name] = value;
             setLocalStorageCustomer(state.selectedCustomer)
@@ -224,6 +285,11 @@ export const cartSlice = createSlice({
             state.cartItems = [];
             state.show_calculator = false;
             deleteLocalStorageCart();
+            state.settings.cookie = null;
+            state.needRefreshCart = true;
+
+
+            updateLocalStorageSettings(state.settings);
         },
         clearOrder: (state) => {
             state.orderObj = {paymentMethod: 'cash', orderType: 'instore', redeem_points: 0, discount_value: 0};
@@ -234,12 +300,16 @@ export const cartSlice = createSlice({
             // Increasing the quantity of the product
             if (cartIndex >= 0) {
                 state.cartItems[cartIndex].quantity += 1
+                state.addCartItem = state.cartItems[cartIndex];
             } else {
                 // index -1
                 // New product to cart add
+                const item = {...action.payload, quantity: 1};
                 state.cartItems.push({...action.payload, quantity: 1});
+                state.addCartItem = item;
             }
-            addLocalStorageCart(state.cartItems)
+            addLocalStorageCart(state.cartItems);
+
         },
         productSubTotal: (state) => {
             state.subTotal = state.cartItems.reduce((subTotal, product) => {
@@ -260,6 +330,7 @@ export const cartSlice = createSlice({
             const product = state.cartItems.find((item) => item.id === action.payload)
             product.quantity = product.quantity + 1
             addLocalStorageCart(state.cartItems);
+            state.updatedCartItem = product;
         },
         decrease: (state, action) => {
             const product = state.cartItems.find((item) => item.id === action.payload)
@@ -268,7 +339,8 @@ export const cartSlice = createSlice({
             } else {
                 product.quantity = product.quantity - 1
             }
-            addLocalStorageCart(state.cartItems)
+            addLocalStorageCart(state.cartItems);
+            state.updatedCartItem = product;
         },
         updateSubtotal: (state, {payload: {id, price}}) => {
             const product = state.cartItems.find((item) => item.id === id);
@@ -277,8 +349,11 @@ export const cartSlice = createSlice({
             addLocalStorageCart(state.cartItems)
         },
         removeCartItem: (state, action) => {
-            state.cartItems = state.cartItems.filter((item) => item.id !== action.payload)
-            addLocalStorageCart(state.cartItems)
+            if(action.payload.key) state.deletedCartItem =  action.payload;
+
+            state.cartItems = state.cartItems.filter((item) => item.id !== action.payload.id)
+            addLocalStorageCart(state.cartItems);
+
         },
         hideCalculator: (state) => {
             state.show_calculator = false;
@@ -289,7 +364,6 @@ export const cartSlice = createSlice({
             cartSlice.caseReducers.productTotalAmount(state)
         },
         updateSettings: (state, {payload: {name, value}}) => {
-            console.log(name, value)
             state.settings[name] = value;
             updateLocalStorageSettings(state.settings)
         },
@@ -313,6 +387,49 @@ export const cartSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            .addCase(getCart.pending, (state, action) => {
+                state.loading = true;
+            })
+            .addCase(getCart.fulfilled, (state, action) => {
+                state.loading = false;
+                state.settings.nonce = action.payload.nonce;
+                updateLocalStorageSettings(state.settings);
+
+                state.orderObj.discount_value = action.payload.data.totals.total_discount;
+
+                action.payload.data.items.forEach(e => {
+                    const product = state.cartItems.find((item) => item.product_id === e.id)
+                    if(product) {
+                        product.price = e.prices.price;
+                        product.key = e.key;
+                    }
+                });
+                state.coupons = action.payload.data.coupons;
+                addLocalStorageCart(state.cartItems);
+                addLocalStorageOrder(state.orderObj);
+                state.needRefreshCart = false;
+            })
+            .addCase(batch.fulfilled, (state, action) => {
+
+                state.settings.cookie = action.payload.cookie.reduce((t, e) => {
+                    if(/wp_woocommerce_session/.test(e)) t = e;
+                    return t;
+                }, state.settings.cookie);
+
+                state.needRefreshCart = true;
+
+            }).addCase(addCart.fulfilled, (state, action) => {
+                state.addCartItem = false;
+            }).addCase(editCartItem.fulfilled, (state, action) => {
+                state.updatedCartItem = false;
+                state.needRefreshCart = true;
+            })
+
+            .addCase(deleteCartItem.fulfilled, (state, action) => {
+                state.deletedCartItem = false;
+                state.needRefreshCart = true;
+            })
+
             // Create order
             .addCase(orderCreate.pending, (state) => {
                 state.loading = true;
@@ -412,10 +529,18 @@ export const cartSlice = createSlice({
                 state.loading = false;
                 state.error = false;
 
-                state.orderObj.redeem_value = action.payload.amount;
-                state.orderObj.redeem_points = action.payload.points;
-                addLocalStorageOrder(state.orderObj);
-                cartSlice.caseReducers.productTotalAmount(state, action);
+                if(action.payload.amount > state.totalAmount){
+                    toast.error("Exceed total amount");
+                    state.orderObj.redeem_value = 0;
+                    state.orderObj.redeem_points = 0;
+                    addLocalStorageOrder(state.orderObj);
+                }
+                else{
+                    state.orderObj.redeem_value = action.payload.amount;
+                    state.orderObj.redeem_points = action.payload.points;
+                    cartSlice.caseReducers.productTotalAmount(state, action);
+                }
+
             })
 
             // Get point
@@ -454,12 +579,11 @@ export const cartSlice = createSlice({
                 state.loading = false;
                 toast.success("Carrier ID is valid");
                 state.settings.enableInvoice = false;
-                console.log(action.payload)
                 state.selectedCustomer.carrier_id = action.payload.carrier_id
                 updateSettings(state.settings);
             }).addCase(validateCarrierID.rejected, (state) => {
                 state.loading = false
-                state.error = true;
+                state.resetCarrierID = true;
                 toast.error("載具號碼錯誤");
             })
     }

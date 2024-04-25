@@ -11,10 +11,25 @@ import {Badge, Form, Modal, Spinner} from "react-bootstrap"
 import InputGroup from "react-bootstrap/InputGroup"
 import {useNavigate, Link} from "react-router-dom";
 import {
+    batch,
     calcPoint,
-    clearCart, clearOrder, getOrder, hideCalculator, issueInvoice, orderCreate, printInvoice,
+    clearCart,
+    clearOrder,
+    deleteCartItem,
+    editCartItem,
+    getCart,
+    getOrder,
+    hideCalculator,
+    issueInvoice,
+    orderCreate,
+    printInvoice,
     productSubTotal,
-    productTotalAmount, removeOrder, updateOrder, updateOrderDetail, updateSettings, validateCarrierID,
+    productTotalAmount,
+    removeOrder,
+    updateOrder,
+    updateOrderDetail,
+    updateSettings,
+    validateCarrierID,
 } from "../features/cart/cartSlice";
 import {useSelector, useDispatch} from "react-redux";
 import CartTable from "../components/CartTable";
@@ -27,10 +42,11 @@ import {FaCircleCheck, FaTriangleExclamation} from "react-icons/fa6";
 import {toast} from "react-toastify";
 import {addCustomer} from "../features/customer/customerSlice";
 import SmoothScroll from "../components/SmoothScroll";
+import {handleChange} from "../features/product/productSlice";
 
 const Cart = () => {
 
-    const {loading, error, selectedCustomer, cartItems, subTotal, totalAmount, orderObj, order, show_calculator, settings} = useSelector(
+    const {loading, error, selectedCustomer, coupons, resetCarrierID, cartItems, subTotal, totalAmount, orderObj, order, show_calculator, settings, deletedCartItem, updatedCartItem, needRefreshCart} = useSelector(
         (state) => state.cart
     );
     const {user} = useSelector((state) => state.auth);
@@ -66,6 +82,40 @@ const Cart = () => {
         if(typeof orderObj.order_id != 'undefined' && orderObj.order_id != null)
             dispatch(getOrder(orderObj.order_id));
     }, [dispatch, orderObj.order_id]);
+
+
+    useEffect(() => {
+        if(resetCarrierID){
+            setCarrierId("");
+            dispatch(handleChange({name: "resetCarrierID", value: false}));
+        }
+    }, [dispatch, resetCarrierID]);
+
+
+    // edit cart justdog
+    useEffect(() => {
+        if (settings.nonce && settings.nonce.length > 0 && updatedCartItem) {
+            dispatch(editCartItem({nonce: settings.nonce, cart_item: updatedCartItem, cookie: settings.cookie}))
+        }
+    }, [dispatch, settings.nonce, settings.cookie, updatedCartItem])
+
+
+    useEffect(() => {
+        if (deletedCartItem) {
+            dispatch(deleteCartItem({nonce: settings.nonce, cart_item: deletedCartItem, cookie: settings.cookie}))
+        }
+    }, [dispatch, settings.nonce, settings.cookie, deletedCartItem])
+
+    // Get cart from justdog
+    useEffect(() => {
+        if(needRefreshCart)
+            dispatch(getCart(settings.cookie));
+    }, [dispatch, settings.cookie, needRefreshCart]);
+
+    // Sync cart to justdog.
+    useEffect(() => {
+        dispatch(batch({nonce: settings.nonce, cartItems: cartItems}));
+    }, [dispatch, settings.nonce]);
 
 
     useEffect(() => {
@@ -139,18 +189,20 @@ const Cart = () => {
     }
 
     const onRedeemPointChange = e => {
-        dispatch(updateOrderDetail({name: 'redeem_points', value: e.target.value}));
+        if(e.target.value.length > 0)
+            dispatch(updateOrderDetail({name: 'redeem_points', value: e.target.value}));
     }
     const handleCalcPointValue = (e) => {
         if(orderObj.redeem_points > 0) dispatch(calcPoint({points: orderObj.redeem_points, customer_id: selectedCustomer.user_id}));
     }
 
     const handleDiscountValue = e => {
-        dispatch(updateOrderDetail({name: "discount_value", value: e.target.value}))
+        if(e.target.value.length > 0)
+            dispatch(updateOrderDetail({name: "discount_value", value: e.target.value}))
     }
 
     const cleanupSession = () => {
-        dispatch(clearCart());
+        dispatch(clearCart())
         dispatch(clearCustomerValues())
         dispatch(removeOrder(orderObj.order_id));
         navigate("/dashboard");
@@ -191,8 +243,14 @@ const Cart = () => {
             setCustomerUpdated(false);
             dispatch(addCustomer(selectedCustomer));
         }
+    }
 
+    const onHideCustomAmount = e => {
 
+        if(orderObj.orderType === "ubereat" && orderObj.customTotalAmount == 0){
+            dispatch(updateOrderDetail({name: "orderType", value: "instore"}));
+        }
+        setShowCustomAmountModal(false);
     }
 
     const onCustomerSearch = e => {
@@ -214,6 +272,14 @@ const Cart = () => {
     }
 
 
+    const handleResetCustomerGovID = e => {
+        dispatch(handleCustomerChange({name: selectedCustomer.is_b2b ? "buyer_id" : "carrier_id", value: ""}))
+    }
+
+    const handleClearRedeem = e => {
+        dispatch(updateOrderDetail({name: "redeem_points", value: 0}))
+        dispatch(updateOrderDetail({name: "redeem_value", value: 0}))
+    }
 
     return (
         <div className={"cart-page d-flex"}>
@@ -319,8 +385,15 @@ const Cart = () => {
                                 <th>SubTotal:</th>
                                 <td>${subTotal}</td>
                             </tr>
+                            {coupons.map(e => {
+                                return <tr key={e.code}>
+                                    <th>{e.code}</th>
+                                    <td>-${e.totals.total_discount}</td>
+                                </tr>
+                            })}
+
                             {orderObj.discount_value > 0 ? <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
-                                <th>Discount:</th>
+                                <th>Total discount:</th>
                                 <td>-${orderObj.discount_value}</td>
                             </tr> : null}
                             {orderObj.redeem_value > 0 ? <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
@@ -447,7 +520,7 @@ const Cart = () => {
                                 />}
 
                                 <InputGroup.Text id="govid">
-                                    <Button variant={"secondary"} onClick={e => dispatch(handleCustomerChange({name: selectedCustomer.is_b2b ? "buyer_id" : "carrier_id", value: ""}))}><FaEraser/></Button>
+                                    <Button variant={"secondary"} onClick={handleResetCustomerGovID}><FaEraser/></Button>
                                     <Button className={"ms-2"} variant={"success"} onClick={handleCarrierIDChange}><FaCircleCheck/></Button>
                                 </InputGroup.Text>
 
@@ -460,6 +533,7 @@ const Cart = () => {
                                         (max: {selectedCustomer.points} points)</Form.Label>
                                     {orderObj.redeem_value > 0 ? <Badge bg="success">Off -NT$ {orderObj.redeem_value}</Badge> : null}
                                     <div className={"d-flex flex-row"}>
+                                        <InputGroup>
                                         <Form.Control
                                             name={"redeem_points"}
                                             onChange={onRedeemPointChange}
@@ -469,10 +543,13 @@ const Cart = () => {
                                             max={selectedCustomer.points}
                                             type="number"
                                             id="inputPoints"
-                                            className={"me-2"}
                                             onFocus={e => e.target.select()}
                                             onBlur={handleCalcPointValue}
                                         />
+                                            <InputGroup.Text>
+                                                <Button variant={"secondary"} onClick={handleClearRedeem}><FaEraser/></Button>
+                                            </InputGroup.Text>
+                                        </InputGroup>
 
                                     </div>
 
@@ -509,7 +586,7 @@ const Cart = () => {
             </Modal>
 
 
-            <Modal size={"lg"}  show={showCustomAmountModal} backdrop={"static"} onHide={e => setShowCustomAmountModal(false)} keyboard={true}>
+            <Modal size={"lg"}  show={showCustomAmountModal} backdrop={"static"} onHide={onHideCustomAmount} keyboard={true}>
                 <Form  className={"bg-dark text-white"}>
                     <Modal.Header closeButton>
                         <Modal.Title>Custom order amount</Modal.Title>
@@ -534,7 +611,7 @@ const Cart = () => {
                     </Modal.Body>
 
                     <Modal.Footer>
-                        <Button size={"lg"}  variant="primary" type={"button"} onClick={e => setShowCustomAmountModal(false)}>Save & Close</Button>
+                        <Button size={"lg"}  variant="primary" type={"button"} onClick={onHideCustomAmount}>Save & Close</Button>
                     </Modal.Footer>
                 </Form>
             </Modal>

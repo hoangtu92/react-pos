@@ -73,6 +73,12 @@ export const updateLocalStorageSettings = (settings) => {
     localStorage.setItem('settings', JSON.stringify(settings))
 }
 
+export const resetLocalStorageSettings = () => {
+    localStorage.setItem('settings', JSON.stringify({scanMode: true, enableInvoice: false}))
+}
+
+
+
 export const getLocalStorageSettings = () => {
     return JSON.parse(localStorage.getItem('settings'))
 }

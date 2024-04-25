@@ -6,13 +6,18 @@ import {getProducts, handleChange} from "../features/product/productSlice";
 import ProductSearch from "../components/ProductSearch";
 import SmoothScroll from "../components/SmoothScroll";
 import Form from "react-bootstrap/Form";
-import {updateSettings} from "../features/cart/cartSlice";
+import {addCart, editCartItem, getCart, updateSettings} from "../features/cart/cartSlice";
 
 const Content = () => {
 
     const dispatch = useDispatch();
     const {settings} = useSelector((state) => state.cart);
     const {query} = useSelector((state) => state.product);
+
+
+    useEffect(() => {
+        dispatch(getCart());
+    }, [dispatch]);
 
 
     useEffect(() => {
