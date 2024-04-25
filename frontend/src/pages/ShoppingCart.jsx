@@ -62,7 +62,7 @@ const ShoppingCart = () => {
                       className="remove-item"
                       type="button"
                       onClick={() => {
-                        dispatch(removeCartItem(cart.id));
+                        dispatch(removeCartItem(cart));
                       }}
                   >
                     <FaTrashAlt size={14}/>

@@ -94,14 +94,14 @@ const Cart = () => {
 
     // edit cart justdog
     useEffect(() => {
-        if (settings.nonce && settings.nonce.length > 0 && updatedCartItem) {
+        if (settings.nonce && settings.nonce.length > 0 && settings.cookie && updatedCartItem) {
             dispatch(editCartItem({nonce: settings.nonce, cart_item: updatedCartItem, cookie: settings.cookie}))
         }
     }, [dispatch, settings.nonce, settings.cookie, updatedCartItem])
 
 
     useEffect(() => {
-        if (deletedCartItem) {
+        if (deletedCartItem && settings.cookie) {
             dispatch(deleteCartItem({nonce: settings.nonce, cart_item: deletedCartItem, cookie: settings.cookie}))
         }
     }, [dispatch, settings.nonce, settings.cookie, deletedCartItem])

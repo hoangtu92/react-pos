@@ -417,10 +417,15 @@ export const cartSlice = createSlice({
                 }, state.settings.cookie);
 
                 state.needRefreshCart = true;
+                state.updatedCartItem = false;
+                state.deletedCartItem = false;
 
             }).addCase(addCart.fulfilled, (state, action) => {
                 state.addCartItem = false;
-            }).addCase(editCartItem.fulfilled, (state, action) => {
+            }).addCase(editCartItem.pending, (state, action) => {
+                state.loading = true;
+            })
+            .addCase(editCartItem.fulfilled, (state, action) => {
                 state.updatedCartItem = false;
                 state.needRefreshCart = true;
             })
