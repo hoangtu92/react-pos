@@ -229,7 +229,7 @@ const Cart = () => {
     }
 
     const handleCarrierIDChange = () => {
-        if(carrierId.length > 0){
+        if(carrierId != null && carrierId != ""){
             dispatch(validateCarrierID(carrierId))
         }
     }
@@ -428,7 +428,7 @@ const Cart = () => {
                                                 className={"align-items-end flex-row justify-content-end"}
                                                 id="issueInvoice"
                                                 checked={settings.enableInvoice}
-                                                disabled={selectedCustomer.carrier_id.length > 0}
+                                                disabled={selectedCustomer.carrier_id != null && selectedCustomer.carrier_id !== ""}
                                                 onChange={e => {
                                                     dispatch(updateSettings({name: "enableInvoice", value: e.target.checked}))
                                                 }}
