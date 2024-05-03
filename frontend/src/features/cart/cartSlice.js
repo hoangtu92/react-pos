@@ -241,7 +241,7 @@ export const issueInvoice = createAsyncThunk('order/issueInvoice', async (order_
 
         if(result.status){
             thunkAPI.dispatch(printInvoice(order_id));
-            if(typeof result.jObj !== "undefined")
+            if(typeof result.jObj !== "undefined" && !result.order.synced)
                 thunkAPI.dispatch(syncOrder(order_id));
         }
 

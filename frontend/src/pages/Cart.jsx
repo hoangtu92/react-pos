@@ -310,7 +310,7 @@ const Cart = () => {
                         {loading ? <Spinner animation="border" variant="dark" /> : error ? <FaTriangleExclamation size={32} color={"red"}/> : <FaCheckCircle size={32} color={"green"}/>}
 
                         <div>
-                            <Button variant={"danger"} className={"float-end mb-2"} onClick={cleanupSession}><FaTrashAlt/></Button>
+                            <Button variant={"danger"} type={"button"} className={"float-end mb-2"} onClick={cleanupSession}><FaTrashAlt/></Button>
                             <span><Badge pill bg={"warning text-black"}>#{orderObj.order_id}</Badge></span>
                         </div>
 
@@ -441,7 +441,7 @@ const Cart = () => {
                             <tr>
                                 <td></td>
                                 <td>
-                                    <Button variant={"warning"} size={"lg"} type="submit" onClick={handleSubmit} disabled={cartItems.length === 0 || loading || error}
+                                    <Button variant={"warning"} size={"lg"} type="submit" disabled={cartItems.length === 0 || loading || error}
                                             className={'d-flex align-items-center'}>
                                         {settings.enableInvoice ? <span><FaPrint className={"me-1"}/> 結帳</span> : <span><FaShoppingBag className={"me-1"}/> 結帳</span> }
                                             </Button>

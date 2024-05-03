@@ -54,6 +54,10 @@ const OrderSchema = mongoose.Schema(
         orderType: {
             type: String,
             default: 0
+        },
+        synced: {
+            type: Boolean,
+            default: false
         }
     },
     {timestamps: true}
