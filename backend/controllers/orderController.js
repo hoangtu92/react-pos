@@ -483,10 +483,6 @@ const syncOrder = async(req, res) => {
 
             }
 
-            await Order.updateOne({order_id: order.order_id}, {
-                synced: true
-            });
-
             res.status(201).json({
                 status: true,
                 msg: "Sync completed",

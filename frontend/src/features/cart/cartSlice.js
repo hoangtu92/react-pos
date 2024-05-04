@@ -219,9 +219,8 @@ export const updateOrder = createAsyncThunk('order/updateOrder', async (order, t
         if(result.status){
             if(order.enableInvoice)
                 thunkAPI.dispatch(issueInvoice(order.order_id));
-            else{
-                thunkAPI.dispatch(syncOrder(order.order_id));
-            }
+
+            thunkAPI.dispatch(syncOrder(order.order_id));
         }
 
         return result;
@@ -241,8 +240,6 @@ export const issueInvoice = createAsyncThunk('order/issueInvoice', async (order_
 
         if(result.status){
             thunkAPI.dispatch(printInvoice(order_id));
-            if(typeof result.jObj !== "undefined" && !result.order.synced)
-                thunkAPI.dispatch(syncOrder(order_id));
         }
 
         return result;
@@ -562,15 +559,8 @@ export const cartSlice = createSlice({
         })
 
             // Issue invoice
-            .addCase(issueInvoice.pending, (state) => {
-                state.loading = true
-            }).addCase(issueInvoice.fulfilled, (state, action) => {
+            .addCase(issueInvoice.fulfilled, (state, action) => {
                 state.error = false;
-
-                if(typeof action.payload.jObj == "undefined"){
-                    // Issue order the first time
-                    state.loading = false;
-                }
             }).addCase(issueInvoice.rejected, (state, action) => {
                 state.loading = false
                 state.error = true
