@@ -70,10 +70,9 @@ export const getProducts = createAsyncThunk('product/getProducts', async (query,
             if(result.length === 1){
                 thunkAPI.dispatch(addToCart(result[0]));
             }
-            else if(result.length === 0 && settings.scanMode){
+            else if(result.length === 0){
                 toast.warn("無此商品請重新搜尋");
             }
-            thunkAPI.dispatch(handleChange({name: "query", value: ""}));
         }
 
 

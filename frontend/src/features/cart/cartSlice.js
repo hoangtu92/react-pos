@@ -321,7 +321,8 @@ export const cartSlice = createSlice({
             if(typeof state.orderObj.discount_value != "undefined") state.totalAmount -= state.orderObj.discount_value;
 
             state.totalAmount = Math.round(state.totalAmount);
-            if(state.totalAmount < 0) state.error = true;
+
+            state.error = state.totalAmount < 0;
         },
         increase: (state, action) => {
             const product = state.cartItems.find((item) => item.id === action.payload)
