@@ -15,6 +15,7 @@ import orderService from "../order/orderService";
 import {toast} from "react-toastify";
 import customerService from "../customer/customerService";
 import productService from "../product/productService";
+import {handleChange} from "../product/productSlice";
 
 const cartItems = getLocalStorageCart()
 const orderObj = getLocalStorageOrder()
@@ -368,7 +369,7 @@ export const cartSlice = createSlice({
         printInvoice: (state, {payload: order_id}) => {
 
             if(typeof order_id === "undefined" || !order_id){
-                toast.error("Sorry. There was an error with automate printing function. Please click print manually.")
+                alert("Sorry. There was an error with automate printing function. Please click print manually.")
                 return;
             }
             const left = Math.round((document.body.clientWidth - (749/2))/2)
@@ -379,8 +380,18 @@ export const cartSlice = createSlice({
             }
             window.addEventListener("message", msgListener, false);
         },
-        setError: () => {
-
+        validateBuyerID: (state, {payload: buyerID}) => {
+            if(state.selectedCustomer.is_b2b){
+                if((buyerID == "" || !/^[0-9]{8}$/.test(buyerID))){
+                    alert("Invalid Tax ID");
+                    state.error = true;
+                }
+                else{
+                    state.error = false;
+                    state.selectedCustomer.buyer_id = buyerID;
+                    setLocalStorageCustomer(state.selectedCustomer)
+                }
+            }
         }
     },
     extraReducers: (builder) => {
@@ -524,7 +535,7 @@ export const cartSlice = createSlice({
                 state.loading = true;
 
             }).addCase(calcPoint.rejected, (state, action) => {
-                toast.error(action.payload.msg);
+                alert(action.payload.msg);
                 state.loading = false;
                 state.orderObj.redeem_points = 0;
 
@@ -533,7 +544,7 @@ export const cartSlice = createSlice({
                 state.error = false;
 
                 if(action.payload.amount > state.totalAmount){
-                    toast.error("Exceed total amount");
+                    alert("Exceed total amount");
                     state.orderObj.redeem_value = 0;
                     state.orderObj.redeem_points = 0;
                     addLocalStorageOrder(state.orderObj);
@@ -565,7 +576,7 @@ export const cartSlice = createSlice({
             }).addCase(issueInvoice.rejected, (state, action) => {
                 state.loading = false
                 state.error = true
-                toast.error(action.payload.msg)
+                alert(action.payload.msg)
             })
 
             .addCase(validateCarrierID.pending, (state) => {
@@ -580,7 +591,7 @@ export const cartSlice = createSlice({
             }).addCase(validateCarrierID.rejected, (state) => {
                 state.loading = false
                 state.resetCarrierID = true;
-                toast.error("載具號碼錯誤");
+                alert("載具號碼錯誤");
             })
     }
 })
@@ -600,6 +611,7 @@ export const {
     printInvoice,
     updateSettings,
     handleCustomerChange,
-    clearCustomerValues
+    clearCustomerValues,
+    validateBuyerID
 } = cartSlice.actions;
 export default cartSlice.reducer

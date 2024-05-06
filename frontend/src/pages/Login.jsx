@@ -19,7 +19,7 @@ const Login = () => {
 
   useEffect(() => {
     if (error) {
-      toast.error(message);
+      alert(message);
     }
     if (success || user) {
       navigate("/dashboard");

@@ -28,7 +28,7 @@ import {
     removeOrder,
     updateOrder,
     updateOrderDetail,
-    updateSettings,
+    updateSettings, validateBuyerID,
     validateCarrierID,
 } from "../features/cart/cartSlice";
 import {useSelector, useDispatch} from "react-redux";
@@ -55,6 +55,7 @@ const Cart = () => {
     const navigate = useNavigate();
 
     const [carrierId, setCarrierId] = useState("");
+    const [buyerId, setBuyerId] = useState("");
     const [receivedCash, setReceiveCash] = useState(0);
     const [customerUpdated, setCustomerUpdated] = useState(false);
     const [showCustomAmountModal, setShowCustomAmountModal] = useState(false);
@@ -144,11 +145,11 @@ const Cart = () => {
         e.preventDefault();
 
         if(selectedCustomer.is_b2b && (typeof selectedCustomer.buyer_id === 'undefined' || !/[0-9]{8}/.test(selectedCustomer.buyer_id))){
-            toast.error("Tax ID is required for B2B Customer")
+            alert("Tax ID is required for B2B Customer")
             return;
         }
         if(orderObj.orderType === "ubereat" && (typeof orderObj.customTotalAmount === 'undefined' || orderObj.customTotalAmount <= 0)){
-            toast.error("Custom total amount is required for Ubereat order")
+            alert("Custom total amount is required for Ubereat order")
             return;
         }
 
@@ -218,14 +219,7 @@ const Cart = () => {
     }
 
     const handleBuyerIDChange = (e) => {
-        if(selectedCustomer.is_b2b){
-            if((typeof e.target.value === 'undefined' || !/^[0-9]{8}$/.test(e.target.value))){
-                toast.error("Invalid Tax ID");
-            }
-            else{
-                dispatch(handleCustomerChange({name: "buyer_id" ,value: e.target.value}))
-            }
-        }
+        dispatch(validateBuyerID(buyerId));
     }
 
     const handleCarrierIDChange = () => {
@@ -501,28 +495,29 @@ const Cart = () => {
                                     id={"buyer_id"}
                                     type="number"
                                     size={"lg"}
-                                    onChange={() => {}}
+                                    onChange={e => setBuyerId(e.target.value)}
                                     onBlur={handleBuyerIDChange}
                                     name={"buyer_id"}
                                     onFocus={e => e.target.select()}
-                                    placeholder={typeof selectedCustomer.buyer_id != "undefined" && selectedCustomer.buyer_id !== null ? selectedCustomer.buyer_id : "統一編號Buyer Tax ID"}
+                                    value={buyerId}
+                                    placeholder={"統一編號Buyer Tax ID"}
                                 /> : <Form.Control
                                     id={"carrier_id"}
                                     type="text"
                                     size={"lg"}
-                                    onChange={(e) => setCarrierId(e.target.value)}
+                                    onChange={e => setCarrierId(e.target.value)}
                                     onBlur={handleCarrierIDChange}
                                     onFocus={e => e.target.select()}
                                     value={carrierId}
-                                    placeholder={typeof selectedCustomer.carrier_id != "undefined" ? selectedCustomer.carrier_id : "載具號碼Carrier ID"}
+                                    placeholder={"載具號碼Carrier ID"}
                                     name={"carrier_id"}
 
                                 />}
 
-                                <InputGroup.Text id="govid">
+                                {/*<InputGroup.Text id="govid">
                                     <Button variant={"secondary"} onClick={handleResetCustomerGovID}><FaEraser/></Button>
                                     <Button className={"ms-2"} variant={"success"} onClick={handleCarrierIDChange}><FaCircleCheck/></Button>
-                                </InputGroup.Text>
+                                </InputGroup.Text>*/}
 
                                 </InputGroup>
                             </Form.Group>

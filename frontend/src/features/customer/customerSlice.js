@@ -100,7 +100,7 @@ export const customerSlice = createSlice({
                 updateLocalStorageCustomerSync(state.syncObj);
 
             }).addCase(syncCustomers.rejected, () => {
-                toast.error("Error occurred while syncing!")
+                alert("Error occurred while syncing!")
             })
 
             .addCase(countCustomers.fulfilled, (state, action) => {
