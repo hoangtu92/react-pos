@@ -6,6 +6,7 @@ import {
     getLocalStorageUser,
     deleteLocalStorageUser,
 } from '../../utils/localStorage'
+import trans from "../../utils/translate";
 
 const user = getLocalStorageUser()
 
@@ -68,7 +69,7 @@ export const authSlice = createSlice({
                 state.loading = false
                 //state.user = action.payload
                 //addLocalStorageUser(action.payload)
-                toast.success('user successfully registered')
+                toast.success(trans("register_success_msg"))
             })
             .addCase(register.rejected, (state, action) => {
                 state.loading = false
@@ -83,7 +84,7 @@ export const authSlice = createSlice({
                 state.loading = false
                 state.user = action.payload
                 addLocalStorageUser(action.payload)
-                toast.success('user success login')
+                toast.success(trans("login_success_msg"))
             })
             .addCase(login.rejected, (state, action) => {
                 state.loading = false
@@ -94,7 +95,7 @@ export const authSlice = createSlice({
             .addCase(logout.fulfilled, (state) => {
                 state.user = null
                 deleteLocalStorageUser()
-                toast.success('User logout')
+                toast.success(trans("user_logged_out_msg"))
             })
             .addCase(allUsers.fulfilled, (state, action) => {
                 state.users = action.payload

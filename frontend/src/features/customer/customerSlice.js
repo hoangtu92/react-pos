@@ -6,6 +6,7 @@ import {
     getLocalStorageCustomerSync,
     updateLocalStorageCustomerSync,
 } from "../../utils/localStorage";
+import trans from "../../utils/translate";
 
 const syncObj = getLocalStorageCustomerSync();
 const initialState = {
@@ -95,12 +96,12 @@ export const customerSlice = createSlice({
                 if(Math.round(state.syncObj.synced_percent) === 100 && action.payload.total === 0){
                     state.syncObj.page = 1;
                     state.syncObj.playing = false;
-                    toast.success('customer successfully synced!')
+                    toast.success(trans("customer_sync_success"))
                 }
                 updateLocalStorageCustomerSync(state.syncObj);
 
             }).addCase(syncCustomers.rejected, () => {
-                alert("Error occurred while syncing!")
+                alert(trans("customer_sync_failed"))
             })
 
             .addCase(countCustomers.fulfilled, (state, action) => {

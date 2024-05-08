@@ -2,6 +2,7 @@ import React from "react";
 import {useSelector} from "react-redux";
 import ProductItem from "../components/ProductItem";
 import ClipLoader from "react-spinners/ClipLoader";
+import trans from "../utils/translate";
 const Products = () => {
     const {loading, products} = useSelector((state) => state.product);
 
@@ -18,7 +19,7 @@ const Products = () => {
                     <ClipLoader size={60} color="#ecc20e" cssOverride={override}/>
                 ) : products.length === 0 ? (
                     <div className="info-details">
-                        <div className="info">No products found...</div>
+                        <div className="info">{trans("no_product_found")}</div>
                     </div>
                 ) : products.map((product) => (
                     <ProductItem key={product._id} product={product}/>

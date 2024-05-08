@@ -7,6 +7,7 @@ import ProductSearch from "../components/ProductSearch";
 import SmoothScroll from "../components/SmoothScroll";
 import Form from "react-bootstrap/Form";
 import {addCart, editCartItem, getCart, updateSettings} from "../features/cart/cartSlice";
+import trans from "../utils/translate";
 
 const Content = () => {
 
@@ -50,7 +51,7 @@ const Content = () => {
                                 onChange={e => {
                                     dispatch(updateSettings({name: "scanMode", value: e.target.checked}))
                                 }}
-                                label={"Scan Mode"}
+                                label={trans("scan_mode")}
                             />
                         </div>
                     </Form.Group>

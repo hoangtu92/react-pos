@@ -2,6 +2,7 @@ import {decrease, increase, removeCartItem, updateSubtotal} from "../features/ca
 import {FaTimes} from "react-icons/fa";
 import {React} from "react";
 import {Form} from "react-bootstrap";
+import trans from "../utils/translate";
 
 const CartTable = ({cartItems, dispatch}) => {
     return (
@@ -17,11 +18,11 @@ const CartTable = ({cartItems, dispatch}) => {
             <thead>
             <tr>
                 <td></td>
-                <td>Image</td>
-                <td>Product</td>
-                <td>Price</td>
-                <td>Quantity</td>
-                <td>Subtotal</td>
+                <td>{trans("image")}</td>
+                <td>{trans("product")}</td>
+                <td>{trans("price")}</td>
+                <td>{trans("quantity")}</td>
+                <td>{trans("subtotal")}</td>
             </tr>
             </thead>
             <tbody>
@@ -94,9 +95,7 @@ const CartTable = ({cartItems, dispatch}) => {
                         <td>${(product.price * product.quantity)}</td>
                     </tr>
                 ))
-            ) : (
-                <div>Products Loading...</div>
-            )}
+            ) : null}
             </tbody>
         </table>
     )

@@ -10,6 +10,7 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import {FaTrashAlt} from "react-icons/fa";
 import Button from "react-bootstrap/Button";
+import trans from "../utils/translate";
 
 const ShoppingCart = () => {
   const { cartItems, subTotal, totalAmount } = useSelector(
@@ -103,18 +104,18 @@ const ShoppingCart = () => {
 
       <div className="total-card">
         <div className="total-items">
-          <span className="items-count">Items ({cartItems.length})</span>
+          <span className="items-count">{trans("items")} ({cartItems.length})</span>
           <span className="items-price">$ {subTotal}</span>
         </div>
         <div className="divider"></div>
         <div className="total">
-          <span className="total-text">Total </span>
+          <span className="total-text">{trans("total")} </span>
           <span className="total-item-price">$ {totalAmount}</span>
         </div>
 
         <div className="pay">
           <button disabled={cartItems.length === 0} className="pay-btn" onClick={() => navigate("/dashboard/cart")}>
-            Continue
+            {trans("continue")}
           </button>
         </div>
       </div>

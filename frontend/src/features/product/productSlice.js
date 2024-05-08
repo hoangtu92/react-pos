@@ -7,6 +7,7 @@ import {
     getLocalStorageSettings,
     updateLocalStorageProductSync
 } from "../../utils/localStorage";
+import trans from "../../utils/translate";
 
 const syncObj = getLocalStorageProductSync();
 
@@ -69,7 +70,7 @@ export const getProducts = createAsyncThunk('product/getProducts', async (query,
             if (result.length === 1) {
                 thunkAPI.dispatch(addToCart(result[0]));
             } else if (result.length === 0) {
-                alert("無此商品請重新搜尋");
+                alert(trans("product_not_found_msg"));
             }
         }
 
@@ -127,12 +128,12 @@ export const productSlice = createSlice({
                 if (Math.round(state.syncObj.synced_percent) === 100 && action.payload.total === 0) {
                     state.syncObj.page = 1;
                     state.syncObj.playing = false;
-                    toast.success("Product syncing is completed!")
+                    toast.success(trans("product_sync_success"))
                 }
                 updateLocalStorageProductSync(state.syncObj);
 
             }).addCase(syncProducts.rejected, (state) => {
-            alert("Error occurred while syncing!");
+            alert(trans("product_sync_failed"));
             state.syncObj.playing = false;
         })
 
@@ -141,7 +142,7 @@ export const productSlice = createSlice({
                 updateLocalStorageProductSync(state.syncObj);
             })
             .addCase(truncateProduct.fulfilled, (state, action) => {
-                toast.success("All products have been removed. Please sync again to have newest product data.")
+                toast.success(trans("product_wipe_success"))
             })
 
 

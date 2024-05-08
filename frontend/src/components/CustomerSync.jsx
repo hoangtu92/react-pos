@@ -3,6 +3,7 @@ import {useDispatch, useSelector} from "react-redux";
 import Button from "react-bootstrap/Button";
 import {countCustomers, updateSyncCustomer} from "../features/customer/customerSlice";
 import {ProgressBar} from "react-bootstrap";
+import trans from "../utils/translate";
 
 const CustomerSync = () => {
     const {syncObj} = useSelector((state) => state.customer);
@@ -39,18 +40,18 @@ const CustomerSync = () => {
     return (
         <>
             <div className={"border-opacity-25 p-4 border-dark border"}>
-                <h3 className={"border-bottom border-dark-subtle mb-4 pb-4"}>Customer</h3>
+                <h3 className={"border-bottom border-dark-subtle mb-4 pb-4"}>{trans("customer")}</h3>
                 <div className={"d-flex pt-3 pb-3  flex-row align-items-center"}>
 
                     <div className={"mb-3"}>
                         {syncObj.playing ?
-                            <Button variant={"warning"} onClick={pauseSyncCustomer}>Pause</Button> :
+                            <Button variant={"warning"} onClick={pauseSyncCustomer}>{trans("pause")}</Button> :
                             syncObj.page > 1 ?
-                                <Button variant={"success"} onClick={resumeSyncCustomer}>Resume</Button>
+                                <Button variant={"success"} onClick={resumeSyncCustomer}>{trans("resume")}</Button>
                                 :
-                                <Button variant={"primary"} onClick={startSyncCustomer}>Start</Button>
+                                <Button variant={"primary"} onClick={startSyncCustomer}>{trans("start")}</Button>
                         }
-                        <Button className={"ms-2"} onClick={resetSyncCustomer} variant={"danger"}>Reset</Button>
+                        <Button className={"ms-2"} onClick={resetSyncCustomer} variant={"danger"}>{trans("reset")}</Button>
                     </div>
                 </div>
                 <div className={"mb-2"}>

@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import trans from "../utils/translate";
 
 const Header = () => {
   return (
@@ -9,10 +10,10 @@ const Header = () => {
       </div>
       <ul>
         <li>
-          <Link to="/login">Login</Link>
+          <Link to="/login">{trans("login")}</Link>
         </li>
         <li>
-          <Link to="/register">Register</Link>
+          <Link to="/register">{trans("register")}</Link>
         </li>
       </ul>
     </header>

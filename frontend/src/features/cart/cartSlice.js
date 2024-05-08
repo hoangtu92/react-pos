@@ -15,7 +15,7 @@ import orderService from "../order/orderService";
 import {toast} from "react-toastify";
 import customerService from "../customer/customerService";
 import productService from "../product/productService";
-import {handleChange} from "../product/productSlice";
+import trans from "../../utils/translate";
 
 const cartItems = getLocalStorageCart()
 const orderObj = getLocalStorageOrder()
@@ -33,7 +33,7 @@ const initialState = {
     subTotal: 0,
     loading: false,
     show_calculator: false,
-    settings: settings ?? {scanMode: true, enableInvoice: false},
+    settings: settings ?? {scanMode: true, enableInvoice: false, language: "tw"},
     addCartItem: false,
     updatedCartItem: false,
     deletedCartItem: false,
@@ -369,21 +369,21 @@ export const cartSlice = createSlice({
         printInvoice: (state, {payload: order_id}) => {
 
             if(typeof order_id === "undefined" || !order_id){
-                alert("Sorry. There was an error with automate printing function. Please click print manually.")
+                alert(trans("auto_print_error_msg"))
                 return;
             }
             const left = Math.round((document.body.clientWidth - (749/2))/2)
             window.open(`http://localhost:8000/api/invoice/view/${order_id}`, '_blank', 'location=yes,height=609,width=749,left='+left+',top=0,scrollbars=yes,status=yes');
             const msgListener = function (){
-                toast.success('Invoice printed successfully!');
+                toast.success(trans("print_success_msg"));
                 window.removeEventListener("message", msgListener, false);
             }
             window.addEventListener("message", msgListener, false);
         },
         validateBuyerID: (state, {payload: buyerID}) => {
             if(state.selectedCustomer.is_b2b){
-                if((buyerID == "" || !/^[0-9]{8}$/.test(buyerID))){
-                    alert("Invalid Tax ID");
+                if((!/^[0-9]{8}$/.test(buyerID))){
+                    alert(trans("invalid_tax_id_msg"));
                     state.error = true;
                 }
                 else{
@@ -544,7 +544,7 @@ export const cartSlice = createSlice({
                 state.error = false;
 
                 if(action.payload.amount > state.totalAmount){
-                    alert("Exceed total amount");
+                    alert(trans("redeem_amount_exceed_total_error"));
                     state.orderObj.redeem_value = 0;
                     state.orderObj.redeem_points = 0;
                     addLocalStorageOrder(state.orderObj);
@@ -584,14 +584,14 @@ export const cartSlice = createSlice({
                 state.error = false
             }).addCase(validateCarrierID.fulfilled, (state, action) => {
                 state.loading = false;
-                toast.success("Carrier ID is valid");
+                toast.success(trans("carrier_id_validate_success"));
                 state.settings.enableInvoice = false;
                 state.selectedCustomer.carrier_id = action.payload.carrier_id
                 updateSettings(state.settings);
             }).addCase(validateCarrierID.rejected, (state) => {
                 state.loading = false
                 state.resetCarrierID = true;
-                alert("載具號碼錯誤");
+                alert(trans("carrier_id_validate_failed"));
             })
     }
 })

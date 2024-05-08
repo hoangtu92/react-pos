@@ -7,6 +7,7 @@ import {
 } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { logout, reset } from "../features/auth/authSlice";
+import trans from "../utils/translate";
 
 const SidebarLeft = () => {
   const { user } = useSelector((state) => state.auth);
@@ -27,16 +28,16 @@ const SidebarLeft = () => {
       <div className="menu-links">
         <Link to="/dashboard" className={location.pathname === "/dashboard" ? "bg-hover" : null}>
           <FaShoppingBag className="menu-icon" />
-          Home
+          {trans("home")}
         </Link>
         <Link to="/dashboard/orders" className={location.pathname === "/dashboard/orders" ? "bg-hover" : null}>
           <FaShopify className="menu-icon" />
-          Orders
+          {trans("orders")}
         </Link>
 
         <Link to="/dashboard/sync" className={location.pathname === "/dashboard/sync" ? "bg-hover" : null}>
           <FaSync className="menu-icon" />
-          Sync
+          {trans("sync")}
         </Link>
 
       </div>

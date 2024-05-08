@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify'
 import { useSelector, useDispatch} from 'react-redux'
 import { register, reset } from '../features/auth/authSlice'
+import trans from "../utils/translate";
 
 const Register = () => {
 
@@ -18,7 +18,7 @@ const Register = () => {
   const navigate = useNavigate()
 
   const { user, success, error, message } = useSelector(state => state.auth)
-  
+
   useEffect(() => {
     if (error) {
       alert(message)
@@ -35,7 +35,7 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-   
+
     const userData = {
       name, email, password
     }
@@ -46,32 +46,32 @@ const Register = () => {
   return (
       <>
       <div className='auth-container'>
-        
+
 
 
 
               <form className='register-form' onSubmit={handleSubmit}>
-                  
-                <h1>Register</h1>
+
+                <h1>{trans("register")}</h1>
                 <div className='formInput'>
-                    <label>Name</label>   
-                    <input type="text" placeholder='Name' name='name' value={name} onChange={onChange} />  
+                    <label>{trans("name")}</label>
+                    <input type="text" placeholder={trans("name")} name='name' value={name} onChange={onChange} />
                   </div>
-         
+
                 <div className='formInput'>
-                  <label>Email</label>   
-                  <input type="email" placeholder='Email' name='email' value={email} onChange={onChange} />  
-                </div>     
-                  
-                  
-                <div className='formInput'>
-                  <label>Password</label>   
-                  <input type="password" placeholder='Password' name='password' value={password} onChange={onChange} />  
+                  <label>{trans("email")}</label>
+                  <input type="email" placeholder={trans("email")} name='email' value={email} onChange={onChange} />
                 </div>
 
-              <button type='submit' className='btn-grad'>Register</button>
-              
-             <div className='home'><a href='/'>Go to home page</a></div>
+
+                <div className='formInput'>
+                  <label>{trans("password")}</label>
+                  <input type="password" placeholder={trans("password")} name='password' value={password} onChange={onChange} />
+                </div>
+
+              <button type='submit' className='btn-grad'>{trans("register")}</button>
+
+             <div className='home'><a href='/'>{trans("go_to_home")}</a></div>
           </form>
           </div>
       </>

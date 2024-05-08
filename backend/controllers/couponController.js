@@ -6,7 +6,6 @@
  */
 const calcCouponValue = async (req, res) => {
     const {points, customer_id} = req.body;
-    console.log(customer_id, points);
     const result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/coupon/calc?points=${points}&customer_id=${customer_id}`, {
         method: "GET",
         headers: {

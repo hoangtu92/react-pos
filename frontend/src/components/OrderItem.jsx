@@ -4,6 +4,7 @@ import {Table} from "react-bootstrap";
 import Button from "react-bootstrap/Button";
 import {FaPrint} from "react-icons/fa";
 import {printInvoice} from "../features/cart/cartSlice";
+import trans from "../utils/translate";
 
 const OrderItem = ({ order, onClick }) => {
 
@@ -12,15 +13,15 @@ const OrderItem = ({ order, onClick }) => {
   return (
     <div className="order-details" key={order._id} onClick={onClick}>
       <div className="order-title">
-        <span className="order-id"><strong>Order Id: # {order.order_id}</strong> (<small className="qta">
-          Sold :
+        <span className="order-id"><strong>{trans("order_id")}: # {order.order_id}</strong> (<small className="qta">
+          {trans("sold")} :
             {order.cartItems.reduce((prev, cur) => {
                 return prev + cur.quantity;
             }, 0)}
         </small>
 )</span>
-        <span className="order-time"> Payment: {order.paymentMethod} <br/>
-            Clerk: {order.clerks.length > 0 ? order.clerks[0].name : ""}
+        <span className="order-time"> {trans("payment")}: {order.paymentMethod} <br/>
+            {trans("clerk")}: {order.clerks.length > 0 ? order.clerks[0].name : ""}
         </span>
       </div>
 

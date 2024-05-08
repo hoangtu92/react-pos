@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { login, reset } from "../features/auth/authSlice";
+import trans from "../utils/translate";
 
 const Login = () => {
   const [form, setForm] = useState({
@@ -45,13 +46,13 @@ const Login = () => {
     <>
       <div className="auth-container">
         <form className="register-form" onSubmit={handleSubmit}>
-          <h1>Login</h1>
+          <h1>{trans("login")}</h1>
 
           <div className="formInput">
-            <label>Email</label>
+            <label>{trans("email")}</label>
             <input
               type="email"
-              placeholder="Email"
+              placeholder={trans("email")}
               name="email"
               value={email}
               onChange={onChange}
@@ -59,7 +60,7 @@ const Login = () => {
           </div>
 
           <div className="formInput">
-            <label>Password</label>
+            <label>{trans("password")}</label>
             <input
               type="password"
               placeholder="Password"
@@ -70,11 +71,11 @@ const Login = () => {
           </div>
 
           <button type="submit" className="btn-grad">
-            Log In
+            {trans("login")}
           </button>
 
           <div className="home">
-            <a href="/">Go to home page</a>
+            <a href="/">{trans("go_to_home")}</a>
           </div>
         </form>
       </div>

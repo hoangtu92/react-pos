@@ -38,11 +38,11 @@ import Button from "react-bootstrap/Button";
 import {clearCustomerValues,
     getCustomers,
     handleCustomerChange} from "../features/cart/cartSlice";
-import {FaCircleCheck, FaTriangleExclamation} from "react-icons/fa6";
-import {toast} from "react-toastify";
+import {FaTriangleExclamation} from "react-icons/fa6";
 import {addCustomer} from "../features/customer/customerSlice";
 import SmoothScroll from "../components/SmoothScroll";
 import {handleChange} from "../features/product/productSlice";
+import trans from "../utils/translate";
 
 const Cart = () => {
 
@@ -145,11 +145,11 @@ const Cart = () => {
         e.preventDefault();
 
         if(selectedCustomer.is_b2b && (typeof selectedCustomer.buyer_id === 'undefined' || !/[0-9]{8}/.test(selectedCustomer.buyer_id))){
-            alert("Tax ID is required for B2B Customer")
+            alert(trans("alert_required_tax_id"))
             return;
         }
         if(orderObj.orderType === "ubereat" && (typeof orderObj.customTotalAmount === 'undefined' || orderObj.customTotalAmount <= 0)){
-            alert("Custom total amount is required for Ubereat order")
+            alert(trans("alert_required_custom_total"))
             return;
         }
 
@@ -241,7 +241,7 @@ const Cart = () => {
 
     const onHideCustomAmount = e => {
 
-        if(orderObj.orderType === "ubereat" && orderObj.customTotalAmount == 0){
+        if(orderObj.orderType === "ubereat" && orderObj.customTotalAmount <= 0){
             dispatch(updateOrderDetail({name: "orderType", value: "instore"}));
         }
         setShowCustomAmountModal(false);
@@ -288,7 +288,7 @@ const Cart = () => {
                                         <FaHome className="icon-cart"/>
                                     </Link>
                                 </div>
-                                <span>Return to the main page and add products to the cart.</span>
+                                <span>{trans("cart_empty_msg")}</span>
                             </div>
                         </div>
                     }
@@ -322,7 +322,7 @@ const Cart = () => {
                                                        onChange={handleUpdateOrderType} type={"radio"}
                                                        name={"order_type"} value={"instore"}/>
                                                 <label className={"mb-0 btn btn-outline-secondary btn-lg"}
-                                                       htmlFor="instore_type"><FaStoreAlt/> Store</label>
+                                                       htmlFor="instore_type"><FaStoreAlt/> {trans("store")}</label>
                                             </span>
 
                                     <span className={"me-2"}>
@@ -332,7 +332,7 @@ const Cart = () => {
                                                        onChange={() => {}}
                                                        name={"order_type"} value={"ubereat"}/>
                                                 <label className={"mb-0 btn btn-outline-secondary btn-lg"}
-                                                       htmlFor="ubereat_type"><FaUber/> Ubereat
+                                                       htmlFor="ubereat_type"><FaUber/> {trans("ubereat")}
                                             </label>
                                             </span>
                                     <span>
@@ -340,7 +340,7 @@ const Cart = () => {
                                                        onChange={e => window.open("https://seller.shopee.tw", "_blank")}
                                                        type={"radio"} name={"order_type"} value={"shopee"}/>
                                                 <label className={"mb-0 btn btn-outline-secondary btn-lg"}
-                                                       htmlFor="shopee_type"><FaShoppingBag/> Shopee
+                                                       htmlFor="shopee_type"><FaShoppingBag/> {trans("shopee")}
                                             </label>
                                             </span>
 
@@ -355,7 +355,7 @@ const Cart = () => {
                                                        checked={orderObj.paymentMethod === "cash"} onChange={handleUpdatePayment}
                                                        type={"radio"} name={"payment"} value={"cash"}/>
                                                 <label className={"btn btn-outline-secondary btn-lg"}
-                                                       htmlFor="cash_payment"><FaMoneyBillAlt/> Cash</label>
+                                                       htmlFor="cash_payment"><FaMoneyBillAlt/> {trans("cash")}</label>
                                             </span>
 
                                     <span>
@@ -364,7 +364,7 @@ const Cart = () => {
                                                        onChange={handleUpdatePayment} type={"radio"} name={"payment"}
                                                        value={"credit"}/>
                                                 <label className={"btn btn-outline-secondary btn-lg"}
-                                                       htmlFor="credit_payment"><FaCreditCard/> Credit card
+                                                       htmlFor="credit_payment"><FaCreditCard/> {trans("credit_card")}
                                             </label>
                                             </span>
                                 </div>
@@ -376,7 +376,7 @@ const Cart = () => {
                         <table>
                             <tbody>
                             <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
-                                <th>SubTotal:</th>
+                                <th>{trans("subtotal")}:</th>
                                 <td>${subTotal}</td>
                             </tr>
                             {coupons.map(e => {
@@ -387,21 +387,21 @@ const Cart = () => {
                             })}
 
                             {orderObj.discount_value > 0 ? <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
-                                <th>Total discount:</th>
+                                <th>{trans("total_discount")}:</th>
                                 <td>-${orderObj.discount_value}</td>
                             </tr> : null}
                             {orderObj.redeem_value > 0 ? <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
-                                <th>Redeem:</th>
+                                <th>{trans("redeem")}:</th>
                                 <td>-${orderObj.redeem_value}</td>
                             </tr> : null}
                             <tr className="grand-total border-top border-warning pt-2" style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
-                                <th>TOTAL:</th>
+                                <th>{trans("total")}:</th>
                                 <td>
                                     <strong>${totalAmount}</strong>
                                 </td>
                             </tr>
                             {orderObj.customTotalAmount > 0 ? <tr className="custom-total border-top border-warning pt-2">
-                                <th>CUSTOM:</th>
+                                <th>{trans("custom")}:</th>
                                 <td>
                                     <strong>${orderObj.customTotalAmount}</strong>
                                 </td>
@@ -422,7 +422,7 @@ const Cart = () => {
                                                 className={"align-items-end flex-row justify-content-end"}
                                                 id="issueInvoice"
                                                 checked={settings.enableInvoice}
-                                                disabled={selectedCustomer.carrier_id != null && selectedCustomer.carrier_id !== ""}
+                                                disabled={!selectedCustomer.is_b2b && selectedCustomer.carrier_id != null && selectedCustomer.carrier_id !== ""}
                                                 onChange={e => {
                                                     dispatch(updateSettings({name: "enableInvoice", value: e.target.checked}))
                                                 }}
@@ -430,14 +430,14 @@ const Cart = () => {
                                         </div>
                                     </Form.Group>
                                 </td>
-                                <td><Form.Label htmlFor={"issueInvoice"}>自動印發票</Form.Label></td>
+                                <td><Form.Label htmlFor={"issueInvoice"}>{trans("auto_invoice")}</Form.Label></td>
                             </tr>
                             <tr>
                                 <td></td>
                                 <td>
                                     <Button variant={"warning"} size={"lg"} type="submit" disabled={cartItems.length === 0 || loading || error}
                                             className={'d-flex align-items-center'}>
-                                        {settings.enableInvoice ? <span><FaPrint className={"me-1"}/> 結帳</span> : <span><FaShoppingBag className={"me-1"}/> 結帳</span> }
+                                        {settings.enableInvoice ? <span><FaPrint className={"me-1"}/> {trans("checkout_invoice")}</span> : <span><FaShoppingBag className={"me-1"}/> {trans("checkout")}</span> }
                                             </Button>
                                 </td>
                             </tr>
@@ -451,13 +451,13 @@ const Cart = () => {
             <Modal show={settings.showCustomerModal} backdrop={"static"} size={"lg"}>
                 <Form onSubmit={e => {e.preventDefault()}} className={"bg-dark text-white"}>
                     <Modal.Header>
-                        <Modal.Title>顧客資訊Customer details</Modal.Title>
+                        <Modal.Title>{trans("customer_details")}</Modal.Title>
                     </Modal.Header>
 
                     <Modal.Body>
 
                         <Form.Group className="mb-3" controlId="searchCustomer.ControlInput1">
-                            <Form.Label>電話號碼Phone</Form.Label>
+                            <Form.Label>{trans("phone")}</Form.Label>
                             <Form.Control
                                 type="phone"
                                 size={"lg"}
@@ -469,7 +469,7 @@ const Cart = () => {
                             />
 
                             <Form.Group>
-                                <Form.Label htmlFor={"customerName"}>顧客姓名Name</Form.Label>
+                                <Form.Label htmlFor={"customerName"}>{trans("name")}</Form.Label>
                                 <Form.Control autoFocus onFocus={e => e.target.select()} id={"customerName"} value={selectedCustomer.name} type={"text"} size={"lg"} onChange={e => dispatch(handleCustomerChange({name: "name", value: e.target.value}))} className={"mb-2"} />
                             </Form.Group>
 
@@ -500,7 +500,7 @@ const Cart = () => {
                                     name={"buyer_id"}
                                     onFocus={e => e.target.select()}
                                     value={buyerId}
-                                    placeholder={"統一編號Buyer Tax ID"}
+                                    placeholder={trans("placeholder_buyerid")}
                                 /> : <Form.Control
                                     id={"carrier_id"}
                                     type="text"
@@ -509,7 +509,7 @@ const Cart = () => {
                                     onBlur={handleCarrierIDChange}
                                     onFocus={e => e.target.select()}
                                     value={carrierId}
-                                    placeholder={"載具號碼Carrier ID"}
+                                    placeholder={trans("placeholder_carrierid")}
                                     name={"carrier_id"}
 
                                 />}
@@ -524,7 +524,7 @@ const Cart = () => {
 
                             {selectedCustomer.points > 0 ?
                                 <Form.Group className={"mb-2"}>
-                                    <Form.Label htmlFor="inputPoints" className={"me-2"}>使用狗狗幣Redeem Points
+                                    <Form.Label htmlFor="inputPoints" className={"me-2"}>{trans("redeem_points")}
                                         (max: {selectedCustomer.points} points)</Form.Label>
                                     {orderObj.redeem_value > 0 ? <Badge bg="success">Off -NT$ {orderObj.redeem_value}</Badge> : null}
                                     <div className={"d-flex flex-row"}>
@@ -551,7 +551,7 @@ const Cart = () => {
                                 </Form.Group> : null}
 
                             <Form.Group>
-                                <Form.Label htmlFor="inputDiscount" className={"me-2"}>折扣Discount</Form.Label>
+                                <Form.Label htmlFor="inputDiscount" className={"me-2"}>{trans("discount")}</Form.Label>
                                 <div className={"d-flex flex-row"}>
                                     <Form.Control
                                         name={"discount_value"}
@@ -575,7 +575,7 @@ const Cart = () => {
                     </Modal.Body>
 
                     <Modal.Footer>
-                        <Button size={"lg"} variant="warning" type={"button"} onClick={handleCloseCustomerModal}>Save & Close</Button>
+                        <Button size={"lg"} variant="warning" type={"button"} onClick={handleCloseCustomerModal}>{trans("save_close")}</Button>
                     </Modal.Footer>
                 </Form>
             </Modal>
@@ -584,13 +584,13 @@ const Cart = () => {
             <Modal size={"lg"}  show={showCustomAmountModal} backdrop={"static"} onHide={onHideCustomAmount} keyboard={true}>
                 <Form  className={"bg-dark text-white"}>
                     <Modal.Header closeButton>
-                        <Modal.Title>Custom order amount</Modal.Title>
+                        <Modal.Title>{trans("custom_order_amount")}</Modal.Title>
                     </Modal.Header>
 
                     <Modal.Body>
 
                         <Form.Group className="mb-3" controlId="searchCustomer.ControlInput2">
-                            <Form.Label>Order Amount</Form.Label>
+                            <Form.Label>{trans("order_amount")}</Form.Label>
                             <Form.Control
                                 type="number"
                                 size={"lg"}
@@ -606,7 +606,7 @@ const Cart = () => {
                     </Modal.Body>
 
                     <Modal.Footer>
-                        <Button size={"lg"}  variant="primary" type={"button"} onClick={onHideCustomAmount}>Save & Close</Button>
+                        <Button size={"lg"}  variant="primary" type={"button"} onClick={onHideCustomAmount}>{trans("save_close")}</Button>
                     </Modal.Footer>
                 </Form>
             </Modal>
@@ -615,13 +615,13 @@ const Cart = () => {
             <Modal size={"lg"}  show={show_calculator} backdrop={"static"}>
                 <Form  className={"bg-dark text-white"}>
                     <Modal.Header>
-                        <Modal.Title className={"text-success"}>訂單完成!</Modal.Title>
+                        <Modal.Title className={"text-success"}>{trans("congrats_msg")}</Modal.Title>
 
                     </Modal.Header>
 
                     <Modal.Body>
                         <Form.Group className="mb-3" controlId="searchCustomer.ControlInput1">
-                            <Form.Label>總金額Total Amount</Form.Label>
+                            <Form.Label>{trans("total_amount")}</Form.Label>
                             <Form.Control
                                 type="text"
                                 size={"lg"}
@@ -632,7 +632,7 @@ const Cart = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3" controlId="searchCustomer.ControlInput2">
-                            <Form.Label>收到金額Received Amount</Form.Label>
+                            <Form.Label>{trans("received_amount")}</Form.Label>
                             <Form.Control
                                 type="number"
                                 size={"lg"}
@@ -646,7 +646,7 @@ const Cart = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3" controlId="searchCustomer.ControlInput2">
-                            <Form.Label>找零Return</Form.Label>
+                            <Form.Label>{trans("return")}</Form.Label>
                             <Form.Control
                                 type="text"
                                 size={"lg"}
@@ -659,7 +659,7 @@ const Cart = () => {
 
                     <Modal.Footer>
                         <Button size={"lg"}  variant={"secondary"} onClick={handlePrintInvoice}><FaPrint/></Button>
-                        <Button size={"lg"}  variant="success" type={"button"} disabled={loading} onClick={finishOrder}>Finish</Button>
+                        <Button size={"lg"}  variant="success" type={"button"} disabled={loading} onClick={finishOrder}>{trans("finish")}</Button>
                     </Modal.Footer>
                 </Form>
             </Modal>
