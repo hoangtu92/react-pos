@@ -273,7 +273,7 @@ h1 {
 }
 
 .sidebarLeft {
-  flex-basis: 5%;
+  width: 150px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;

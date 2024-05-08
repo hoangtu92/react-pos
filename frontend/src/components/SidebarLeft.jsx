@@ -8,9 +8,12 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { logout, reset } from "../features/auth/authSlice";
 import trans from "../utils/translate";
+import Form from "react-bootstrap/Form";
+import {updateSettings} from "../features/cart/cartSlice";
 
 const SidebarLeft = () => {
   const { user } = useSelector((state) => state.auth);
+  const { settings } = useSelector((state) => state.cart);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -46,6 +49,22 @@ const SidebarLeft = () => {
         <div className="user-detail">
           <FaUserCircle className="user-icon" />
           <span className="user">{user.name}</span>
+        </div>
+        <div className={"language-switcher"}>
+          <Form.Group>
+            <div className={"mb-2"}>
+              <Form.Check // prettier-ignore
+                  type="switch"
+                  id="language"
+                  checked={settings.language == "tw"}
+                  onChange={e => {
+                    dispatch(updateSettings({name: "language", value: e.target.checked ? "tw": "en"}))
+                  }}
+                  label={"TW"}
+
+              />
+            </div>
+          </Form.Group>
         </div>
         <button className="logout-btn" onClick={logoutUser}>
           <FaSignInAlt className="logout-icon" />
