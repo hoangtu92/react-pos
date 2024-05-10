@@ -422,7 +422,9 @@ const Cart = () => {
                                                 className={"align-items-end flex-row justify-content-end"}
                                                 id="issueInvoice"
                                                 checked={settings.enableInvoice}
+/*
                                                 disabled={!selectedCustomer.is_b2b && selectedCustomer.carrier_id != null && selectedCustomer.carrier_id !== ""}
+*/
                                                 onChange={e => {
                                                     dispatch(updateSettings({name: "enableInvoice", value: e.target.checked}))
                                                 }}
