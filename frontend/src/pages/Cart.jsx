@@ -516,10 +516,10 @@ const Cart = () => {
 
                                 />}
 
-                                {<InputGroup.Text id="govid">
+                                {/*<InputGroup.Text id="govid">
                                     <Button variant={"secondary"} onClick={handleResetCustomerGovID}><FaEraser/></Button>
-                                    {/*<Button className={"ms-2"} variant={"success"} onClick={handleCarrierIDChange}><FaCircleCheck/></Button>*/}
-                                </InputGroup.Text>}
+                                    <Button className={"ms-2"} variant={"success"} onClick={handleCarrierIDChange}><FaCircleCheck/></Button>
+                                </InputGroup.Text>*/}
 
                                 </InputGroup>
                             </Form.Group>
