@@ -84,7 +84,9 @@ const languages = {
     "product_sync_failed": ["Error occurred while syncing!", "同步時發生錯誤！"],
     "product_wipe_success": ["All products have been removed. Please sync again to have newest product data.", "所有產品均已刪除。 請再次同步以獲得最新的產品資料。"],
 
-    "max_day": ["Max day", "最大日期"]
+    "max_day": ["Max day", "最大日期"],
+
+    "dev_mode_warning_msg": ["POS is running in dev mode.", "POS is running in dev mode." ]
 
 };
 

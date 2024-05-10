@@ -51,13 +51,13 @@ export const deleteLocalStorageCustomer = () => {
 
 
 export const addLocalStorageOrder = (order) => {
-    localStorage.setItem('order', JSON.stringify(order))
+    sessionStorage.setItem('order', JSON.stringify(order))
 }
 
 export const getLocalStorageOrder = () => {
     const order = {paymentMethod: 'cash', orderType: 'instore', redeem_points: 0, discount_value: 0};
     try{
-        let a = JSON.parse(localStorage.getItem('order'));
+        let a = JSON.parse(sessionStorage.getItem('order'));
         if(a == null) a = order;
         return a;
     }
@@ -67,7 +67,7 @@ export const getLocalStorageOrder = () => {
 }
 
 export const deleteLocalStorageOrder = () => {
-    localStorage.removeItem('order')
+    sessionStorage.removeItem('order')
 }
 export const updateLocalStorageSettings = (settings) => {
     localStorage.setItem('settings', JSON.stringify(settings))

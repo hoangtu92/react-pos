@@ -146,6 +146,7 @@ const getQRValue = async (order) => {
  */
 const viewInvoice = async (req, res) => {
     const {order_id} = req.params;
+    const {print} = req.query;
 
 
     const order = await Order.findOne({order_id: order_id});
@@ -198,7 +199,8 @@ const viewInvoice = async (req, res) => {
             qr_left,
             qr_right,
             barcode,
-            month_invoice
+            month_invoice,
+            print
         })
     }
     else res.status(403);

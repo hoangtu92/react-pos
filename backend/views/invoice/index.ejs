@@ -253,11 +253,14 @@
     <% } %>
     </tbody>
 </table>
+<% if(print == "true"){ %>
 <script>
     window.onload = function (){
         window.print();
     }
-
+</script>
+<% } %>
+<script>
     window.onafterprint = function (){
         window.opener.postMessage("Print success", "*");
         window.close();

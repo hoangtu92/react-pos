@@ -373,8 +373,9 @@ export const cartSlice = createSlice({
                 alert(trans("auto_print_error_msg"))
                 return;
             }
-            const left = Math.round((document.body.clientWidth - (749/2))/2)
-            window.open(`http://localhost:8000/api/invoice/view/${order_id}`, '_blank', 'location=yes,height=609,width=749,left='+left+',top=0,scrollbars=yes,status=yes');
+            const left = Math.round((document.body.clientWidth - (749/2))/2);
+            const print = state.selectedCustomer.carrier_id == null || state.selectedCustomer.carrier_id == "";
+            window.open(`http://localhost:8000/api/invoice/view/${order_id}?print=${print}`, '_blank', 'location=yes,height=609,width=749,left='+left+',top=0,scrollbars=yes,status=yes');
             const msgListener = function (){
                 toast.success(trans("print_success_msg"));
                 window.removeEventListener("message", msgListener, false);
