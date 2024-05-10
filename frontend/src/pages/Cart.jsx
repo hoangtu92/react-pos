@@ -88,7 +88,7 @@ const Cart = () => {
     useEffect(() => {
         if(resetCarrierID){
             setCarrierId("");
-            dispatch(handleChange({name: "resetCarrierID", value: false}));
+            dispatch(handleCustomerChange({name: "carrier_id", value: ""}))
         }
     }, [dispatch, resetCarrierID]);
 
@@ -225,6 +225,9 @@ const Cart = () => {
     const handleCarrierIDChange = () => {
         if(carrierId != null && carrierId != ""){
             dispatch(validateCarrierID(carrierId))
+        }
+        else{
+            dispatch(handleCustomerChange({name: "carrier_id", value: ""}));
         }
     }
 
@@ -511,15 +514,10 @@ const Cart = () => {
                                     onBlur={handleCarrierIDChange}
                                     onFocus={e => e.target.select()}
                                     value={carrierId}
-                                    placeholder={trans("placeholder_carrierid")}
+                                    placeholder={selectedCustomer.carrier_id ?? trans("placeholder_carrierid")}
                                     name={"carrier_id"}
 
                                 />}
-
-                                {/*<InputGroup.Text id="govid">
-                                    <Button variant={"secondary"} onClick={handleResetCustomerGovID}><FaEraser/></Button>
-                                    <Button className={"ms-2"} variant={"success"} onClick={handleCarrierIDChange}><FaCircleCheck/></Button>
-                                </InputGroup.Text>*/}
 
                                 </InputGroup>
                             </Form.Group>

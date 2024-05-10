@@ -272,6 +272,7 @@ export const cartSlice = createSlice({
         },
         handleCustomerChange: (state, {payload: {name, value}}) => {
             state.selectedCustomer[name] = value;
+            state.resetCarrierID = false;
             setLocalStorageCustomer(state.selectedCustomer)
         },
         clearCustomerValues: (state) => {
