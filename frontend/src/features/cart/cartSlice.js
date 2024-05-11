@@ -474,9 +474,11 @@ export const cartSlice = createSlice({
             }).addCase(syncOrder.fulfilled, (state) => {
                 state.loading = false;
                 state.error = false;
+                toast.success(trans("order_sync_success"))
             }).addCase(syncOrder.rejected, (state) => {
                 state.loading = false
-                state.error = true
+                state.error = true;
+                alert(trans("order_sync_failed"))
             })
             // get order from justdog
             .addCase(getOrder.pending, (state) => {

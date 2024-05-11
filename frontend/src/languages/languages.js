@@ -87,7 +87,9 @@ const languages = {
 
     "max_day": ["Max day", "最大日期"],
 
-    "dev_mode_warning_msg": ["POS is running in dev mode.", "POS is running in dev mode." ]
+    "dev_mode_warning_msg": ["POS is running in dev mode.", "POS is running in dev mode." ],
+    "order_sync_success": ["Order synced successfully.", "訂單同步成功" ],
+    "order_sync_failed": ["Order sync failed. Please go to order list and manually sync to justdog", "訂單同步失敗。 請前往訂單清單並手動同步至 justdog" ],
 
 };
 

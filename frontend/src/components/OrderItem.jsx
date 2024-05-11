@@ -2,8 +2,8 @@ import React from "react";
 import {  useDispatch } from "react-redux";
 import {Table} from "react-bootstrap";
 import Button from "react-bootstrap/Button";
-import {FaPrint} from "react-icons/fa";
-import {printInvoice} from "../features/cart/cartSlice";
+import {FaPrint, FaSync} from "react-icons/fa";
+import {printInvoice, syncOrder} from "../features/cart/cartSlice";
 import trans from "../utils/translate";
 
 const OrderItem = ({ order, onClick }) => {
@@ -42,6 +42,7 @@ const OrderItem = ({ order, onClick }) => {
         <span className="order-price-detail d-flex align-items-center">
           <span className="order-price">$ {order.totalAmount}</span>
           <Button onClick={e => dispatch(printInvoice(order.order_id))}><FaPrint/></Button>
+          <Button className={"ms-2"} onClick={e => dispatch(syncOrder(order.order_id))}><FaSync/></Button>
         </span>
       </div>
     </div>
