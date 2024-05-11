@@ -49,7 +49,10 @@ export const countCustomers = createAsyncThunk('customer/countCustomers', async 
                 thunkAPI.dispatch(syncCustomers({page: 1}))
             }
         }
-
+        else{
+            thunkAPI.dispatch(clearValues())
+            toast.warn(trans("no_customer_found"))
+        }
 
         return result;
     } catch (error) {

@@ -58,14 +58,15 @@ const countProducts = async (req, res) => {
 /**
  *
  * @param page
+ * @param perpage
  * @param count
  * @param look_back
  * @param cb
  * @returns {Promise<void>}
  */
-const do_sync = async (page = 1, count,  look_back = 0, cb) => {
+const do_sync = async (page = 1, perpage = 20, count,  look_back = 0, cb) => {
 
-    let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/product/get?page=${page}&perpage=20&count=${count}&look_back=${look_back}`, {
+    let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/product/get?page=${page}&perpage=${perpage}&count=${count}&look_back=${look_back}`, {
         method: "GET",
         headers: {
             'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
@@ -136,7 +137,7 @@ const do_sync = async (page = 1, count,  look_back = 0, cb) => {
  */
 const syncProduct = async(req, res) => {
     const { page, look_back, count } = req.query;
-    await do_sync(page, count, look_back,  (results) => {
+    await do_sync(page, 20, count, look_back,  (results) => {
       if(results){
           res.status(200).json(results)
       }
@@ -392,5 +393,6 @@ module.exports = {
     addCartItems,
     editCartItem,
     removeCartItem,
-    getCarts
+    getCarts,
+    do_sync
 }

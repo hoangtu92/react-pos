@@ -23,14 +23,12 @@ export const syncProducts = createAsyncThunk('product/syncProducts', async (args
     try {
         const result = await productService.productSync(args.page, args.look_back);
 
-        if (result.created.length > 0 || result.updated.length) {
-
+        if (result.created.length > 0 || result.updated.length > 0) {
             const syncObj = getLocalStorageProductSync();
             if (syncObj.playing) {
                 const next_page = args.page + 1;
                 thunkAPI.dispatch(syncProducts({page: next_page, look_back: args.look_back}))
             }
-
         }
         return result
     } catch (error) {
@@ -53,7 +51,10 @@ export const countProducts = createAsyncThunk('product/countProducts', async (_,
                 thunkAPI.dispatch(syncProducts({page: 1, look_back: syncObj.look_back}))
             }
         }
-
+        else{
+            thunkAPI.dispatch(clearValues())
+            toast.warn(trans("no_product_found"))
+        }
 
         return result;
     } catch (error) {
