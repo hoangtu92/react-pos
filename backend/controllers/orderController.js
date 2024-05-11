@@ -416,12 +416,14 @@ const syncOrder = async(req, res) => {
                 });
             }
 
-            if(typeof order.invoice.buyer_id !== "undefined" && order.invoice.buyer_id !== null){
+            if(typeof order.invoice.buyer_id !== "undefined" && order.invoice.buyer_id !== null && order.invoice.buyer_id.length > 0){
                 data["meta_data"].push({
                     "key": "smilepayei_buyer_id",
                     "value": order.invoice.buyer_id
                 });
-            } else if(typeof order.invoice.carrier_id !== "undefined" && order.invoice.carrier_id !== null){
+            }
+
+            if(typeof order.invoice.carrier_id !== "undefined" && order.invoice.carrier_id !== null && order.invoice.carrier_id.length > 0){
                 data["meta_data"].push({
                     "key": "smilepayei_carrier_id",
                     "value": order.invoice.carrier_id

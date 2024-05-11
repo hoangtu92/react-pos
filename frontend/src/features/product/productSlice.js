@@ -70,12 +70,12 @@ export const getProducts = createAsyncThunk('product/getProducts', async (query,
         if (settings.scanMode) {
             if (result.length === 1) {
                 thunkAPI.dispatch(addToCart(result[0]));
+                thunkAPI.dispatch(getProducts());
+                return [];
             } else if (result.length === 0) {
                 alert(trans("product_not_found_msg"));
             }
         }
-
-
         return result;
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response.data)
