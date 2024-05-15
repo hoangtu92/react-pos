@@ -29,8 +29,7 @@ const OrderSchema = mongoose.Schema(
             require: true
         },
         order_id: {
-            type: Number,
-            required: true
+            type: Number
         },
         clerk: {
             type: mongoose.Schema.ObjectId,
@@ -54,6 +53,9 @@ const OrderSchema = mongoose.Schema(
         orderType: {
             type: String,
             default: 0
+        },
+        is_b2b: {
+            type: Boolean
         }
     },
     {timestamps: true}

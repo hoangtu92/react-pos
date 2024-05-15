@@ -74,6 +74,7 @@ const languages = {
     "print_success_msg": ['Invoice printed successfully!', '發票列印成功！'],
     "invalid_tax_id_msg": ["Invalid Tax ID", "統一編號錯誤，請再次確認！"],
     "redeem_amount_exceed_total_error": ["Exceed total amount", "折扣超過總金額"],
+    "point_too_small_msg": ["Point too small", "Point too small"],
     "carrier_id_validate_success": ["Carrier ID is valid", "載具正確"],
     "carrier_id_validate_failed": ["Carrier ID is invalid", "錯誤！請重新輸入載具！"],
 
@@ -88,6 +89,7 @@ const languages = {
     "max_day": ["Max day", "最大日期"],
 
     "dev_mode_warning_msg": ["POS is running in dev mode.", "POS is running in dev mode." ],
+    "order_create_success": ["Order created successfully.", "Order created successfully." ],
     "order_sync_success": ["Order synced successfully.", "訂單同步成功" ],
     "order_sync_failed": ["Order sync failed. Please go to order list and manually sync to justdog", "訂單同步失敗。 請前往訂單清單並手動同步至 justdog" ],
 

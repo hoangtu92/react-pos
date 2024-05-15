@@ -9,13 +9,13 @@ import {
     getLocalStorageSettings,
     updateLocalStorageSettings,
     setLocalStorageCustomer,
-    deleteLocalStorageCustomer, getLocalStorageCustomer, resetLocalStorageSettings
+    deleteLocalStorageCustomer, getLocalStorageCustomer
 } from '../../utils/localStorage'
 import orderService from "../order/orderService";
 import {toast} from "react-toastify";
 import customerService from "../customer/customerService";
-import productService from "../product/productService";
 import trans from "../../utils/translate";
+import cartService from "./cartService";
 
 const cartItems = getLocalStorageCart()
 const orderObj = getLocalStorageOrder()
@@ -27,7 +27,6 @@ const initialState = {
     customers: [],
     selectedCustomer: selectedCustomer,
     orderObj: orderObj,
-    order: {},
     totalCount: 0,
     totalAmount: 0,
     subTotal: 0,
@@ -44,80 +43,22 @@ const initialState = {
 }
 
 /**
- * Get cart from justdog
- */
-export const getCart = createAsyncThunk('cart/get', async (cookie = "", thunkAPI) => {
-    try {
-        return await productService.getCarts(cookie);
-    } catch (error) {
-        return thunkAPI.rejectWithValue(error.response.data)
-    }
-})
-/**
- * Add cart item cart to justdog
- */
-export const batch = createAsyncThunk('cart/batch', async (data, thunkAPI) => {
-    try {
-        return await productService.batch(data)
-    } catch (error) {
-        return thunkAPI.rejectWithValue(error.response.data)
-    }
-})
-/**
- * Add cart item cart to justdog
- */
-export const addCart = createAsyncThunk('cart/add', async (data, thunkAPI) => {
-    try {
-        return await productService.addCartItem(data)
-    } catch (error) {
-        return thunkAPI.rejectWithValue(error.response.data)
-    }
-})
-
-/**
- * edit cart item
- */
-export const editCartItem = createAsyncThunk('cart/editCartItem', async (data, thunkAPI) => {
-    try {
-        return await productService.editCartItem(data);
-    } catch (error) {
-        return thunkAPI.rejectWithValue(error.response.data)
-    }
-})
-/**
- * edit cart item
- */
-export const deleteCartItem = createAsyncThunk('cart/deleteCartItem', async (data, thunkAPI) => {
-    try {
-        return await productService.removeCartItem(data);
-    } catch (error) {
-        return thunkAPI.rejectWithValue(error.response.data)
-    }
-})
-
-/**
  * Create new blank order to get order_id reference from justdog.tw
  *
  */
 export const orderCreate = createAsyncThunk('order/orderCreate', async (order, thunkAPI) => {
     try {
-        return await orderService.orderCreate(order)
-    } catch (error) {
-        return thunkAPI.rejectWithValue(error.response.data)
-    }
-})
-
-export const getOrder = createAsyncThunk('order/getOrder', async (order_id, thunkAPI) => {
-    try {
-        let result = await orderService.getOrder(order_id);
+        const result = await orderService.orderCreate(order);
 
         if(result.status){
-            // If local pos order already issue invoice but jd order hasn't completed yet
-            if(typeof result.order.invoice !== 'undefined' && typeof result.order.invoice.invno !== 'undefined' && result.jd_order.status !== "completed"){
-                // Sync immediately
-                thunkAPI.dispatch(syncOrder(order_id))
+            if(order.enableInvoice)
+                thunkAPI.dispatch(issueInvoice({id: result.data._id, print: true}));
+            else{
+                thunkAPI.dispatch(syncOrder(result.data._id));
             }
+
         }
+
         return result;
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response.data)
@@ -127,11 +68,7 @@ export const getOrder = createAsyncThunk('order/getOrder', async (order_id, thun
 export const getCustomers = createAsyncThunk('customer/getCustomers', async (data, thunkAPI) => {
     try {
         const result =  await customerService.getCustomers(data.query);
-        if(result.length > 0){
-            // Quickly add first customer to the order
-            thunkAPI.dispatch(addCustomer({customer_id: result[0].user_id, order_id: data.order_id}))
-        }
-        else {
+        if(result.length == 0){
             thunkAPI.dispatch(clearCustomerValues());
             if(/^0[0-9]{9,10}$/.test(data.query)){
                 thunkAPI.dispatch(handleCustomerChange({name: "phone", value: data.query}));
@@ -144,14 +81,9 @@ export const getCustomers = createAsyncThunk('customer/getCustomers', async (dat
 })
 
 // Update customer to order in justdog
-export const addCustomer = createAsyncThunk('order/addCustomer', async (data, thunkAPI) => {
+export const addUpdateCustomer = createAsyncThunk('order/addUpdateCustomer', async (data, thunkAPI) => {
     try {
-        const result = await orderService.addCustomer(data);
-        if(result.status){
-            thunkAPI.dispatch(getPoints(data.customer_id));
-
-        }
-        return result;
+        return await customerService.addUpdateCustomer(data);
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response.data)
     }
@@ -160,87 +92,40 @@ export const addCustomer = createAsyncThunk('order/addCustomer', async (data, th
 // Validate carrier id
 export const validateCarrierID = createAsyncThunk('order/validateCarrierID', async (carrier_id, thunkAPI) => {
     try {
-        const result =  await orderService.validateCarrierID(carrier_id);
-        if(result.status){
-            thunkAPI.dispatch(handleCustomerChange({name: "carrier_id" ,value: carrier_id}));
-        }
-        return result;
+        return  await cartService.validateCarrierID(carrier_id);
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response.data)
     }
 })
-
-/**
- * Remove blank order
- *
- */
-export const removeOrder = createAsyncThunk('order/removeOrder', async (order_id, thunkAPI) => {
-    try {
-        const result = await orderService.removeOrder(order_id, thunkAPI);
-
-
-        thunkAPI.dispatch(clearOrder())
-        resetLocalStorageSettings()
-
-        return result;
-
-    } catch (error) {
-        return thunkAPI.rejectWithValue(error.response.data)
-    }
-});
 
 /**
  * Calculate redeem point to credit value
  *
  */
-export const calcPoint = createAsyncThunk('coupon/calc', async (data, thunkAPI) => {
+export const calcPoint = createAsyncThunk('coupon/calc', async (points, thunkAPI) => {
     try {
-        return await orderService.calcPoint(data);
+        return await customerService.calcPoint(points);
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response.data)
     }
 })
 
-export const getPoints = createAsyncThunk('customer/getPoints', async (customer_id, thunkAPI) => {
-    try {
-        return await customerService.getPoints(customer_id)
-    } catch (error) {
-        return thunkAPI.rejectWithValue(error.response.data)
-    }
-})
-
-/**
- * Update finalization order data to local POS
- *
- */
-export const updateOrder = createAsyncThunk('order/updateOrder', async (order, thunkAPI) => {
-    try {
-        let result = await orderService.updateOrder(order);
-
-        if(result.status){
-            if(order.enableInvoice)
-                thunkAPI.dispatch(issueInvoice(order.order_id));
-
-            thunkAPI.dispatch(syncOrder(order.order_id));
-        }
-
-        return result;
-
-    } catch (error) {
-        return thunkAPI.rejectWithValue(error.response.data)
-    }
-})
 
 /**
  * Issue invoice after everything is set.
  * Expected behavior: Issue invoice (if hasn't yet) and return the invoice object.
  */
-export const issueInvoice = createAsyncThunk('order/issueInvoice', async (order_id, thunkAPI) => {
+export const issueInvoice = createAsyncThunk('order/issueInvoice', async (data, thunkAPI) => {
     try {
-        const result =  await orderService.issueInvoice(order_id);
+        const result =  await orderService.issueInvoice(data.id);
 
         if(result.status){
-            thunkAPI.dispatch(printInvoice(order_id));
+            const print = !result.invoice.carrier_id;
+            if(print || data.print) {
+                thunkAPI.dispatch(printInvoice(data.id));
+            }
+
+            thunkAPI.dispatch(syncOrder(data.id))
         }
 
         return result;
@@ -253,9 +138,9 @@ export const issueInvoice = createAsyncThunk('order/issueInvoice', async (order_
  *
  * Sync invoice, other order details to justdog.tw
  */
-export const syncOrder = createAsyncThunk('order/syncOrder', async (order_id, thunkAPI) => {
+export const syncOrder = createAsyncThunk('order/syncOrder', async (id, thunkAPI) => {
     try {
-        return await orderService.syncOrder(order_id);
+        return await orderService.syncOrder(id);
 
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response.data)
@@ -367,20 +252,25 @@ export const cartSlice = createSlice({
             state.settings[name] = value;
             updateLocalStorageSettings(state.settings)
         },
-        printInvoice: (state, {payload: order_id}) => {
+        printInvoice: (state, {payload: id}) => {
 
-            if(typeof order_id === "undefined" || !order_id){
+            if(typeof id === "undefined" || !id){
                 alert(trans("auto_print_error_msg"))
                 return;
             }
             const left = Math.round((document.body.clientWidth - (749/2))/2);
-            const print = state.selectedCustomer.carrier_id == null || state.selectedCustomer.carrier_id == "";
-            window.open(`http://localhost:8000/api/invoice/view/${order_id}?print=${print}`, '_blank', 'location=yes,height=609,width=749,left='+left+',top=0,scrollbars=yes,status=yes');
+            window.open(`http://localhost:8000/api/invoice/view/${id}`, '_blank', 'location=yes,height=609,width=749,left='+left+',top=0,scrollbars=yes,status=yes');
             const msgListener = function (){
                 toast.success(trans("print_success_msg"));
                 window.removeEventListener("message", msgListener, false);
             }
             window.addEventListener("message", msgListener, false);
+
+
+            if(state.settings.auto_invoice){
+                state.show_calculator = true;
+            }
+
         },
         validateBuyerID: (state, {payload: buyerID}) => {
             if(state.selectedCustomer.is_b2b){
@@ -398,74 +288,20 @@ export const cartSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(getCart.pending, (state, action) => {
-                state.loading = true;
-            })
-            .addCase(getCart.fulfilled, (state, action) => {
-                state.loading = false;
-                state.settings.nonce = action.payload.nonce;
-                updateLocalStorageSettings(state.settings);
-
-                state.orderObj.discount_value = action.payload.data.totals.total_discount;
-
-                action.payload.data.items.forEach(e => {
-                    const product = state.cartItems.find((item) => item.product_id === e.id)
-                    if(product) {
-                        product.price = e.prices.price;
-                        product.key = e.key;
-                    }
-                });
-                state.coupons = action.payload.data.coupons;
-                addLocalStorageCart(state.cartItems);
-                addLocalStorageOrder(state.orderObj);
-                state.needRefreshCart = false;
-            })
-            .addCase(batch.fulfilled, (state, action) => {
-
-                state.settings.cookie = action.payload.cookie.reduce((t, e) => {
-                    if(/wp_woocommerce_session/.test(e)) t = e;
-                    return t;
-                }, state.settings.cookie);
-
-                state.needRefreshCart = true;
-                state.updatedCartItem = false;
-                state.deletedCartItem = false;
-
-            }).addCase(addCart.fulfilled, (state, action) => {
-                state.addCartItem = false;
-            }).addCase(editCartItem.pending, (state, action) => {
-                state.loading = true;
-            })
-            .addCase(editCartItem.fulfilled, (state, action) => {
-                state.updatedCartItem = false;
-                state.needRefreshCart = true;
-            })
-
-            .addCase(deleteCartItem.fulfilled, (state, action) => {
-                state.deletedCartItem = false;
-                state.needRefreshCart = true;
-            })
-
             // Create order
             .addCase(orderCreate.pending, (state) => {
                 state.loading = true;
             }).addCase(orderCreate.fulfilled, (state, action) => {
-                state.loading = false;
-                state.error = false;
-                state.orderObj.order_id = action.payload.order_id;
-                addLocalStorageOrder(state.orderObj);
+
+                state.orderObj.id = action.payload.data._id;
+                addLocalStorageOrder(state.orderObj)
+
+                toast.success(trans("order_create_success"))
+                // Show calculator when no invoice is needed
+                if(!state.settings.auto_invoice){
+                    state.show_calculator = true;
+                }
             }).addCase(orderCreate.rejected, (state) => {
-                state.loading = false
-                state.error = true
-            })
-            // update order to local pos
-            .addCase(updateOrder.pending, (state) => {
-                state.loading = true;
-            }).addCase(updateOrder.fulfilled, (state) => {
-                state.error = false;
-                state.show_calculator = true;
-            }).addCase(updateOrder.rejected, (state) => {
-                state.loading = false
                 state.error = true
             })
             // sync order with justdog
@@ -474,25 +310,11 @@ export const cartSlice = createSlice({
             }).addCase(syncOrder.fulfilled, (state) => {
                 state.loading = false;
                 state.error = false;
-                toast.success(trans("order_sync_success"))
+                toast.success(trans("order_sync_success"));
             }).addCase(syncOrder.rejected, (state) => {
                 state.loading = false
                 state.error = true;
                 alert(trans("order_sync_failed"))
-            })
-            // get order from justdog
-            .addCase(getOrder.pending, (state) => {
-                state.loading = true;
-            }).addCase(getOrder.fulfilled, (state, {payload: result}) => {
-                state.loading = false;
-                state.error = false;
-                state.order = result.order;
-                if(!result.jd_order.is_editable){
-                    state.show_calculator = true;
-                }
-            }).addCase(getOrder.rejected, (state) => {
-                state.loading = false
-                state.error = true
             })
             // Get customer
             .addCase(getCustomers.pending, (state) => {
@@ -511,35 +333,23 @@ export const cartSlice = createSlice({
                 state.error = true
             })
 
-            // Add customer to order in justdog
-            .addCase(addCustomer.pending, (state) => {
+            .addCase(addUpdateCustomer.pending, (state) => {
                 state.loading = true
-            }).addCase(addCustomer.fulfilled, (state) => {
+            }).addCase(addUpdateCustomer.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = false;
-            }).addCase(addCustomer.rejected, (state) => {
+                state.selectedCustomer._id = action.payload.data._id;
+                setLocalStorageCustomer(state.selectedCustomer)
+            }).addCase(addUpdateCustomer.rejected, (state) => {
                 state.loading = false
                 state.error = true
             })
-
-            // Remove order
-            .addCase(removeOrder.pending, (state) => {
-                state.loading = true;
-            }).addCase(removeOrder.fulfilled, (state) => {
-                state.loading = false;
-                state.error = false;
-                //toast.success('order successfully deleted')
-            }).addCase(removeOrder.rejected, (state) => {
-                state.loading = false
-                state.error = true
-            })
-
             // Calc point
             .addCase(calcPoint.pending, (state) => {
                 state.loading = true;
 
             }).addCase(calcPoint.rejected, (state, action) => {
-                alert(action.payload.msg);
+                alert(trans(action.payload.msg));
                 state.loading = false;
                 state.orderObj.redeem_points = 0;
 
@@ -561,22 +371,12 @@ export const cartSlice = createSlice({
 
             })
 
-            // Get point
-            .addCase(getPoints.pending, (state) => {
-                state.loading = true;
-
-            }).addCase(getPoints.rejected, (state) => {
-                state.loading = false;
-            }).addCase(getPoints.fulfilled, (state, action) => {
-                state.loading = false;
-                state.error = false;
-                state.selectedCustomer.points = action.payload.points;
-
-        })
-
             // Issue invoice
             .addCase(issueInvoice.fulfilled, (state, action) => {
                 state.error = false;
+                state.orderObj.invoice = action.payload.invoice
+                addLocalStorageOrder(state.orderObj);
+
             }).addCase(issueInvoice.rejected, (state, action) => {
                 state.loading = false
                 state.error = true
@@ -592,6 +392,7 @@ export const cartSlice = createSlice({
                 state.settings.enableInvoice = false;
                 state.selectedCustomer.carrier_id = action.payload.carrier_id
                 updateSettings(state.settings);
+                setLocalStorageCustomer(state.selectedCustomer);
             }).addCase(validateCarrierID.rejected, (state) => {
                 state.loading = false
                 state.resetCarrierID = true;
@@ -616,6 +417,7 @@ export const {
     updateSettings,
     handleCustomerChange,
     clearCustomerValues,
-    validateBuyerID
+    validateBuyerID,
+    handleChange
 } = cartSlice.actions;
 export default cartSlice.reducer

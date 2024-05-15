@@ -26,16 +26,24 @@ const getPoints = async (customer_id) => {
     return response.data
 }
 
-const addCustomer = async (customer) => {
-    const response = await httpRequest.post("/customer/instant-sync", customer)
+const calcPoint = async(points) => {
+    // /api/coupon/calc
+    const response = await httpRequest.get("/customer/calc-points?points=" + points);
+    return response.data
+}
+
+const addUpdateCustomer = async (data) => {
+    // localhost:5000/api/order/add-order
+    const response = await httpRequest.post("/customer/add-update-customer", data)
     return response.data
 }
 const customerService = {
     customerSync,
     getCustomers,
-    addCustomer,
+    addUpdateCustomer,
     getPoints,
-    customerCount
+    customerCount,
+    calcPoint
 }
 
 export default customerService

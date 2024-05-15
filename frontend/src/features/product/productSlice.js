@@ -14,7 +14,6 @@ const syncObj = getLocalStorageProductSync();
 const initialState = {
     products: [],
     syncObj: syncObj,
-    query: "",
     error: false,
     loading: false,
 }

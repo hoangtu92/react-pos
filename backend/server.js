@@ -8,6 +8,7 @@ const orderRoutes = require('./routes/orderRoutes')
 const couponRoutes = require('./routes/couponRoutes')
 const customerRoutes = require('./routes/customerRoutes')
 const invoiceRoutes = require('./routes/invoiceRoutes')
+const discountRoutes = require('./routes/discountRoutes')
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
 
@@ -45,6 +46,7 @@ app.use('/api/product', productRoutes)
 app.use('/api/order', orderRoutes)
 app.use('/api/coupon', couponRoutes)
 app.use('/api/customer', customerRoutes)
+app.use('/api/discount', discountRoutes)
 
 // Middleware
 app.use(errorHandler)

@@ -1,4 +1,6 @@
 const Customer = require("../models/customerModel");
+const Setting = require("../models/settingModel");
+const {XMLParser} = require("fast-xml-parser");
 
 const WooCommerceRestApi = require("@woocommerce/woocommerce-rest-api").default;
 const api = new WooCommerceRestApi({
@@ -107,6 +109,38 @@ const syncCustomer = async(req, res) => {
     })
 
 }
+
+/**
+ * @route /api/customer/add-update-customer
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
+const addOrUpdateCustomer = async (req, res) => {
+    const {buyer_id, carrier_id, email, name, phone} = req.body;
+    if(name && phone){
+
+        let customer = await Customer.findOneAndUpdate({phone: phone}, {
+            buyer_id, carrier_id, email, name, phone
+        });
+
+        if(!customer){
+            customer = await Customer.create( {
+                buyer_id, carrier_id, email, name, phone
+            });
+        }
+        res.status(201).json({
+            status: true,
+            data: customer,
+            msg: "Success"
+        })
+    }
+    else res.status(400).json({
+        status: false,
+        msg: "phone && name is required"
+    })
+}
+
 
 /**
  * SYnc customer info between POS and justdog (create of none exists)
@@ -256,11 +290,35 @@ const getPoints = async (req, res) => {
 
 }
 
+const calcPointValue = async(req, res) => {
+    const {points} = req.query;
+
+    const redeem_ratio = await Setting.findOne({name: "redeem_ratio"});
+    if(redeem_ratio){
+        if(points < redeem_ratio.value){
+            res.status(400).json({
+                msg: "point_too_small_msg",
+                points: points,
+                amount: redeem_ratio.value
+            })
+        }
+        else{
+            res.status(200).json({
+                points: points,
+                amount: points/redeem_ratio.value
+            })
+        }
+
+    }
+}
+
 
 module.exports = {
     syncCustomer,
+    addOrUpdateCustomer,
     searchCustomers,
     instantSync,
     getPoints,
-    do_sync
+    do_sync,
+    calcPointValue
 }

@@ -145,11 +145,10 @@ const getQRValue = async (order) => {
  * @returns {Promise<void>}
  */
 const viewInvoice = async (req, res) => {
-    const {order_id} = req.params;
-    const {print} = req.query;
+    const {id} = req.params;
 
 
-    const order = await Order.findOne({order_id: order_id});
+    const order = await Order.findOne({_id: id});
 
     if(typeof order.invoice == 'undefined'){
         res.status(403).json({
@@ -199,8 +198,7 @@ const viewInvoice = async (req, res) => {
             qr_left,
             qr_right,
             barcode,
-            month_invoice,
-            print
+            month_invoice
         })
     }
     else res.status(403);
@@ -217,9 +215,9 @@ const viewInvoice = async (req, res) => {
  * @returns {Promise<void>}
  */
 const issueInvoice = async(req, res) => {
-    const {order_id} = req.body;
+    const {id} = req.body;
 
-    const order = await Order.findOne({order_id: order_id});
+    const order = await Order.findOne({_id: id});
     if(order){
 
         if(typeof order.invoice !== "undefined" && order.invoice.invno.length > 0){
@@ -282,7 +280,7 @@ const issueInvoice = async(req, res) => {
             "CarrierType": "",
             "CarrierName": "In Store Customer",
 
-            "orderid": order.order_id.toString(),
+            "orderid": order._id.toString(),
             "Phone": "0999111222",
             "Email": "justdog.tw@gmail.com",
             "Note1": "Justdog POS",
@@ -352,7 +350,7 @@ const issueInvoice = async(req, res) => {
                 carrier_id: order.carrier_id,
                 type: jObj["SmilePayEinvoice"]["InvoiceType"]
             }
-            await Order.updateOne({order_id: order_id}, {invoice: invoice});
+            await Order.updateOne({_id: id}, {invoice: invoice});
             res.status(201).json({
                 status: true,
                 data: data,
@@ -374,4 +372,66 @@ const issueInvoice = async(req, res) => {
 }
 
 
-module.exports = {viewInvoice, issueInvoice}
+
+const validate_carrier_id = async(req, res) => {
+    let {carrier_id, type} = req.body;
+
+    if(!type) type = "3J0002";
+
+    const support_type = ["3J0002", "CQ0001"];
+    const convert_table = {"3J0002": "biz", "CQ0001" : "Certificate"}
+    const api_url="https://ssl.smse.com.tw/api/SPEinvoice_application.asp";
+    if(!type || !carrier_id){
+        res.status(400).json({
+            status: false,
+            code: "-7002",
+            msg: "載具參數錯誤"
+        });
+        return;
+    }
+
+    if(support_type.indexOf(type) < 0){
+        res.status(400).json({
+            status: false,
+            code: "-7003",
+            msg: "未支援的載具類型"
+        });
+        return;
+    }
+
+    let formData = new URLSearchParams();
+
+    formData.append("types", convert_table[type]);
+
+    formData.append(convert_table[type], carrier_id);
+
+    let result = await fetch(api_url, {
+        method: "POST",
+        body: formData
+    })
+
+    const string = await result.text();
+
+    const parser = new XMLParser();
+    let jObj = parser.parse(string);
+
+    if(jObj.SmilePayEinvoice.Status == 0){
+        res.status(201).json({
+            status: true,
+            carrier_id: carrier_id,
+            msg: jObj.Desc,
+            data: jObj.SmilePayEinvoice
+        })
+    }
+    else{
+        res.status(400).json({
+            status: false,
+            data: jObj.SmilePayEinvoice
+        })
+    }
+
+
+}
+
+
+module.exports = {viewInvoice, issueInvoice, validate_carrier_id}

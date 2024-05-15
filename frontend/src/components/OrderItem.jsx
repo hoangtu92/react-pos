@@ -13,9 +13,8 @@ const OrderItem = ({ order, onClick }) => {
   return (
     <div className="order-details" key={order._id} onClick={onClick}>
       <div className="order-title">
-        <span className="order-id"><strong>{trans("order_id")}: # {order.order_id}</strong> (<small className="qta">
-          {trans("sold")} :
-            {order.cartItems.reduce((prev, cur) => {
+        <span className="order-id"><strong>{trans("order_id")}: # {order._id} - #{order.order_id}</strong> (<small className="qta">
+          {trans("sold")} :{order.cartItems.reduce((prev, cur) => {
                 return prev + cur.quantity;
             }, 0)}
         </small>
@@ -41,8 +40,8 @@ const OrderItem = ({ order, onClick }) => {
 
         <span className="order-price-detail d-flex align-items-center">
           <span className="order-price">$ {order.totalAmount}</span>
-          <Button onClick={e => dispatch(printInvoice(order.order_id))}><FaPrint/></Button>
-          <Button className={"ms-2"} onClick={e => dispatch(syncOrder(order.order_id))}><FaSync/></Button>
+          <Button onClick={e => dispatch(printInvoice(order._id))}><FaPrint/></Button>
+          <Button className={"ms-2"} onClick={e => dispatch(syncOrder(order._id))}><FaSync/></Button>
         </span>
       </div>
     </div>

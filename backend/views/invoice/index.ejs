@@ -1,6 +1,6 @@
 <html lang="en">
 <head>
-    <title>Invoice of #<%= order.order_id %></title>
+    <title>Invoice of #<%= order._id %></title>
     <style>
         * {
             -webkit-text-size-adjust: none;
@@ -253,14 +253,10 @@
     <% } %>
     </tbody>
 </table>
-<% if(print == "true"){ %>
 <script>
     window.onload = function (){
         window.print();
     }
-</script>
-<% } %>
-<script>
     window.onafterprint = function (){
         window.opener.postMessage("Print success", "*");
         window.close();

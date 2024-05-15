@@ -11,22 +11,16 @@ import {Badge, Form, Modal, Spinner} from "react-bootstrap"
 import InputGroup from "react-bootstrap/InputGroup"
 import {useNavigate, Link} from "react-router-dom";
 import {
-    batch,
+    addUpdateCustomer,
     calcPoint,
     clearCart,
     clearOrder,
-    deleteCartItem,
-    editCartItem,
-    getCart,
-    getOrder,
     hideCalculator,
     issueInvoice,
     orderCreate,
     printInvoice,
     productSubTotal,
     productTotalAmount,
-    removeOrder,
-    updateOrder,
     updateOrderDetail,
     updateSettings, validateBuyerID,
     validateCarrierID,
@@ -39,14 +33,13 @@ import {clearCustomerValues,
     getCustomers,
     handleCustomerChange} from "../features/cart/cartSlice";
 import {FaTriangleExclamation} from "react-icons/fa6";
-import {addCustomer} from "../features/customer/customerSlice";
 import SmoothScroll from "../components/SmoothScroll";
-import {handleChange} from "../features/product/productSlice";
 import trans from "../utils/translate";
+import {handleChange} from "../features/cart/cartSlice";
 
 const Cart = () => {
 
-    const {loading, error, selectedCustomer, coupons, resetCarrierID, cartItems, subTotal, totalAmount, orderObj, order, show_calculator, settings, deletedCartItem, updatedCartItem, needRefreshCart} = useSelector(
+    const {loading, error, selectedCustomer, coupons, resetCarrierID, cartItems, subTotal, totalAmount, orderObj, show_calculator, settings} = useSelector(
         (state) => state.cart
     );
     const {user} = useSelector((state) => state.auth);
@@ -57,7 +50,6 @@ const Cart = () => {
     const [carrierId, setCarrierId] = useState("");
     const [buyerId, setBuyerId] = useState("");
     const [receivedCash, setReceiveCash] = useState(0);
-    const [customerUpdated, setCustomerUpdated] = useState(false);
     const [showCustomAmountModal, setShowCustomAmountModal] = useState(false);
 
     useEffect(() => {
@@ -67,24 +59,6 @@ const Cart = () => {
 
     }, [dispatch, cartItems, orderObj]);
 
-
-    useEffect(() => {
-        if (typeof orderObj.order_id === 'undefined') {
-            dispatch(orderCreate({
-                paymentMethod: "cash",
-                orderType: "instore",
-                clerk: user._id,
-            }));
-        }
-    }, [dispatch, user._id, orderObj.order_id]);
-
-
-    useEffect(() => {
-        if(typeof orderObj.order_id != 'undefined' && orderObj.order_id != null)
-            dispatch(getOrder(orderObj.order_id));
-    }, [dispatch, orderObj.order_id]);
-
-
     useEffect(() => {
         if(resetCarrierID){
             setCarrierId("");
@@ -93,48 +67,93 @@ const Cart = () => {
     }, [dispatch, resetCarrierID]);
 
 
-    // edit cart justdog
     useEffect(() => {
-        if (settings.nonce && settings.nonce.length > 0 && settings.cookie && updatedCartItem) {
-            dispatch(editCartItem({nonce: settings.nonce, cart_item: updatedCartItem, cookie: settings.cookie}))
+        if(typeof orderObj.invoice != 'undefined'){
+            dispatch(handleChange({name: "show_calculator", value: true}))
         }
-    }, [dispatch, settings.nonce, settings.cookie, updatedCartItem])
-
+    }, [dispatch, orderObj.invoice]);
 
     useEffect(() => {
-        if (deletedCartItem && settings.cookie) {
-            dispatch(deleteCartItem({nonce: settings.nonce, cart_item: deletedCartItem, cookie: settings.cookie}))
+        if (!selectedCustomer._id) showCustomerModal();
+    }, [selectedCustomer._id]);
+
+    const onCustomerSearch = e => {
+        const isValidPhone = (/\d+/.test(e.target.value) && (e.target.value.length === 10 || e.target.value.length === 11));
+        if( isValidPhone
+            || (/[\w\s]+/.test(e.target.value) && e.target.value.length > 3))
+            dispatch(getCustomers({query: e.target.value}));
+    }
+
+    const handleBuyerIDChange = (e) => {
+        dispatch(validateBuyerID(buyerId));
+    }
+
+    const handleCarrierIDChange = () => {
+        if(carrierId && /\S+/.test(carrierId)){
+            dispatch(validateCarrierID(carrierId))
         }
-    }, [dispatch, settings.nonce, settings.cookie, deletedCartItem])
-
-    // Get cart from justdog
-    useEffect(() => {
-        if(needRefreshCart)
-            dispatch(getCart(settings.cookie));
-    }, [dispatch, settings.cookie, needRefreshCart]);
-
-    // Sync cart to justdog.
-    useEffect(() => {
-        dispatch(batch({nonce: settings.nonce, cartItems: cartItems}));
-    }, [dispatch, settings.nonce]);
-
-
-    useEffect(() => {
-        if (typeof orderObj.order_id === "undefined") {
-            if (typeof selectedCustomer.user_id === "undefined") showCustomerModal();
+        else{
+            setCarrierId("");
+            dispatch(handleCustomerChange({name: "carrier_id", value: ""}));
         }
-    }, [selectedCustomer.user_id, orderObj.order_id]);
+    }
 
-    // Update customer when 1 or many field updated
-    useEffect(() => {
-        setCustomerUpdated(true)
-    }, [selectedCustomer.phone, selectedCustomer.name, selectedCustomer.carrier_id, selectedCustomer.buyer_id]);
+    const onRedeemPointChange = e => {
+        if(e.target.value.length > 0)
+            dispatch(updateOrderDetail({name: 'redeem_points', value: e.target.value}));
+    }
+    const handleCalcPointValue = (e) => {
+        if(orderObj.redeem_points > 0) dispatch(calcPoint(orderObj.redeem_points));
+    }
+
+    const handleClearRedeem = e => {
+        dispatch(updateOrderDetail({name: "redeem_points", value: 0}))
+        dispatch(updateOrderDetail({name: "redeem_value", value: 0}))
+    }
+
+    const handleDiscountValue = e => {
+        if(e.target.value.length > 0)
+            dispatch(updateOrderDetail({name: "discount_value", value: e.target.value}))
+    }
+
+    const handleUpdatePayment = (e) => {
+        dispatch(updateOrderDetail({name: "paymentMethod", value: e.target.value}));
+    }
+
+    const handleUpdateOrderType = (e) => {
+        dispatch(updateOrderDetail({name: "orderType", value: e.target.value}));
+        if(e.target.value === 'instore'){
+            dispatch(updateOrderDetail({name: 'customTotalAmount', value: 0}))
+        }
+        else{
+            if(e.target.value === "ubereat"){
+                dispatch(getCustomers({query: "0923110978"}))
+            }
+            setShowCustomAmountModal(true);
+        }
+    }
 
     const showCustomerModal = () => {
         dispatch(updateSettings({name: "showCustomerModal", value: true}))
     }
     const hideCustomerModal = () => {
         dispatch(updateSettings({name: "showCustomerModal", value: false}))
+    }
+    const handleCloseCustomerModal = e => {
+        // save customer info
+        if(selectedCustomer.phone && /^0[0-9]{9,10}$/.test(selectedCustomer.phone)){
+            dispatch(addUpdateCustomer(selectedCustomer));
+        }
+
+        hideCustomerModal();
+    }
+
+    const onHideCustomAmount = e => {
+
+        if(orderObj.orderType === "ubereat" && orderObj.customTotalAmount <= 0){
+            dispatch(updateOrderDetail({name: "orderType", value: "instore"}));
+        }
+        setShowCustomAmountModal(false);
     }
 
     /**
@@ -153,8 +172,9 @@ const Cart = () => {
             return;
         }
 
-        dispatch(updateOrder({
-            order_id: orderObj.order_id,
+        // todo create order
+        dispatch(orderCreate({
+            clerk: user._id,
             cartItems,
             subTotal,
             totalAmount,
@@ -165,6 +185,7 @@ const Cart = () => {
             redeem_points: orderObj.redeem_points,
             discountAmount: orderObj.discount_value,
             customer: selectedCustomer._id,
+            is_b2b: selectedCustomer.is_b2b,
             carrier_id: !selectedCustomer.is_b2b ? selectedCustomer.carrier_id : undefined,
             buyer_id: selectedCustomer.is_b2b ? selectedCustomer.buyer_id: undefined,
             enableInvoice: settings.enableInvoice
@@ -172,43 +193,17 @@ const Cart = () => {
 
     };
 
-    const handleUpdatePayment = (e) => {
-        dispatch(updateOrderDetail({name: "paymentMethod", value: e.target.value}));
-    }
-
-    const handleUpdateOrderType = (e) => {
-        dispatch(updateOrderDetail({name: "orderType", value: e.target.value}));
-        if(e.target.value === 'instore'){
-            dispatch(updateOrderDetail({name: 'customTotalAmount', value: 0}))
-        }
-        else{
-            if(e.target.value === "ubereat"){
-                dispatch(getCustomers({query: "0923110978", order_id: orderObj.order_id}))
-            }
-            setShowCustomAmountModal(true);
-        }
-    }
-
-    const onRedeemPointChange = e => {
-        if(e.target.value.length > 0)
-            dispatch(updateOrderDetail({name: 'redeem_points', value: e.target.value}));
-    }
-    const handleCalcPointValue = (e) => {
-        if(orderObj.redeem_points > 0) dispatch(calcPoint({points: orderObj.redeem_points, customer_id: selectedCustomer.user_id}));
-    }
-
-    const handleDiscountValue = e => {
-        if(e.target.value.length > 0)
-            dispatch(updateOrderDetail({name: "discount_value", value: e.target.value}))
-    }
-
     const cleanupSession = () => {
         dispatch(clearCart())
         dispatch(clearCustomerValues())
-        dispatch(removeOrder(orderObj.order_id));
         navigate("/dashboard");
     }
 
+    const handlePrintInvoice = () => {
+        if(typeof orderObj.invoice !== "undefined")
+            dispatch(printInvoice(orderObj.id))
+        else dispatch(issueInvoice({id: orderObj.id, print: true}))
+    }
 
     const finishOrder = () => {
         dispatch(hideCalculator());
@@ -218,72 +213,12 @@ const Cart = () => {
         navigate("/dashboard");
     }
 
-    const handleBuyerIDChange = (e) => {
-        dispatch(validateBuyerID(buyerId));
-    }
-
-    const handleCarrierIDChange = () => {
-        if(carrierId != null && carrierId != ""){
-            dispatch(validateCarrierID(carrierId))
-        }
-        else{
-            dispatch(handleCustomerChange({name: "carrier_id", value: ""}));
-        }
-    }
-
-    const handleCloseCustomerModal = e => {
-            hideCustomerModal();
-
-        // Todo save customer to database
-
-        if(customerUpdated && /^0[0-9]{9,10}$/.test(selectedCustomer.phone)){
-            setCustomerUpdated(false);
-            dispatch(addCustomer(selectedCustomer));
-        }
-    }
-
-    const onHideCustomAmount = e => {
-
-        if(orderObj.orderType === "ubereat" && orderObj.customTotalAmount <= 0){
-            dispatch(updateOrderDetail({name: "orderType", value: "instore"}));
-        }
-        setShowCustomAmountModal(false);
-    }
-
-    const onCustomerSearch = e => {
-        const isValidPhone = (/\d+/.test(e.target.value) && (e.target.value.length === 10 || e.target.value.length === 11));
-        if( isValidPhone
-            || (/[\w\s]+/.test(e.target.value) && e.target.value.length > 3))
-            dispatch(getCustomers({query: e.target.value, order_id: orderObj.order_id}));
-
-        if(isValidPhone){
-            dispatch(handleCustomerChange({name: "phone", value: e.target.value}))
-        }
-
-    }
-
-    const handlePrintInvoice = () => {
-        if(typeof order.invoice !== "undefined")
-            dispatch(printInvoice(orderObj.order_id))
-        else dispatch(issueInvoice(orderObj.order_id))
-    }
-
-
-    const handleResetCustomerGovID = e => {
-        dispatch(handleCustomerChange({name: selectedCustomer.is_b2b ? "buyer_id" : "carrier_id", value: ""}))
-    }
-
-    const handleClearRedeem = e => {
-        dispatch(updateOrderDetail({name: "redeem_points", value: 0}))
-        dispatch(updateOrderDetail({name: "redeem_value", value: 0}))
-    }
-
     return (
         <div className={"cart-page d-flex"}>
             <section id="cart" className={"p-5"}>
                 <SmoothScroll>
                     {(cartItems.length > 0) ?
-                        <CartTable dispatch={dispatch} order_id={orderObj.order_id} cartItems={cartItems}/> :
+                        <CartTable dispatch={dispatch} cartItems={cartItems}/> :
                         <div className="info-details">
                             <div className={"icon-info d-flex w-100 justify-content-center flex-row align-items-center"}>
                                 <div className="icon">
@@ -308,9 +243,8 @@ const Cart = () => {
 
                         <div>
                             <Button variant={"danger"} type={"button"} className={"float-end mb-2"} onClick={cleanupSession}><FaTrashAlt/></Button>
-                            <span><Badge pill bg={"warning text-black"}>#{orderObj.order_id}</Badge></span>
+                            <span><Badge pill bg={"warning text-black"}>#{orderObj.id}</Badge></span>
                         </div>
-
                     </div>
                     <CustomerItem onClose={() => dispatch(clearCustomerValues())} onClick={() => showCustomerModal()} customer={selectedCustomer}/>
 
@@ -425,9 +359,6 @@ const Cart = () => {
                                                 className={"align-items-end flex-row justify-content-end"}
                                                 id="issueInvoice"
                                                 checked={settings.enableInvoice}
-/*
-                                                disabled={!selectedCustomer.is_b2b && selectedCustomer.carrier_id != null && selectedCustomer.carrier_id !== ""}
-*/
                                                 onChange={e => {
                                                     dispatch(updateSettings({name: "enableInvoice", value: e.target.checked}))
                                                 }}
@@ -645,12 +576,12 @@ const Cart = () => {
                             />
                         </Form.Group>
 
-                        <Form.Group className="mb-3" controlId="searchCustomer.ControlInput2">
+                        <Form.Group className="mb-3" controlId="searchCustomer.ControlInput3">
                             <Form.Label>{trans("return")}</Form.Label>
                             <Form.Control
                                 type="text"
                                 size={"lg"}
-                                value={"NT$ " + (receivedCash - totalAmount)}
+                                value={"NT$ " + (receivedCash > 0 ? receivedCash - totalAmount : 0)}
                                 className={"mb-2 bg-success text-white"}
                                 readOnly
                             />
