@@ -14,6 +14,7 @@ const syncObj = getLocalStorageProductSync();
 const initialState = {
     products: [],
     syncObj: syncObj,
+    query: "",
     error: false,
     loading: false,
 }
@@ -69,7 +70,7 @@ export const getProducts = createAsyncThunk('product/getProducts', async (query,
         if (settings.scanMode) {
             if (result.length === 1) {
                 thunkAPI.dispatch(addToCart(result[0]));
-                thunkAPI.dispatch(getProducts());
+                thunkAPI.dispatch(handleProductStateChange({name: "query", value: ""}))
                 return [];
             } else if (result.length === 0) {
                 alert(trans("product_not_found_msg"));
@@ -93,7 +94,7 @@ export const productSlice = createSlice({
     name: 'product',
     initialState,
     reducers: {
-        handleChange: (state, {payload: {name, value}}) => {
+        handleProductStateChange: (state, {payload: {name, value}}) => {
             state[name] = value
             console.log(state.error)
         },
@@ -149,6 +150,6 @@ export const productSlice = createSlice({
     }
 })
 
-export const {handleChange, clearValues, updateSyncProduct} = productSlice.actions;
+export const {handleProductStateChange, clearValues, updateSyncProduct} = productSlice.actions;
 export default productSlice.reducer
 

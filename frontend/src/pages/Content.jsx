@@ -1,8 +1,8 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import Products from "./Products";
 import {useDispatch, useSelector} from "react-redux";
 import ShoppingCart from "./ShoppingCart";
-import {getProducts, handleChange} from "../features/product/productSlice";
+import {getProducts, handleProductStateChange} from "../features/product/productSlice";
 import ProductSearch from "../components/ProductSearch";
 import SmoothScroll from "../components/SmoothScroll";
 import Form from "react-bootstrap/Form";
@@ -13,7 +13,7 @@ const Content = () => {
 
     const dispatch = useDispatch();
     const {settings} = useSelector((state) => state.cart);
-    const [query, setQuery] = useState("")
+    const {query} = useSelector((state) => state.product);
 
     useEffect(() => {
         dispatch(getProducts(query));
@@ -21,14 +21,14 @@ const Content = () => {
 
     const onSubmit = (e) => {
         e.preventDefault();
-        setQuery(e.target.search.value)
+        dispatch(handleProductStateChange({name: "query", value: e.target.search.value}));
         e.target.reset();
         return false;
     }
 
     const onChange = (e) => {
         if(!settings.scanMode)
-            setQuery(e.target.search.value)
+            dispatch(handleProductStateChange({name: "query", value: e.target.value}))
     }
 
 

@@ -36,6 +36,7 @@ import {FaTriangleExclamation} from "react-icons/fa6";
 import SmoothScroll from "../components/SmoothScroll";
 import trans from "../utils/translate";
 import {handleChange} from "../features/cart/cartSlice";
+import {handleProductStateChange} from "../features/product/productSlice";
 
 const Cart = () => {
 
@@ -51,6 +52,12 @@ const Cart = () => {
     const [buyerId, setBuyerId] = useState("");
     const [receivedCash, setReceiveCash] = useState(0);
     const [showCustomAmountModal, setShowCustomAmountModal] = useState(false);
+
+    useEffect(() => {
+
+        dispatch(handleProductStateChange({name: "query", value: ""}))
+
+    }, [dispatch]);
 
     useEffect(() => {
 
