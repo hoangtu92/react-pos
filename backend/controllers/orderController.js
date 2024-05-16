@@ -53,16 +53,19 @@ const addOrder = async(req, res) => {
     });
     if(order){
         const customerObj = await Customer.findOne({_id: customer});
-        let customer_points = customerObj.points - redeem_points;
 
-        await Customer.updateOne({_id: customer}, {points: customer_points});
+        if(customerObj){
+            let customer_points = customerObj.points - redeem_points;
 
-        /*const earn_ratio = await Setting.findOne({name: "earn_ratio"});
-        if(earn_ratio){
-            const total = customTotalAmount ?? totalAmount;
-            customer_points += total/earn_ratio;
             await Customer.updateOne({_id: customer}, {points: customer_points});
-        }*/
+
+            /*const earn_ratio = await Setting.findOne({name: "earn_ratio"});
+            if(earn_ratio){
+                const total = customTotalAmount ?? totalAmount;
+                customer_points += total/earn_ratio;
+                await Customer.updateOne({_id: customer}, {points: customer_points});
+            }*/
+        }
 
         res.status(201).json({
             status: true,
@@ -115,92 +118,97 @@ const syncOrder = async(req, res) => {
 
         // Customer id
         const customer = await Customer.findOne({_id: order.customer});
-        let user_id = customer.user_id;
 
-        const customerObj = {
-            first_name: customer.name,
-            last_name: customer.name,
-            meta_data: [
-                {
-                    key: "billing_first_name",
-                    value: customer.name,
-                },
-                {
-                    key: "billing_phone",
-                    value: customer.phone.toString()
+        if(customer){
+            let user_id = customer.user_id;
+
+            const customerObj = {
+                first_name: customer.name,
+                last_name: customer.name,
+                meta_data: [
+                    {
+                        key: "billing_first_name",
+                        value: customer.name,
+                    },
+                    {
+                        key: "billing_phone",
+                        value: customer.phone.toString()
+                    }
+                ]
+            };
+
+            if(customer.carrier_id){
+                if(!order.is_b2b){
+                    data["meta_data"].push({
+                        "key": "smilepayei_carrier_id",
+                        "value": customer.carrier_id
+                    });
                 }
-            ]
-        };
+                customerObj.meta_data.push({
+                    key: "smilepayei_carrier_id",
+                    value: customer.carrier_id
+                })
+            }
 
-        if(customer.carrier_id) customerObj.meta_data.push({
-            key: "smilepayei_carrier_id",
-            value: customer.carrier_id
-        })
-
-        if(customer.buyer_id) customerObj.meta_data.push({
-            key: "smilepayei_buyer_id",
-            value: customer.buyer_id
-        });
-
-        if(!user_id){
-            // Find justdog customer by phone
-            let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/customer/get-by-phone?phone=${customer.phone}`, {
-                method: "GET",
-                headers: {
-                    'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
-                    'Content-Type': 'application/json'
+            if(customer.buyer_id) {
+                if(order.is_b2b){
+                    data["meta_data"].push({
+                        "key": "smilepayei_buyer_id",
+                        "value": customer.buyer_id
+                    });
                 }
-            })
-            if(result.ok) {
-                const userResult = await result.json();
-                if(userResult.data){
-                    user_id = userResult.data.user_id;
+                customerObj.meta_data.push({
+                    key: "smilepayei_buyer_id",
+                    value: customer.buyer_id
+                });
+            }
+
+            if(!user_id){
+                // Find justdog customer by phone
+                let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/customer/get-by-phone?phone=${customer.phone}`, {
+                    method: "GET",
+                    headers: {
+                        'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                if(result.ok) {
+                    const userResult = await result.json();
+                    if(userResult.data){
+                        user_id = userResult.data.user_id;
+                    }
                 }
             }
-        }
 
-        if(!user_id){
-            // Adding new customer to justdog
-            customerObj.email = `_customer_no_email_${customer.phone}@justdog.tw`
-            customerObj.password = `WDH@D@D@Y@RGF#GI`
-            customerObj.username = customer.phone.toString();
-            try{
-                const result = await api.post("customers", customerObj);
-                if(result.status){
-                    user_id = result.data.id;
+            if(!user_id){
+                // Adding new customer to justdog
+                customerObj.email = `_customer_no_email_${customer.phone}@justdog.tw`
+                customerObj.password = `WDH@D@D@Y@RGF#GI`
+                customerObj.username = customer.phone.toString();
+                try{
+                    const result = await api.post("customers", customerObj);
+                    if(result.status){
+                        user_id = result.data.id;
+                    }
+                    else{
+                        console.error("Could not create new user", customerObj);
+                    }
                 }
-                else{
-                    console.error("Could not create new user", customerObj);
+                catch (e){
+                    console.error(e.message);
+                    console.log(customerObj)
                 }
             }
-            catch (e){
-                console.error(e.message);
-                console.log(customerObj)
+            else{
+                // Update customer data
+                await api.put("customers/" + user_id, customerObj);
             }
-        }
-        else{
-            // Update customer data
-            await api.put("customers/" + user_id, customerObj);
-        }
 
-        if(user_id){
-            if(user_id != customer.user_id) await Customer.updateOne({phone: customer.phone}, {user_id: user_id})
+            if(user_id){
+                if(user_id != customer.user_id) await Customer.updateOne({phone: customer.phone}, {user_id: user_id})
 
-            data.customer_id = user_id;
-        }
-
-        if(order.is_b2b && customer.buyer_id){
-            data["meta_data"].push({
-                "key": "smilepayei_buyer_id",
-                "value": customer.buyer_id
-            });
-        }
-
-        if(!order.is_b2b && customer.carrier_id){
-            data["meta_data"].push({
-                "key": "smilepayei_carrier_id",
-                "value": customer.carrier_id
-            });
+                data.customer_id = user_id;
+            }
         }
 
         // Custom amount

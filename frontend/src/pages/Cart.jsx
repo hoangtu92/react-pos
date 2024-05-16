@@ -68,10 +68,10 @@ const Cart = () => {
 
 
     useEffect(() => {
-        if(typeof orderObj.invoice != 'undefined'){
+        if(orderObj.id){
             dispatch(handleChange({name: "show_calculator", value: true}))
         }
-    }, [dispatch, orderObj.invoice]);
+    }, [dispatch, orderObj.id]);
 
     useEffect(() => {
         if (!selectedCustomer._id) showCustomerModal();

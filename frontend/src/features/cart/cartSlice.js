@@ -167,7 +167,6 @@ export const cartSlice = createSlice({
         },
         clearCart: (state) => {
             state.cartItems = [];
-            state.show_calculator = false;
             deleteLocalStorageCart();
             state.settings.cookie = null;
             state.needRefreshCart = true;
@@ -265,12 +264,6 @@ export const cartSlice = createSlice({
                 window.removeEventListener("message", msgListener, false);
             }
             window.addEventListener("message", msgListener, false);
-
-
-            if(state.settings.auto_invoice){
-                state.show_calculator = true;
-            }
-
         },
         validateBuyerID: (state, {payload: buyerID}) => {
             if(state.selectedCustomer.is_b2b){
@@ -297,10 +290,6 @@ export const cartSlice = createSlice({
                 addLocalStorageOrder(state.orderObj)
 
                 toast.success(trans("order_create_success"))
-                // Show calculator when no invoice is needed
-                if(!state.settings.auto_invoice){
-                    state.show_calculator = true;
-                }
             }).addCase(orderCreate.rejected, (state) => {
                 state.error = true
             })

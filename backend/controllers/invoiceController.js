@@ -332,34 +332,43 @@ const issueInvoice = async(req, res) => {
         const parser = new XMLParser();
         let jObj = parser.parse(string);
 
-        if(jObj["SmilePayEinvoice"]["Status"] !== 0){
-            res.status(400).json({
-                status: false,
-                msg: jObj["SmilePayEinvoice"]["Desc"] + "[" + jObj["SmilePayEinvoice"]["Status"] + "]",
-                debug: jObj,
-                data: data
-            })
+        if(jObj["SmilePayEinvoice"]){
+            if(jObj["SmilePayEinvoice"]["Status"] !== 0){
+                res.status(400).json({
+                    status: false,
+                    msg: jObj["SmilePayEinvoice"]["Desc"] + "[" + jObj["SmilePayEinvoice"]["Status"] + "]",
+                    debug: jObj,
+                    data: data
+                })
+            }
+            else {
+                const invoice = {
+                    date: invoiceDate,
+                    time: invoiceTime,
+                    invno: jObj["SmilePayEinvoice"]["InvoiceNumber"],
+                    rdno: jObj["SmilePayEinvoice"]["RandomNumber"].toString(),
+                    buyer_id: order.buyer_id ?? 0,
+                    carrier_id: order.carrier_id,
+                    type: jObj["SmilePayEinvoice"]["InvoiceType"]
+                }
+                await Order.updateOne({_id: id}, {invoice: invoice});
+                res.status(201).json({
+                    status: true,
+                    data: data,
+                    order: order,
+                    invoice,
+                    jObj
+                });
+            }
         }
         else {
-            const invoice = {
-                date: invoiceDate,
-                time: invoiceTime,
-                invno: jObj["SmilePayEinvoice"]["InvoiceNumber"],
-                rdno: jObj["SmilePayEinvoice"]["RandomNumber"].toString(),
-                buyer_id: order.buyer_id ?? 0,
-                carrier_id: order.carrier_id,
-                type: jObj["SmilePayEinvoice"]["InvoiceType"]
-            }
-            await Order.updateOne({_id: id}, {invoice: invoice});
-            res.status(201).json({
-                status: true,
-                data: data,
-                order: order,
-                invoice,
-                jObj
-            });
+            console.error(jObj);
+            res.status(400).json({
+                status: false,
+                msg: "Failed to issue invoice. Invoice vendor response: " + string,
+                data: jObj
+            })
         }
-
     }
     else{
         res.status(400).json({
