@@ -133,7 +133,15 @@ const syncOrder = async(req, res) => {
                     {
                         key: "billing_phone",
                         value: customer.phone.toString()
-                    }
+                    },
+                    {
+                        key: "smilepayei_carrier_id",
+                        value: customer.carrier_id
+                    },
+                    {
+                        key: "smilepayei_buyer_id",
+                        value: customer.buyer_id
+                    },
                 ]
             };
 
@@ -144,10 +152,6 @@ const syncOrder = async(req, res) => {
                         "value": customer.carrier_id
                     });
                 }
-                customerObj.meta_data.push({
-                    key: "smilepayei_carrier_id",
-                    value: customer.carrier_id
-                })
             }
 
             if(customer.buyer_id) {
@@ -157,10 +161,6 @@ const syncOrder = async(req, res) => {
                         "value": customer.buyer_id
                     });
                 }
-                customerObj.meta_data.push({
-                    key: "smilepayei_buyer_id",
-                    value: customer.buyer_id
-                });
             }
 
             if(!user_id){
