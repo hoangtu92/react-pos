@@ -1418,3 +1418,20 @@ input.type-select:checked + label,
 .Toastify__toast-icon {
   width: 24px;
 }
+.item-image{
+  position: relative;
+}
+.item-image img{
+
+}
+
+.item-image sup{
+  position: absolute;
+  background: orange;
+  padding: 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  color: black;
+  right: 5px;
+  top: 5px;
+}

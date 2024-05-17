@@ -12,7 +12,7 @@ import InputGroup from "react-bootstrap/InputGroup"
 import {useNavigate, Link} from "react-router-dom";
 import {
     addUpdateCustomer,
-    calcPoint,
+    calcPoint, calculateDiscount,
     clearCart,
     clearOrder,
     hideCalculator,
@@ -40,7 +40,7 @@ import {handleProductStateChange} from "../features/product/productSlice";
 
 const Cart = () => {
 
-    const {loading, error, selectedCustomer, coupons, resetCarrierID, cartItems, subTotal, totalAmount, orderObj, show_calculator, settings} = useSelector(
+    const {loading, error, updatedCartItem, selectedCustomer, coupons, resetCarrierID, cartItems, orderObj, show_calculator, settings} = useSelector(
         (state) => state.cart
     );
     const {user} = useSelector((state) => state.auth);
@@ -60,11 +60,19 @@ const Cart = () => {
     }, [dispatch]);
 
     useEffect(() => {
-
         dispatch(productSubTotal());
-        dispatch(productTotalAmount());
+    }, [dispatch, cartItems]);
 
-    }, [dispatch, cartItems, orderObj]);
+    useEffect(() => {
+        dispatch(productTotalAmount());
+    }, [dispatch, orderObj.subTotal, orderObj.discount_value, orderObj.redeem_value]);
+
+
+    useEffect(() => {
+        if(updatedCartItem) {
+            dispatch(calculateDiscount({cartItems, orderObj, selectedCustomer}));
+        }
+    }, [dispatch, updatedCartItem]);
 
     useEffect(() => {
         if(resetCarrierID){
@@ -183,8 +191,8 @@ const Cart = () => {
         dispatch(orderCreate({
             clerk: user._id,
             cartItems,
-            subTotal,
-            totalAmount,
+            subTotal: orderObj.subTotal,
+            totalAmount: orderObj.totalAmount,
             paymentMethod: orderObj.paymentMethod,
             orderType: orderObj.orderType,
             customTotalAmount: orderObj.customTotalAmount,
@@ -203,6 +211,7 @@ const Cart = () => {
     const cleanupSession = () => {
         dispatch(clearCart())
         dispatch(clearCustomerValues())
+        dispatch(clearOrder())
         navigate("/dashboard");
     }
 
@@ -321,7 +330,7 @@ const Cart = () => {
                             <tbody>
                             <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
                                 <th>{trans("subtotal")}:</th>
-                                <td>${subTotal}</td>
+                                <td>${orderObj.subTotal}</td>
                             </tr>
                             {coupons.map(e => {
                                 return <tr key={e.code}>
@@ -330,18 +339,27 @@ const Cart = () => {
                                 </tr>
                             })}
 
-                            {orderObj.discount_value > 0 ? <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
-                                <th>{trans("total_discount")}:</th>
-                                <td>-${orderObj.discount_value}</td>
-                            </tr> : null}
                             {orderObj.redeem_value > 0 ? <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
                                 <th>{trans("redeem")}:</th>
                                 <td>-${orderObj.redeem_value}</td>
                             </tr> : null}
-                            <tr className="grand-total border-top border-warning pt-2" style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
+
+                            {orderObj.discounts && orderObj.discounts.map((discount, index) => (
+                                <tr key={index}>
+                                <th><small>{discount.name}:</small></th>
+                                <td><small>-${discount.value}</small></td>
+                                </tr>
+                            ))}
+
+                            {orderObj.discount_value > 0 ? <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
+                                <th>{trans("total_discount")}:</th>
+                                <td>-${orderObj.discount_value}</td>
+                            </tr> : null}
+
+                            <tr className="grand-total border-top border-warning pt-2 mt-4" style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
                                 <th>{trans("total")}:</th>
                                 <td>
-                                    <strong>${totalAmount}</strong>
+                                    <strong>${orderObj.totalAmount}</strong>
                                 </td>
                             </tr>
                             {orderObj.customTotalAmount > 0 ? <tr className="custom-total border-top border-warning pt-2">
@@ -497,7 +515,6 @@ const Cart = () => {
                                         placeholder={orderObj.discount_value}
                                         min={0}
                                         size={"lg"}
-                                        max={orderObj.totalAmount}
                                         type="number"
                                         id="inputDiscount"
                                         className={"me-2"}
@@ -532,7 +549,7 @@ const Cart = () => {
                             <Form.Control
                                 type="number"
                                 size={"lg"}
-                                min={totalAmount}
+                                min={orderObj.totalAmount}
                                 onChange={(e) => {dispatch(updateOrderDetail({name: 'customTotalAmount', value: e.target.value}))}}
                                 onFocus={e => e.target.select()}
                                 className={"mb-2"}
@@ -563,7 +580,7 @@ const Cart = () => {
                             <Form.Control
                                 type="text"
                                 size={"lg"}
-                                value={"NT$ " + totalAmount}
+                                value={"NT$ " + orderObj.totalAmount}
                                 className={"mb-2 bg-warning"}
                                 readOnly
                             />
@@ -575,7 +592,7 @@ const Cart = () => {
                                 type="number"
                                 size={"lg"}
                                 value={receivedCash}
-                                min={totalAmount}
+                                min={orderObj.totalAmount}
                                 onChange={(e) => {setReceiveCash(e.target.value)}}
                                 onFocus={e => e.target.select()}
                                 className={"mb-2"}
@@ -588,7 +605,7 @@ const Cart = () => {
                             <Form.Control
                                 type="text"
                                 size={"lg"}
-                                value={"NT$ " + (receivedCash > 0 ? receivedCash - totalAmount : 0)}
+                                value={"NT$ " + (receivedCash > 0 ? receivedCash - orderObj.totalAmount : 0)}
                                 className={"mb-2 bg-success text-white"}
                                 readOnly
                             />

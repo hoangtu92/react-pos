@@ -13,7 +13,7 @@ import Button from "react-bootstrap/Button";
 import trans from "../utils/translate";
 
 const ShoppingCart = () => {
-  const { cartItems, subTotal, totalAmount } = useSelector(
+  const { cartItems, orderObj } = useSelector(
     (state) => state.cart
   );
   const navigate = useNavigate();
@@ -105,12 +105,12 @@ const ShoppingCart = () => {
       <div className="total-card">
         <div className="total-items">
           <span className="items-count">{trans("items")} ({cartItems.length})</span>
-          <span className="items-price">$ {subTotal}</span>
+          <span className="items-price">${orderObj.subTotal}</span>
         </div>
         <div className="divider"></div>
         <div className="total">
           <span className="total-text">{trans("total")} </span>
-          <span className="total-item-price">$ {totalAmount}</span>
+          <span className="total-item-price">$ {orderObj.totalAmount}</span>
         </div>
 
         <div className="pay">

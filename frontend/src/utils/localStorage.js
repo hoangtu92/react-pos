@@ -55,7 +55,7 @@ export const addLocalStorageOrder = (order) => {
 }
 
 export const getLocalStorageOrder = () => {
-    const order = {paymentMethod: 'cash', orderType: 'instore', redeem_points: 0, discount_value: 0};
+    const order = {paymentMethod: 'cash', orderType: 'instore', redeem_points: 0, discount_value: 0, totalAmount: 0, subTotal: 0};
     try{
         let a = JSON.parse(localStorage.getItem('order'));
         if(a == null) a = order;

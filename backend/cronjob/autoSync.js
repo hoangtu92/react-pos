@@ -31,7 +31,7 @@ const do_sync_discounts = require("../controllers/DiscountController").do_sync_d
     });
 
 
-    process.exit(0);
+    //process.exit(0);
 })();
 
 

@@ -16,6 +16,7 @@ import {toast} from "react-toastify";
 import customerService from "../customer/customerService";
 import trans from "../../utils/translate";
 import cartService from "./cartService";
+import discountService from "../discount/discountService";
 
 const cartItems = getLocalStorageCart()
 const orderObj = getLocalStorageOrder()
@@ -27,14 +28,11 @@ const initialState = {
     customers: [],
     selectedCustomer: selectedCustomer,
     orderObj: orderObj,
-    totalCount: 0,
-    totalAmount: 0,
-    subTotal: 0,
     loading: false,
     show_calculator: false,
     settings: settings ?? {scanMode: true, enableInvoice: false, language: "tw"},
     addCartItem: false,
-    updatedCartItem: false,
+    updatedCartItem: true,
     deletedCartItem: false,
     needRefreshCart: false,
     error: false,
@@ -110,6 +108,18 @@ export const calcPoint = createAsyncThunk('coupon/calc', async (points, thunkAPI
     }
 })
 
+/**
+ * Calculate discount
+ *
+ */
+export const calculateDiscount = createAsyncThunk('discount/calc', async (data, thunkAPI) => {
+    try {
+        return await discountService.calcDiscount(data);
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response.data)
+    }
+})
+
 
 /**
  * Issue invoice after everything is set.
@@ -170,8 +180,6 @@ export const cartSlice = createSlice({
             deleteLocalStorageCart();
             state.settings.cookie = null;
             state.needRefreshCart = true;
-
-
             updateLocalStorageSettings(state.settings);
         },
         clearOrder: (state) => {
@@ -188,33 +196,34 @@ export const cartSlice = createSlice({
                 // index -1
                 // New product to cart add
                 const item = {...action.payload, quantity: 1};
-                state.cartItems.push({...action.payload, quantity: 1});
+                state.cartItems.push({...action.payload, quantity: 1, off: Math.round(100*(action.payload.original_price - action.payload.price)/action.payload.original_price)});
                 state.addCartItem = item;
             }
             addLocalStorageCart(state.cartItems);
+            state.updatedCartItem = true;
 
         },
         productSubTotal: (state) => {
-            state.subTotal = state.cartItems.reduce((subTotal, product) => {
-                const {price, quantity} = product
-                return subTotal + price * quantity
-            }, 0)
+            state.orderObj.subTotal = state.cartItems.reduce((subTotal, product) => {
+                const {price, quantity, discount} = product;
+                return subTotal + price * quantity - discount
+            }, 0);
         },
         productTotalAmount: (state) => {
-            state.totalAmount = state.subTotal;
+            state.orderObj.totalAmount = state.orderObj.subTotal;
 
-            if(typeof state.orderObj.redeem_value != "undefined") state.totalAmount -=  state.orderObj.redeem_value;
-            if(typeof state.orderObj.discount_value != "undefined") state.totalAmount -= state.orderObj.discount_value;
+            if(typeof state.orderObj.redeem_value != "undefined") state.orderObj.totalAmount -=  state.orderObj.redeem_value;
+            if(typeof state.orderObj.discount_value != "undefined") state.orderObj.totalAmount -= state.orderObj.discount_value;
 
-            state.totalAmount = Math.round(state.totalAmount);
+            state.orderObj.totalAmount = Math.round(state.orderObj.totalAmount);
 
-            state.error = state.totalAmount < 0;
+            state.error = state.orderObj.totalAmount < 0;
         },
         increase: (state, action) => {
             const product = state.cartItems.find((item) => item.id === action.payload)
             product.quantity = product.quantity + 1
             addLocalStorageCart(state.cartItems);
-            state.updatedCartItem = product;
+            state.updatedCartItem = true;
         },
         decrease: (state, action) => {
             const product = state.cartItems.find((item) => item.id === action.payload)
@@ -224,7 +233,7 @@ export const cartSlice = createSlice({
                 product.quantity = product.quantity - 1
             }
             addLocalStorageCart(state.cartItems);
-            state.updatedCartItem = product;
+            state.updatedCartItem = true;
         },
         updateSubtotal: (state, {payload: {id, price}}) => {
             const product = state.cartItems.find((item) => item.id === id);
@@ -237,7 +246,7 @@ export const cartSlice = createSlice({
 
             state.cartItems = state.cartItems.filter((item) => item.id !== action.payload.id)
             addLocalStorageCart(state.cartItems);
-
+            state.updatedCartItem = true;
         },
         hideCalculator: (state) => {
             state.show_calculator = false;
@@ -346,7 +355,7 @@ export const cartSlice = createSlice({
                 state.loading = false;
                 state.error = false;
 
-                if(action.payload.amount > state.totalAmount){
+                if(action.payload.amount > state.orderObj.totalAmount){
                     alert(trans("redeem_amount_exceed_total_error"));
                     state.orderObj.redeem_value = 0;
                     state.orderObj.redeem_points = 0;
@@ -359,6 +368,8 @@ export const cartSlice = createSlice({
                 }
 
             })
+
+
 
             // Issue invoice
             .addCase(issueInvoice.fulfilled, (state, action) => {
@@ -386,6 +397,25 @@ export const cartSlice = createSlice({
                 state.loading = false
                 state.resetCarrierID = true;
                 alert(trans("carrier_id_validate_failed"));
+            })
+
+            .addCase(calculateDiscount.pending, (state) => {
+                state.loading = true
+                state.error = false
+            }).addCase(calculateDiscount.fulfilled, (state, action) => {
+                state.loading = false;
+                if(action.payload.cartItems){
+                    state.cartItems = action.payload.cartItems
+                }
+                if(action.payload.orderObj){
+                    state.orderObj = action.payload.orderObj
+                }
+                state.updatedCartItem = false;
+                //toast.success(trans("discount_applied_success"));
+
+            }).addCase(calculateDiscount.rejected, (state) => {
+                state.loading = false
+                //alert(trans("discount_applied_failed"));
             })
     }
 })

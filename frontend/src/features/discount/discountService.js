@@ -6,7 +6,14 @@ const discountSync = async () => {
     return response.data
 }
 
+const calcDiscount = async(data) => {
+    // /api/discount/calc
+    const response = await httpRequest.post("/discount/calc-discount", data);
+    return response.data
+}
+
 const discountService = {
-    discountSync
+    discountSync,
+    calcDiscount
 }
 export default discountService;

@@ -93,6 +93,8 @@ const languages = {
     "order_sync_success": ["Order synced successfully.", "訂單同步成功" ],
     "order_sync_failed": ["Order sync failed. Please go to order list and manually sync to justdog", "訂單同步失敗。 請前往訂單清單並手動同步至 justdog" ],
 
+    "discount_applied_success": ["Discount applied success.", "Discount applied success."],
+    "discount_applied_failed": ["Discount applied failed.", "Discount applied failed."],
 };
 
 export default languages;
