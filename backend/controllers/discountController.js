@@ -123,55 +123,83 @@ const check_discount = (discount, cartItems, orderObj, callback = null) => {
     let matchedProducts = [];
 
     //Check filter
-    let match_filter = 0;
-    if(discount.filters) match_filter = Object.values(discount.filters).filter(e => {
+    let matchedFilters = [];
+    if(discount.filters) matchedFilters = Object.values(discount.filters).filter(filter => {
 
-        if(e.type === "all_products"){
+        if(filter.type === "all_products"){
             matchedProducts.push(0)
         }
-        else{
-            const filter_products = e["value"].concat(e["product_variants"]).map(e => parseInt(e));
-            for(let i=0; i<cartItems.length;i++){
-                if(e.type === "products"){
-                    if(e.method === "in_list" && filter_products.indexOf(cartItems[i].product_id) >= 0){
-                        // Product in list filter
-                        matchedProducts.push(cartItems[i].product_id)
+        else if(filter.type === "product_on_sale"){
+            cartItems.map(item => {
+                if(item.original_price > item.price){
+                    if(filter.method === "in_list"){
+                        // On sale product
+                        matchedProducts.push(item.product_id)
                     }
-                    if(e.method === "not_in_list" && filter_products.indexOf(cartItems[i].product_id) < 0){
-                        // Product in list filter
-                        matchedProducts.push(cartItems[i].product_id)
+                    if(filter.method === "not_in_list"){
+                        // Must be run after the filter
+                        delete(matchedProducts[matchedProducts.indexOf(item.product_id)])
                     }
                 }
-                // And so on
-            }
+
+            });
+        }
+        else if(filter["value"]){
+            cartItems.map(item => {
+                let filter_check = false;
+                switch(filter.type){
+                    case "products":
+                        filter_check = filter["value"].concat(filter["product_variants"]).map(e => parseInt(e)).indexOf(item.product_id) >= 0;
+                        break;
+                    case "product_sku":
+                        filter_check = filter["value"].indexOf(item.sku) >= 0;
+                        break;
+                    case "pwb-brand":
+                        if(item.brands) filter_check = item.brands.filter(e => filter["value"].indexOf(parseInt(e)) >= 0).length;
+                        break;
+                    case "product_category":
+                        if(item.categories) filter_check = item.categories.filter(e => filter["value"].indexOf(parseInt(e)) >= 0).length;
+                        break;
+                    case "product_tags":
+                        if(item.tags) filter_check = item.tags.filter(e => filter["value"].indexOf(parseInt(e)) >= 0).length;
+                        break;
+                    case "product_attributes":
+                        break;
+                }
+
+                if( (filter.method === "in_list" && filter_check) ||
+                    (filter.method === "not_in_list" && !filter_check)){
+                    matchedProducts.push(item.product_id)
+                }
+            })
         }
 
         return matchedProducts.length;
-    }).length;
+    });
 
     // Check condition
-    if(match_filter){
+    if(matchedFilters.length){
 
         const conditions_count = Object.values(discount.conditions).length;
         if(conditions_count > 0){
-            const matched_conditions = is_discount_condition_match(discount, cartItems, matchedProducts);
-            if(discount.additional && discount.additional["condition_relationship"] === "or" && matched_conditions.length > 0){
+            const matchedConditions = check_condition_rules(discount, cartItems, matchedProducts);
+            if(discount.additional && discount.additional["condition_relationship"] === "or" && matchedConditions.length > 0){
                 console.log("Discount apply when either one condition is met");
                 // Todo discount apply when either one condition is met
 
-                if(callback) return callback(matchedProducts)
+                if(callback) return callback(matchedProducts, matchedFilters, matchedConditions)
             }
-            else if(matched_conditions.length == conditions_count){
+            else if(matchedConditions.length == conditions_count){
                 console.log("Discount apply when all condition are met");
                 // Todo discount apply when all condition are met
-                if(callback) return callback(matchedProducts)
+                if(callback) return callback(matchedProducts, matchedFilters, matchedConditions)
             }
 
         }
         else{
             console.log("Discount apply when no conditions are specified")
             // Todo discount apply when no conditions are specified
-            if(callback) return callback(matchedProducts)
+            if(callback) return callback(matchedProducts, matchedFilters, [])
 
         }
     }
@@ -185,40 +213,42 @@ const check_discount = (discount, cartItems, orderObj, callback = null) => {
  * @param matchedProducts
  * @returns {unknown[]|*[]}
  */
-const is_discount_condition_match = (discount, cartItems, matchedProducts) => {
+const check_condition_rules = (discount, cartItems, matchedProducts) => {
     const conditions = Object.values(discount.conditions);
     if(conditions) return conditions.filter(condition => {
-        if(condition.type === "cart_subtotal"){
-            const subTotal = cartItems.reduce((t, e) => {
-                const {price, quantity, product_id} = e;
 
-                if(condition.options.calculate_from === "from_cart"){
-                    t += price * quantity;
+        let compare_value = cartItems.reduce((t, e) => {
+            const {price, quantity, product_id, discount} = e;
+
+            if(condition.options.calculate_from === "from_cart"
+                || matchedProducts.indexOf(product_id) >= 0
+                || matchedProducts.indexOf(0) >= 0){
+
+                if(condition.type === "cart_subtotal"){
+                    t += price * quantity - discount;
                 }
-                else if(matchedProducts.indexOf(product_id) >= 0 || matchedProducts.indexOf(0) >= 0){
-                        t+= price * quantity
+                else if(condition.type === "cart_items_quantity"){
+                    t += quantity;
                 }
-                return t;
-            }, 0);
+                else if(condition.type === "cart_line_items_count"){
+                    t += 1;
+                }
+            }
+            return t;
+        }, 0);
 
-           if(condition.options.operator === "less_than"){
-               return subTotal < condition.options.value;
-           }
-           else if(condition.options.operator === "less_than_or_equal"){
-               return subTotal <= condition.options.value;
-           }
-           else if(condition.options.operator === "greater_than_or_equal"){
-               return subTotal >= condition.options.value;
-           }
-           else if(condition.options.operator === "greater_than"){
-               return subTotal > condition.options.value;
-           }
+        // Check compare value (subtotal, quantity) accordingly with the condition
+        if(condition.options.operator === "less_than"){
+            return compare_value < condition.options.value;
         }
-        else if(condition.type === "cart_items_quantity"){
-
+        else if(condition.options.operator === "less_than_or_equal"){
+            return compare_value <= condition.options.value;
         }
-        else if(condition.type === "cart_line_items_count"){
-
+        else if(condition.options.operator === "greater_than_or_equal"){
+            return compare_value >= condition.options.value;
+        }
+        else if(condition.options.operator === "greater_than"){
+            return compare_value > condition.options.value;
         }
     });
 
@@ -329,11 +359,13 @@ const cart_adjustment = (cartItems, orderObj, adjustment, matchedProducts) => {
  *
  * @param discount
  * @param matchedProducts
+ * @param matchedFilters
+ * @param matchedConditions
  * @param cartItems
  * @param orderObj
  * @returns {boolean}
  */
-const do_discount = (discount, matchedProducts, cartItems, orderObj) => {
+const do_discount = (discount, matchedProducts, matchedFilters, matchedConditions, cartItems, orderObj) => {
 
     if(!orderObj.discounts) orderObj.discounts = [];
 
@@ -400,9 +432,9 @@ const do_discount = (discount, matchedProducts, cartItems, orderObj) => {
  */
 const process_discount = (discount, cartItems, orderObj = {}) => {
 
-    return check_discount(discount, cartItems, orderObj, (matchedProducts) => {
-        console.log("Filtered Discount: ", discount.title, matchedProducts);
-        return do_discount(discount, matchedProducts, cartItems, orderObj);
+    return check_discount(discount, cartItems, orderObj, (matchedProducts, matchedFilters, matchedConditions) => {
+        console.log("Filtered Discount: ", discount.title, matchedProducts, matchedFilters, matchedConditions);
+        return do_discount(discount, matchedProducts, matchedFilters, matchedConditions, cartItems, orderObj);
     })
 
 }

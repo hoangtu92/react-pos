@@ -86,7 +86,11 @@ const do_sync = async (page = 1, perpage = 20, count,  look_back = 0, cb) => {
 
             for(let i=0; i< products.length; i++){
 
-                let {sku, name, price, image, barcode, original_price, id: product_id} = products[i];
+                let {sku, name, price, image, barcode, original_price, id: product_id, categories, tags, brands} = products[i];
+
+                if(categories) categories = categories.split(",");
+                if(tags) tags = tags.split(",");
+                if(brands) tags = brands.split(",");
 
                 const exists = await Product.findOne({"product_id": product_id});
                 if(!exists){
@@ -97,18 +101,23 @@ const do_sync = async (page = 1, perpage = 20, count,  look_back = 0, cb) => {
                         name,
                         price,
                         original_price,
-                        image
+                        image,
+                        categories,
+                        tags,
+                        brands
                     });
                     created.push(product)
                 }
                 else{
                     await Product.updateOne({"product_id": product_id},{
-                        product_id,
                         name: name,
                         barcode: barcode,
                         price: price,
                         original_price,
-                        image: image
+                        image: image,
+                        categories,
+                        tags,
+                        brands
                     });
                     updated.push(products[i]);
                 }

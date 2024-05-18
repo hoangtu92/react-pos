@@ -235,11 +235,13 @@ export const cartSlice = createSlice({
             addLocalStorageCart(state.cartItems);
             state.updatedCartItem = true;
         },
-        updateSubtotal: (state, {payload: {id, price}}) => {
+        updateItemPrice: (state, {payload: {id, price}}) => {
             const product = state.cartItems.find((item) => item.id === id);
             product.price = price;
+            product.off = Math.round(100*(product.original_price - product.price)/product.original_price);
 
-            addLocalStorageCart(state.cartItems)
+            addLocalStorageCart(state.cartItems);
+            state.updatedCartItem = true;
         },
         removeCartItem: (state, action) => {
             if(action.payload.key) state.deletedCartItem =  action.payload;
@@ -428,7 +430,7 @@ export const {
     productTotalAmount,
     increase,
     decrease,
-    updateSubtotal,
+    updateItemPrice,
     removeCartItem,
     hideCalculator,
     updateOrderDetail,
