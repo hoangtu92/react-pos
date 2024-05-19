@@ -379,7 +379,12 @@ const Cart = () => {
                                 <td>-${orderObj.redeem_value}</td>
                             </tr> : null}
 
-                            <tr className="grand-total border-top border-warning pt-2 mt-4" style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
+                            <tr>
+                                <td colSpan={2} className={" pt-2 mt-4"}>
+                                    <div className={"border-top border-warning "}></div>
+                                </td>
+                            </tr>
+                            <tr className="grand-total border-top border-warning" style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
                                 <th>{trans("total")}:</th>
                                 <td>
                                     <strong>${orderObj.totalAmount}</strong>
