@@ -149,19 +149,19 @@ const check_discount = (discount, cartItems, orderObj, callback = null) => {
                 let filter_check = false;
                 switch(filter.type){
                     case "products":
-                        filter_check = filter["value"].concat(filter["product_variants"]).map(e => parseInt(e)).indexOf(item.product_id) >= 0;
+                        filter_check = filter["value"].concat(filter["product_variants"]).map(e => e.toString()).indexOf(item.product_id.toString()) >= 0;
                         break;
                     case "product_sku":
                         filter_check = filter["value"].indexOf(item.sku) >= 0;
                         break;
                     case "pwb-brand":
-                        if(item.brands) filter_check = item.brands.filter(e => filter["value"].indexOf(parseInt(e)) >= 0).length;
+                        if(item.brands) filter_check = item.brands.filter(e => filter["value"].indexOf(e) >= 0).length;
                         break;
                     case "product_category":
-                        if(item.categories) filter_check = item.categories.filter(e => filter["value"].indexOf(parseInt(e)) >= 0).length;
+                        if(item.categories) filter_check = item.categories.filter(e => filter["value"].indexOf(e) >= 0).length;
                         break;
                     case "product_tags":
-                        if(item.tags) filter_check = item.tags.filter(e => filter["value"].indexOf(parseInt(e)) >= 0).length;
+                        if(item.tags) filter_check = item.tags.filter(e => filter["value"].indexOf(e) >= 0).length;
                         break;
                     case "product_attributes":
                         break;
@@ -225,7 +225,7 @@ const check_condition_rules = (discount, cartItems, matchedProducts) => {
                 || matchedProducts.indexOf(0) >= 0){
 
                 if(condition.type === "cart_subtotal"){
-                    t += price * quantity - discount;
+                    t += (price - discount) * quantity;
                 }
                 else if(condition.type === "cart_items_quantity"){
                     t += quantity;
@@ -261,9 +261,10 @@ const check_condition_rules = (discount, cartItems, matchedProducts) => {
  * @param orderObj
  * @param adjustment
  * @param matchedProducts
+ * @param matchedFilters
  * @returns {*}
  */
-const product_adjustment = (cartItems, orderObj, adjustment, matchedProducts) => {
+const product_adjustment = (cartItems, orderObj, adjustment, matchedProducts, matchedFilters) => {
     let total_discount = 0;
     cartItems.map(item => {
 
@@ -274,7 +275,7 @@ const product_adjustment = (cartItems, orderObj, adjustment, matchedProducts) =>
             let discount_value = 0;
             let item_discount_value = 0;
             if(adjustment.type === "percentage"){
-                item_discount_value = (adjustment.value * item.price)/100
+                item_discount_value = (adjustment.value * (item.price - item.discount))/100
             }
             else if(adjustment.type === "flat"){
                 item_discount_value =  parseInt(adjustment.value);
@@ -296,6 +297,7 @@ const product_adjustment = (cartItems, orderObj, adjustment, matchedProducts) =>
                 item.discounts.push({
                     name: adjustment.label ?? adjustment.cart_label,
                     value: item_discount_value,
+                    reason: matchedFilters,
                     adjust: {type: adjustment.type, value: adjustment.value}
                 })
             }
@@ -309,6 +311,7 @@ const product_adjustment = (cartItems, orderObj, adjustment, matchedProducts) =>
         orderObj.discounts.push({
             name: adjustment.label ?? adjustment.cart_label,
             value: Math.round(total_discount),
+            reason: matchedFilters,
             adjust: {type: adjustment.type, value: adjustment.value}
         });
         orderObj.discount_value += orderObj.discounts.reduce((t, e) => {t += e.value; return t;}, 0)
@@ -324,15 +327,17 @@ const product_adjustment = (cartItems, orderObj, adjustment, matchedProducts) =>
  * @param orderObj
  * @param adjustment
  * @param matchedProducts
+ * @param matchedFilters
  */
-const cart_adjustment = (cartItems, orderObj, adjustment, matchedProducts) => {
+const cart_adjustment = (cartItems, orderObj, adjustment, matchedProducts, matchedFilters) => {
     let discount_value = 0;
 
     if(adjustment.type === "percentage" || adjustment.type === "flat"){
         discount_value = cartItems.reduce((t, e) => {
             if(matchedProducts.indexOf(e.product_id) >= 0 || matchedProducts.indexOf(0) >= 0){
                 if(adjustment.type === "percentage"){
-                    t += (adjustment.value * e.price * e.quantity)/100
+                    // Todo check valid rule
+                    t += (adjustment.value * (e.price - e.discount) * e.quantity)/100
                 }
                 else if(adjustment.type === "flat"){
                     t += parseInt(adjustment.value);
@@ -349,6 +354,7 @@ const cart_adjustment = (cartItems, orderObj, adjustment, matchedProducts) => {
     orderObj.discounts.push({
         name: adjustment.label ?? adjustment.cart_label,
         value: Math.round(discount_value),
+        reason: matchedFilters,
         adjust: {type: adjustment.type, value: adjustment.value}
     });
 
@@ -374,11 +380,11 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
     switch (discount.discount_type){
         case "wdr_cart_discount":
             discounted = true;
-            cart_adjustment(cartItems, orderObj, discount.adjustments, matchedProducts);
+            cart_adjustment(cartItems, orderObj, discount.adjustments, matchedProducts, matchedFilters);
             break;
         case "wdr_simple_discount":
             discounted = true;
-            product_adjustment(cartItems, orderObj, discount.adjustments, matchedProducts);
+            product_adjustment(cartItems, orderObj, discount.adjustments, matchedProducts, matchedFilters);
             break;
         case "wdr_bulk_discount":
             if(discount.adjustments.ranges) Object.values(discount.adjustments.ranges).map(range => {
@@ -411,7 +417,7 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
                 ){
 
                     discounted = true;
-                    product_adjustment(cartItems, orderObj, range, matchedProducts);
+                    product_adjustment(cartItems, orderObj, range, matchedProducts, matchedFilters);
                 }
             });
 

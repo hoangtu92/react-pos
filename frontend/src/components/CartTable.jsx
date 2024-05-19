@@ -10,9 +10,9 @@ const CartTable = ({cartItems, dispatch}) => {
             <colgroup>
                 <col width={"5%"}/>
                 <col width={"10%"}/>
-                <col width={"40%"}/>
+                <col width={"35%"}/>
                 <col width={"10%"}/>
-                <col width={"10%"}/>
+                <col width={"15%"}/>
                 <col width={"15%"}/>
                 <col width={"10%"}/>
             </colgroup>
@@ -76,7 +76,7 @@ const CartTable = ({cartItems, dispatch}) => {
                         </Form.Group>
                         </td>
 
-                        <td><small>{product.discounts ? product.discounts.map(e => e.name ? `${e.name}: -\$${e.value}` : `-\$${e.value}`).join(", ") : null}</small>
+                        <td><small>{product.discounts ? product.discounts.map(e => e.name ? `${e.name}: -\$${e.value}` : `-\$${e.value}`).join("\n") : null}</small>
                         </td>
 
                         <td>

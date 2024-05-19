@@ -196,7 +196,7 @@ export const cartSlice = createSlice({
                 // index -1
                 // New product to cart add
                 const item = {...action.payload, quantity: 1};
-                state.cartItems.push({...action.payload, quantity: 1, off: Math.round(100*(action.payload.original_price - action.payload.price)/action.payload.original_price)});
+                state.cartItems.push({...action.payload, quantity: 1, discount: 0, off: Math.round(100*(action.payload.original_price - action.payload.price)/action.payload.original_price)});
                 state.addCartItem = item;
             }
             addLocalStorageCart(state.cartItems);
