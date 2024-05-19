@@ -1,10 +1,6 @@
 import httpRequest from '../../utils/request'
 
 
-const discountSync = async () => {
-    const response = await httpRequest.get("/discount/get-discount-rules")
-    return response.data
-}
 
 const calcDiscount = async(data) => {
     // /api/discount/calc
@@ -12,8 +8,13 @@ const calcDiscount = async(data) => {
     return response.data
 }
 
+const discountSync = async (args) => {
+    const response = await httpRequest.get("/discount/sync-discounts")
+    return response.data
+}
+
 const discountService = {
     discountSync,
-    calcDiscount
+    calcDiscount,
 }
 export default discountService;

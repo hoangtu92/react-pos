@@ -111,6 +111,33 @@ const do_sync_discounts = async(cb = null) => {
 }
 
 /**
+ * @route /sync-discount
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
+const syncDiscountSettings = async(req, res) => {
+    let results = [];
+    await do_sync_settings(data => {
+        results.push(data);
+    });
+
+    await do_sync_discounts(data => {
+        results.push(data);
+    });
+
+    if(results){
+        res.status(200).json({
+            status: true,
+            result: results
+        })
+    }
+    else {
+        res.status(400)
+    }
+}
+
+/**
  *
  * @param discount
  * @param cartItems
@@ -488,5 +515,6 @@ const calculate_discount = async(req, res) => {
 module.exports ={
     do_sync_settings,
     do_sync_discounts,
-    calculate_discount
+    calculate_discount,
+    syncDiscountSettings
 } ;

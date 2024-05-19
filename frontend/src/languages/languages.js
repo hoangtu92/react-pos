@@ -95,6 +95,10 @@ const languages = {
 
     "discount_applied_success": ["Discount applied success.", "Discount applied success."],
     "discount_applied_failed": ["Discount applied failed.", "Discount applied failed."],
+    "discount_sync_success": ["Discount sync success.", "Discount sync success."],
+    "discount_sync_failed": ["Discount sync failed.", "Discount sync failed."],
+
+
 };
 
 export default languages;
