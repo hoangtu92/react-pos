@@ -72,6 +72,7 @@ const languages = {
 
     "auto_print_error_msg": ["Sorry. There was an error with automate printing function. Please click print manually.", "自動列印錯誤。請手動點選列印。"],
     "print_success_msg": ['Invoice printed successfully!', '發票列印成功！'],
+    "invoice_issued_success": ['Invoice issued successfully!', 'Invoice issued successfully!'],
     "invalid_tax_id_msg": ["Invalid Tax ID", "統一編號錯誤，請再次確認！"],
     "redeem_amount_exceed_total_error": ["Exceed total amount", "折扣超過總金額"],
     "point_too_small_msg": ["Point too small", "Point too small"],

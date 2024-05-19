@@ -50,7 +50,7 @@ export const orderCreate = createAsyncThunk('order/orderCreate', async (order, t
 
         if(result.status){
             if(order.enableInvoice)
-                thunkAPI.dispatch(issueInvoice({id: result.data._id, print: true}));
+                thunkAPI.dispatch(issueInvoice({id: result.data._id, print: !order.carrier_id}));
             else{
                 thunkAPI.dispatch(syncOrder(result.data._id));
             }
@@ -130,8 +130,7 @@ export const issueInvoice = createAsyncThunk('order/issueInvoice', async (data, 
         const result =  await orderService.issueInvoice(data.id);
 
         if(result.status){
-            const print = !result.invoice.carrier_id;
-            if(print || data.print) {
+            if(data.print) {
                 thunkAPI.dispatch(printInvoice(data.id));
             }
 
@@ -378,6 +377,7 @@ export const cartSlice = createSlice({
                 state.error = false;
                 state.orderObj.invoice = action.payload.invoice
                 addLocalStorageOrder(state.orderObj);
+                toast.success(trans("invoice_issued_success"))
 
             }).addCase(issueInvoice.rejected, (state, action) => {
                 state.loading = false

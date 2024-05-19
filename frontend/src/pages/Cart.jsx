@@ -218,7 +218,7 @@ const Cart = () => {
     const handlePrintInvoice = () => {
         if(typeof orderObj.invoice !== "undefined")
             dispatch(printInvoice(orderObj.id))
-        else dispatch(issueInvoice({id: orderObj.id, print: true}))
+        else dispatch(issueInvoice({id: orderObj.id, print: !orderObj.carrier_id}))
     }
 
     const finishOrder = () => {
