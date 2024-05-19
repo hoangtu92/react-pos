@@ -211,13 +211,11 @@ const check_discount = (discount, cartItems, orderObj, callback = null) => {
         if(conditions_count > 0){
             const matchedConditions = check_condition_rules(discount, cartItems, matchedProducts);
             if(discount.additional && discount.additional["condition_relationship"] === "or" && matchedConditions.length > 0){
-                console.log("Discount apply when either one condition is met");
                 // Todo discount apply when either one condition is met
 
                 if(callback) return callback(matchedProducts, matchedFilters, matchedConditions)
             }
             else if(matchedConditions.length == conditions_count){
-                console.log("Discount apply when all condition are met");
                 // Todo discount apply when all condition are met
                 if(callback) return callback(matchedProducts, matchedFilters, matchedConditions)
             }
@@ -225,7 +223,6 @@ const check_discount = (discount, cartItems, orderObj, callback = null) => {
         }
         else{
             console.log("Discount apply when no conditions are specified")
-            // Todo discount apply when no conditions are specified
             if(callback) return callback(matchedProducts, matchedFilters, [])
 
         }
@@ -466,7 +463,6 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
 const process_discount = (discount, cartItems, orderObj = {}) => {
 
     return check_discount(discount, cartItems, orderObj, (matchedProducts, matchedFilters, matchedConditions) => {
-        console.log("Filtered Discount: ", discount.title, matchedProducts, matchedFilters, matchedConditions);
         return do_discount(discount, matchedProducts, matchedFilters, matchedConditions, cartItems, orderObj);
     })
 

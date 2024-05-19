@@ -111,7 +111,8 @@ const syncOrder = async(req, res) => {
                 return {
                     sku: e.sku,
                     quantity: e.quantity.toString(),
-                    total: (e.price * e.quantity).toString()
+                    total: ((e.price - e.discount) * e.quantity).toString(),
+                    subtotal: ((e.price - e.discount) * e.quantity).toString(),
                 }
             })
         };
@@ -353,75 +354,8 @@ const getOrders = async (req, res) => {
     res.status(201).json(orders)
 }
 
-/**
- * @route /api/order/apply-discount
- * @param req
- * @param res
- * @returns {Promise<void>}
- */
-const applyDiscount = async (req, res) => {
-    const {
-        order_id,
-        discountValue,
-        discountType,
-        discountTarget
-    } = req.body;
-
-    const order = await Order.findOne({order_id: order_id});
-
-    if(order && discountValue){
-        let discountAmount;
-        if(discountType === 'percent'){
-            if(discountTarget === 'product'){
-                discountAmount = order.cartItems.reduce((t, e) => {
-                    t += (e.price*e.quantity*discountValue)/100;
-                    return t;
-                }, 0);
-            }
-            else{
-                discountAmount = (order.totalAmount*discountValue)/100;
-            }
-        }
-        else{
-            if(discountTarget === 'product'){
-                discountAmount = order.cartItems.reduce((t, e) => {
-                    t += discountValue
-                    return t;
-                }, 0);
-            }
-            else{
-                discountAmount = discountValue;
-            }
-        }
-
-        if(discountAmount > 0){
-            const totalAmount = order.totalAmount - discountAmount;
-
-            await Order.findOneAndUpdate({order_id: order_id}, {
-                discountAmount: Math.round(discountAmount),
-                totalAmount: Math.round(totalAmount)
-            });
-        }
-
-
-        res.status(201).json({
-            status: true,
-            msg: "Apply discount success"
-        })
-    }
-
-
-    else
-        res.status(400).json({
-            status: false,
-            msg: "Apply discount failed"
-        })
-}
-
-
 module.exports = {
     addOrder,
     getOrders,
-    applyDiscount,
     syncOrder
 }

@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { addOrder, getOrders, getOrder, syncOrder} = require('../controllers/orderController')
+const { addOrder, getOrders, syncOrder} = require('../controllers/orderController')
 const { verifyToken } = require('../middleware/authMiddleware')
 
 router.post('/add-order', verifyToken, addOrder)
