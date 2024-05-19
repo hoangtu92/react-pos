@@ -211,8 +211,8 @@ export const cartSlice = createSlice({
         productTotalAmount: (state) => {
             state.orderObj.totalAmount = state.orderObj.subTotal;
 
-            if(typeof state.orderObj.redeem_value != "undefined") state.orderObj.totalAmount -=  state.orderObj.redeem_value;
-            if(typeof state.orderObj.discount_value != "undefined") state.orderObj.totalAmount -= state.orderObj.discount_value;
+            if(state.orderObj.redeem_value) state.orderObj.totalAmount -=  state.orderObj.redeem_value;
+            if(state.orderObj.discountAmount ) state.orderObj.totalAmount -= state.orderObj.discountAmount;
 
             state.orderObj.totalAmount = Math.round(state.orderObj.totalAmount);
 
@@ -409,8 +409,9 @@ export const cartSlice = createSlice({
                     state.cartItems = action.payload.cartItems
                 }
                 if(action.payload.orderObj){
-                    state.orderObj = action.payload.orderObj
+                    state.orderObj = action.payload.orderObj;
                 }
+                state.orderObj.discountAmount = parseInt(state.orderObj.discount_value) + parseInt(state.orderObj.pos_discount)
                 state.updatedCartItem = false;
                 //toast.success(trans("discount_applied_success"));
 

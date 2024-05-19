@@ -56,6 +56,7 @@ const languages = {
     "go_to_home": ["Go to home page", "回首頁"],
     "redeem_points": ["Redeem Points", "使用狗狗幣"],
     "discount": ["Discount", "折扣"],
+    "pos_discount": ["Pos Discount", "Pos Discount"],
     "save_close": ["Save & Close", "儲存並關閉"],
     "custom_order_amount": ["Custom order amount", "自訂訂單金額"],
     "order_amount": ["Order Amount", "訂單金額"],

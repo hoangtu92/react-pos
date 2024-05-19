@@ -1236,14 +1236,10 @@ input.type-select:checked + label,
 
 .cart-summary .cart-total-table table {
   width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 5px;
 }
 
-.cart-summary .cart-total-table table tr {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
 
 .cart-summary .cart-total-table table td {
   color: rgb(106, 104, 104);

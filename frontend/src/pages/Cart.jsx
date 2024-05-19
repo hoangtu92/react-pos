@@ -65,7 +65,7 @@ const Cart = () => {
 
     useEffect(() => {
         dispatch(productTotalAmount());
-    }, [dispatch, orderObj.subTotal, orderObj.discount_value, orderObj.redeem_value]);
+    }, [dispatch, orderObj.subTotal, orderObj.discountAmount, orderObj.redeem_value]);
 
 
     useEffect(() => {
@@ -127,8 +127,10 @@ const Cart = () => {
     }
 
     const handleDiscountValue = e => {
-        if(e.target.value.length > 0)
-            dispatch(updateOrderDetail({name: "discount_value", value: e.target.value}))
+        if(e.target.value.length > 0){
+            dispatch(updateOrderDetail({name: "pos_discount", value: e.target.value}));
+        }
+
     }
 
     const handleUpdatePayment = (e) => {
@@ -198,7 +200,7 @@ const Cart = () => {
             customTotalAmount: orderObj.customTotalAmount,
             redeemAmount: orderObj.redeem_value,
             redeem_points: orderObj.redeem_points,
-            discountAmount: orderObj.discount_value,
+            discountAmount: orderObj.discountAmount,
             customer: selectedCustomer._id,
             is_b2b: selectedCustomer.is_b2b,
             carrier_id: !selectedCustomer.is_b2b ? selectedCustomer.carrier_id : undefined,
@@ -327,6 +329,10 @@ const Cart = () => {
                     </div>
                     <div className="cart-total-table p-3">
                         <table>
+                            <colgroup>
+                                <col width={"50%"}/>
+                                <col width={"50%"}/>
+                            </colgroup>
                             <tbody>
                             <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
                                 <th>{trans("subtotal")}:</th>
@@ -339,21 +345,38 @@ const Cart = () => {
                                 </tr>
                             })}
 
-                            {orderObj.redeem_value > 0 ? <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
-                                <th>{trans("redeem")}:</th>
-                                <td>-${orderObj.redeem_value}</td>
+                            {orderObj.discountAmount ? <tr>
+                                <th>Discount:</th>
+                            </tr> : null}
+                            {orderObj.discountAmount ? <tr>
+                                <td colSpan={2}>
+                                    <table style={{paddingLeft: "10px"}}>
+                                        <tbody style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
+
+                                            {orderObj.discounts && orderObj.discounts.map((discount, index) => (
+                                                <tr key={index}>
+                                                    <th style={{textAlign: "left"}}><small>{discount.name}:</small></th>
+                                                    <td><small>-${discount.value}</small></td>
+                                                </tr>
+                                            ))}
+
+                                            {orderObj.pos_discount ? <tr>
+                                                <th style={{textAlign: "left"}}><small>{trans("pos_discount")}:</small></th>
+                                                <td><small>-${orderObj.pos_discount}</small></td>
+                                            </tr>: null}
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr> : null }
+
+                            {orderObj.discountAmount ? <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
+                                <th>{trans("total_discount")}:</th>
+                                <td>-${orderObj.discountAmount}</td>
                             </tr> : null}
 
-                            {orderObj.discounts && orderObj.discounts.map((discount, index) => (
-                                <tr key={index}>
-                                <th><small>{discount.name}:</small></th>
-                                <td><small>-${discount.value}</small></td>
-                                </tr>
-                            ))}
-
-                            {orderObj.discount_value > 0 ? <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
-                                <th>{trans("total_discount")}:</th>
-                                <td>-${orderObj.discount_value}</td>
+                            {orderObj.redeem_value > 0 ? <tr>
+                                <th>{trans("redeem")}:</th>
+                                <td>-${orderObj.redeem_value}</td>
                             </tr> : null}
 
                             <tr className="grand-total border-top border-warning pt-2 mt-4" style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
@@ -394,11 +417,11 @@ const Cart = () => {
                                 <td><Form.Label htmlFor={"issueInvoice"}>{trans("auto_invoice")}</Form.Label></td>
                             </tr>
                             <tr>
-                                <td></td>
-                                <td>
+                                <th></th>
+                                <td style={{textAlign: "right"}}>
                                     <Button variant={"warning"} size={"lg"} type="submit" disabled={cartItems.length === 0 || loading || error}
-                                            className={'d-flex align-items-center'}>
-                                        {settings.enableInvoice ? <span><FaPrint className={"me-1"}/> {trans("checkout_invoice")}</span> : <span><FaShoppingBag className={"me-1"}/> {trans("checkout")}</span> }
+                                            className={'d-flex'}>
+                                        {settings.enableInvoice ? <span><FaPrint className={"me-1"}/> {trans("checkout")}</span> : <span><FaShoppingBag className={"me-1"}/> {trans("checkout")}</span> }
                                             </Button>
                                 </td>
                             </tr>
@@ -510,9 +533,9 @@ const Cart = () => {
                                 <Form.Label htmlFor="inputDiscount" className={"me-2"}>{trans("discount")}</Form.Label>
                                 <div className={"d-flex flex-row"}>
                                     <Form.Control
-                                        name={"discount_value"}
+                                        name={"pos_discount"}
                                         onChange={handleDiscountValue}
-                                        placeholder={orderObj.discount_value}
+                                        placeholder={orderObj.pos_discount}
                                         min={0}
                                         size={"lg"}
                                         type="number"
