@@ -391,7 +391,6 @@ export const cartSlice = createSlice({
             }).addCase(validateCarrierID.fulfilled, (state, action) => {
                 state.loading = false;
                 toast.success(trans("carrier_id_validate_success"));
-                state.settings.enableInvoice = false;
                 state.selectedCustomer.carrier_id = action.payload.carrier_id
                 updateSettings(state.settings);
                 setLocalStorageCustomer(state.selectedCustomer);
