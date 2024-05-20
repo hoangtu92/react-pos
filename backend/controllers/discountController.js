@@ -241,38 +241,93 @@ const check_condition_rules = (discount, cartItems, matchedProducts) => {
     const conditions = Object.values(discount.conditions);
     if(conditions) return conditions.filter(condition => {
 
-        let compare_value = cartItems.reduce((t, e) => {
-            const {price, quantity, product_id, discount} = e;
+        let compare_value;
+        let condition_value = condition.options.value ?? condition.options.from;
+        let condition_value2 = condition.options.to ?? 0;
 
-            if(condition.options.calculate_from === "from_cart"
-                || matchedProducts.indexOf(product_id) >= 0
-                || matchedProducts.indexOf(0) >= 0){
+        if(condition.type === "cart_item_category_combination"){
 
-                if(condition.type === "cart_subtotal"){
-                    t += (price - discount) * quantity;
-                }
-                else if(condition.type === "cart_items_quantity"){
-                    t += quantity;
-                }
-                else if(condition.type === "cart_line_items_count"){
-                    t += 1;
-                }
+            let compare_arr = condition.options.category.map(cat_id => {
+                return cartItems.reduce((t, item) => {
+                    const {categories, discount, price, quantity} = item;
+
+                    if(categories && categories.indexOf(cat_id) >= 0){
+                        if(condition.options.type === "cart_quantity"){
+                            t += quantity;
+                        }
+                        else if(condition.options.type === "cart_subtotal"){
+                            t += (price - discount) * quantity;
+                        }
+                        else if(condition.options.type === "cart_line_item"){
+                            t += 1;
+                        }
+                    }
+
+                    return t;
+                }, 0)
+            });
+
+            // Whether all categories in condition are presence in the cart
+            const all_cats_presence = compare_arr.length >= condition.options.category.length;
+
+
+            if(condition.options.combination === "each"){
+                compare_value = all_cats_presence ? Math.min(...compare_arr) : 0;
             }
-            return t;
-        }, 0);
+            else if(condition.options.combination === "combine"){
+                compare_value = compare_arr.reduce((t, e) => {t += e; return t;}, 0);
+            }
+            else if(condition.options.combination === "any"){
+                compare_value = Math.max(...compare_arr);
+            }
 
-        // Check compare value (subtotal, quantity) accordingly with the condition
+            //console.log(compare_arr, compare_value)
+        }
+        else{
+            compare_value = cartItems.reduce((t, e) => {
+                const {price, quantity, product_id, discount} = e;
+
+                if(condition.options.calculate_from === "from_cart"
+                    || matchedProducts.indexOf(product_id) >= 0
+                    || matchedProducts.indexOf(0) >= 0){
+
+                    if(condition.type === "cart_subtotal"){
+                        t += (price - discount) * quantity;
+                    }
+                    else if(condition.type === "cart_items_quantity"){
+                        t += quantity;
+                    }
+                    else if(condition.type === "cart_line_items_count"){
+                        t += 1;
+                    }
+
+                }
+                return t;
+            }, 0);
+        }
+
+        if(!compare_value) return false;
+
         if(condition.options.operator === "less_than"){
-            return compare_value < condition.options.value;
+            return compare_value < condition_value
         }
         else if(condition.options.operator === "less_than_or_equal"){
-            return compare_value <= condition.options.value;
+            return compare_value <= condition_value
         }
         else if(condition.options.operator === "greater_than_or_equal"){
-            return compare_value >= condition.options.value;
+            return compare_value >= condition_value
         }
-        else if(condition.options.operator === "greater_than"){
-            return compare_value > condition.options.value;
+        else if (condition.options.operator === "greater_than"){
+            return compare_value > condition_value
+        }
+        else if (condition.options.operator === "equal_to"){
+            return compare_value == condition_value
+        }
+        else if (condition.options.operator === "not_equal_to"){
+            return compare_value != condition_value
+        }
+        else if (condition.options.operator === "in_range"){
+            return compare_value > condition_value && quantity < condition_value2
         }
     });
 
@@ -283,12 +338,13 @@ const check_condition_rules = (discount, cartItems, matchedProducts) => {
  * Perform direct discount to product price
  * @param cartItems
  * @param orderObj
+ * @param discount
  * @param adjustment
  * @param matchedProducts
  * @param matchedFilters
  * @returns {*}
  */
-const product_adjustment = (cartItems, orderObj, adjustment, matchedProducts, matchedFilters) => {
+const product_adjustment = (cartItems, orderObj, discount, adjustment, matchedProducts, matchedFilters) => {
     let total_discount = 0;
     cartItems.map(item => {
 
@@ -296,7 +352,7 @@ const product_adjustment = (cartItems, orderObj, adjustment, matchedProducts, ma
         if(!item.discounts) item.discounts = [];
 
         if(matchedProducts.indexOf(item.product_id) >= 0 || matchedProducts.indexOf(0) >= 0){
-            let discount_value = 0;
+            let discount_value;
             let item_discount_value = 0;
             if(adjustment.type === "percentage"){
                 item_discount_value = (adjustment.value * (item.price - item.discount))/100
@@ -319,7 +375,7 @@ const product_adjustment = (cartItems, orderObj, adjustment, matchedProducts, ma
 
                 item.discount += discount_value;
                 item.discounts.push({
-                    name: adjustment.label ?? adjustment.cart_label,
+                    name: adjustment.label ? adjustment.label : adjustment.cart_label ? adjustment.cart_label : discount.title,
                     value: item_discount_value,
                     reason: matchedFilters,
                     adjust: {type: adjustment.type, value: adjustment.value}
@@ -333,7 +389,7 @@ const product_adjustment = (cartItems, orderObj, adjustment, matchedProducts, ma
     if(adjustment.apply_as_cart_rule === "1"){
         // Apply as coupon/discount
         orderObj.discounts.push({
-            name: adjustment.label ?? adjustment.cart_label,
+            name: adjustment.label ? adjustment.label : adjustment.cart_label ? adjustment.cart_label : discount.title,
             value: Math.round(total_discount),
             reason: matchedFilters,
             adjust: {type: adjustment.type, value: adjustment.value}
@@ -349,11 +405,12 @@ const product_adjustment = (cartItems, orderObj, adjustment, matchedProducts, ma
  * Perform cart discount as coupon
  * @param cartItems
  * @param orderObj
+ * @param discount
  * @param adjustment
  * @param matchedProducts
  * @param matchedFilters
  */
-const cart_adjustment = (cartItems, orderObj, adjustment, matchedProducts, matchedFilters) => {
+const cart_adjustment = (cartItems, orderObj, discount, adjustment, matchedProducts, matchedFilters) => {
     let discount_value = 0;
 
     if(adjustment.type === "percentage" || adjustment.type === "flat"){
@@ -376,7 +433,7 @@ const cart_adjustment = (cartItems, orderObj, adjustment, matchedProducts, match
 
     // Apply as coupon/discount
     orderObj.discounts.push({
-        name: adjustment.label ?? adjustment.cart_label,
+        name: adjustment.label ? adjustment.label : adjustment.cart_label ? adjustment.cart_label : discount.title,
         value: Math.round(discount_value),
         reason: matchedFilters,
         adjust: {type: adjustment.type, value: adjustment.value}
@@ -404,11 +461,11 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
     switch (discount.discount_type){
         case "wdr_cart_discount":
             discounted = true;
-            cart_adjustment(cartItems, orderObj, discount.adjustments, matchedProducts, matchedFilters);
+            cart_adjustment(cartItems, orderObj, discount, discount.adjustments, matchedProducts, matchedFilters);
             break;
         case "wdr_simple_discount":
             discounted = true;
-            product_adjustment(cartItems, orderObj, discount.adjustments, matchedProducts, matchedFilters);
+            product_adjustment(cartItems, orderObj, discount, discount.adjustments, matchedProducts, matchedFilters);
             break;
         case "wdr_bulk_discount":
             if(discount.adjustments.ranges) Object.values(discount.adjustments.ranges).map(range => {
@@ -441,7 +498,7 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
                 ){
 
                     discounted = true;
-                    product_adjustment(cartItems, orderObj, range, matchedProducts, matchedFilters);
+                    product_adjustment(cartItems, orderObj, discount, range, matchedProducts, matchedFilters);
                 }
             });
 
