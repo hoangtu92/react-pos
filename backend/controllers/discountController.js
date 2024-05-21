@@ -244,8 +244,46 @@ const check_condition_rules = (discount, cartItems, matchedProducts) => {
         let compare_value;
         let condition_value = condition.options.value ?? condition.options.from;
         let condition_value2 = condition.options.to ?? 0;
+        if(condition.type === "cart_item_product_combination"){
 
-        if(condition.type === "cart_item_category_combination"){
+            let compare_arr = cartItems.reduce((t, item) => {
+
+                if(condition.options.product.indexOf(item.product_id.toString()) >= 0
+                || condition.options.product.indexOf(item.parent_id.toString()) >=0
+                || condition.options.product_variants.indexOf(item.product_id) >= 0){
+
+                    if(item.parent_id){
+                        if(!t[item.parent_id]) t[item.parent_id] = 0;
+                        t[item.parent_id] += item.quantity;
+                    }
+                    else{
+                        if(!t[item.product_id]) t[item.product_id] = 0;
+                        t[item.product_id] += item.quantity;
+                    }
+
+                }
+
+                return t;
+
+            }, {});
+
+            compare_arr = Object.values(compare_arr);
+
+            // Whether all categories in condition are presence in the cart
+            const all_products_presence = compare_arr.length >= condition.options.product.length;
+
+            if(condition.options.type === "each"){
+                compare_value = all_products_presence ? Math.min(...compare_arr) : 0;
+            }
+            else if(condition.options.type === "combine"){
+                compare_value = all_products_presence ? compare_arr.reduce((t, e) => {t += e; return t;}, 0) : 0;
+            }
+            else if(condition.options.type === "any"){
+                compare_value = Math.max(...compare_arr);
+            }
+        }
+
+        else if(condition.type === "cart_item_category_combination"){
 
             let compare_arr = condition.options.category.map(cat_id => {
                 return cartItems.reduce((t, item) => {

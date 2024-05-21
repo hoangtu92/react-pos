@@ -85,7 +85,7 @@ const do_sync = async (page = 1, perpage = 20, count,  look_back = 0, cb) => {
 
             for(let i=0; i< products.length; i++){
 
-                let {sku, name, price, image, barcode, original_price, id: product_id, categories, tags, brands} = products[i];
+                let {sku, name, price, image, barcode, original_price, id: product_id, parent_id, categories, tags, brands} = products[i];
 
                 if(categories) categories = categories.split(",");
                 if(tags) tags = tags.split(",");
@@ -95,6 +95,7 @@ const do_sync = async (page = 1, perpage = 20, count,  look_back = 0, cb) => {
                 if(!exists){
                     const product = await Product.create({
                         product_id,
+                        parent_id,
                         sku,
                         barcode,
                         name,
@@ -109,6 +110,7 @@ const do_sync = async (page = 1, perpage = 20, count,  look_back = 0, cb) => {
                 }
                 else{
                     await Product.updateOne({"product_id": product_id},{
+                        parent_id,
                         name: name,
                         barcode: barcode,
                         price: price,

@@ -11,6 +11,9 @@ const ProductSchema = new mongoose.Schema(
 		product_id: {
 			type: Number
 		},
+		parent_id:{
+			type: Number
+		},
 		categories: [],
 		tags: [],
 		brands: [],
