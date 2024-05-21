@@ -244,82 +244,61 @@ const check_condition_rules = (discount, cartItems, matchedProducts) => {
         let compare_value;
         let condition_value = condition.options.value ?? condition.options.from;
         let condition_value2 = condition.options.to ?? 0;
-        if(condition.type === "cart_item_product_combination"){
+        if(condition.type === "cart_item_product_combination" || condition.type === "cart_item_category_combination"){
 
-            let compare_arr = cartItems.reduce((t, item) => {
+            let all_presence, compare_arr;
 
-                if(condition.options.product.indexOf(item.product_id.toString()) >= 0
-                || condition.options.product.indexOf(item.parent_id.toString()) >=0
-                || condition.options.product_variants.indexOf(item.product_id) >= 0){
+            if(condition.type === "cart_item_product_combination"){
+                compare_arr = condition.options.product.map(product_id => {
+                    return cartItems.reduce((t, item) => {
+                        if(product_id == item.product_id || product_id == item.parent_id){
+                            t += item.quantity;
+                        }
+                        return t;
+                    }, 0);
 
-                    if(item.parent_id){
-                        if(!t[item.parent_id]) t[item.parent_id] = 0;
-                        t[item.parent_id] += item.quantity;
-                    }
-                    else{
-                        if(!t[item.product_id]) t[item.product_id] = 0;
-                        t[item.product_id] += item.quantity;
-                    }
+                });
 
-                }
+                // Whether all categories in condition are presence in the cart
+                all_presence = compare_arr.filter(e => e).length >= condition.options.product.length;
 
-                return t;
+            }
+            else{
+                compare_arr = condition.options.category.map(cat_id => {
+                    return cartItems.reduce((t, item) => {
+                        const {categories, discount, price, quantity} = item;
 
-            }, {});
+                        if(categories && categories.indexOf(cat_id) >= 0){
+                            if(condition.options.type === "cart_quantity"){
+                                t += quantity;
+                            }
+                            else if(condition.options.type === "cart_subtotal"){
+                                t += (price - discount) * quantity;
+                            }
+                            else if(condition.options.type === "cart_line_item"){
+                                t += 1;
+                            }
+                        }
 
-            compare_arr = Object.values(compare_arr);
+                        return t;
+                    }, 0)
+                });
 
-            // Whether all categories in condition are presence in the cart
-            const all_products_presence = compare_arr.length >= condition.options.product.length;
+                // Whether all categories in condition are presence in the cart
+                all_presence = compare_arr.filter(e => e).length >= condition.options.category.length;
+            }
+
+            //console.log(compare_arr, "all_presence", all_presence)
 
             if(condition.options.type === "each"){
-                compare_value = all_products_presence ? Math.min(...compare_arr) : 0;
+                compare_value = all_presence ? Math.min(...compare_arr) : 0;
             }
             else if(condition.options.type === "combine"){
-                compare_value = all_products_presence ? compare_arr.reduce((t, e) => {t += e; return t;}, 0) : 0;
+                compare_value = all_presence ? compare_arr.reduce((t, e) => {t += e; return t;}, 0) : 0;
             }
             else if(condition.options.type === "any"){
                 compare_value = Math.max(...compare_arr);
             }
-        }
-
-        else if(condition.type === "cart_item_category_combination"){
-
-            let compare_arr = condition.options.category.map(cat_id => {
-                return cartItems.reduce((t, item) => {
-                    const {categories, discount, price, quantity} = item;
-
-                    if(categories && categories.indexOf(cat_id) >= 0){
-                        if(condition.options.type === "cart_quantity"){
-                            t += quantity;
-                        }
-                        else if(condition.options.type === "cart_subtotal"){
-                            t += (price - discount) * quantity;
-                        }
-                        else if(condition.options.type === "cart_line_item"){
-                            t += 1;
-                        }
-                    }
-
-                    return t;
-                }, 0)
-            });
-
-            // Whether all categories in condition are presence in the cart
-            const all_cats_presence = compare_arr.length >= condition.options.category.length;
-
-
-            if(condition.options.combination === "each"){
-                compare_value = all_cats_presence ? Math.min(...compare_arr) : 0;
-            }
-            else if(condition.options.combination === "combine"){
-                compare_value = compare_arr.reduce((t, e) => {t += e; return t;}, 0);
-            }
-            else if(condition.options.combination === "any"){
-                compare_value = Math.max(...compare_arr);
-            }
-
-            //console.log(compare_arr, compare_value)
         }
         else{
             compare_value = cartItems.reduce((t, e) => {
