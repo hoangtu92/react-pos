@@ -129,6 +129,7 @@ const Cart = () => {
     const handleDiscountValue = e => {
         if(e.target.value.length > 0){
             dispatch(updateOrderDetail({name: "pos_discount", value: e.target.value}));
+            dispatch(handleChange({name: "updatedCartItem", value: true}));
         }
 
     }
