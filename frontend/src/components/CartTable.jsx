@@ -71,16 +71,17 @@ const CartTable = ({cartItems, dispatch}) => {
                         </td>
 
                         <td>
-                            <Form.Group className={"d-flex flex-row align-items-center"}>
+                            {product.gifted ? <span>{product.price}</span> : <Form.Group className={"d-flex flex-row align-items-center"}>
                                 <span className={"me-1"}>$ </span><Form.Control onChange={(e) => dispatch(updateItemPrice({id: product.id, price: e.target.value}))} onFocus={e => e.target.select()} type={"number"} value={product.price} />
-                        </Form.Group>
+                            </Form.Group>}
+
                         </td>
 
-                        <td><small>{product.discounts ? product.discounts.map(e => e.name ? `${e.name}: -\$${e.value}` : `-\$${e.value}`).join("\n") : null}</small>
+                        <td><small>{product.discounts ? product.discounts.map(e => e.name ? `${e.name}: -$${e.value}` : `-$${e.value}`).join("\n") : null}</small>
                         </td>
 
                         <td>
-                            <div className="count">
+                            {product.gifted ? <span>{product.quantity}</span> : <div className="count">
                                 <button
                                     className="decrement-btn"
                                     type="button"
@@ -100,7 +101,8 @@ const CartTable = ({cartItems, dispatch}) => {
                                 >
                                     +
                                 </button>
-                            </div>
+                            </div>}
+
                         </td>
                         <td>${(product.price * product.quantity - product.discount)}</td>
                     </tr>
