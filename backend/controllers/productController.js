@@ -24,6 +24,30 @@ const searchProducts = async (req, res) => {
 }
 
 /**
+ * @route /api/product/get_ids
+ * @param req
+ * @param res
+ * @returns {Promise<void>}
+ */
+const getProducts = async (req, res) => {
+    let {bxgy} = req.body;
+    bxgy.items.map(e => parseInt(e));
+    bxgy.items = await Product.find({$or: [{product_id: {$in: bxgy.items}}, {parent_id: {$in: bxgy.items}}]});
+
+    bxgy.items = Object.values(bxgy.items.reduce((t, e) => {
+        if (e.parent_id) {
+            if (!t[e.parent_id]) t[e.parent_id] = [];
+            t[e.parent_id].push(e);
+        } else {
+            if (!t[e.product_id]) t[e.product_id] = [];
+            t[e.product_id].push(e);
+        }
+        return t;
+    }, {})).map(e => e.sort((a, b) => bxgy.mode === "cheapest" ? a.price - b.price : b.price - a.price).shift());
+    res.status(201).json(bxgy)
+}
+
+/**
  * @route /api/product/count
  * @param req
  * @param res
@@ -397,6 +421,7 @@ const removeCartItem = async(req, res) => {
 module.exports = {
     syncProduct,
     searchProducts,
+    getProducts,
     countProducts,
     truncateProduct,
     addCartItem,

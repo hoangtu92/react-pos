@@ -17,6 +17,7 @@ import customerService from "../customer/customerService";
 import trans from "../../utils/translate";
 import cartService from "./cartService";
 import discountService from "../discount/discountService";
+import productService from "../product/productService";
 
 const cartItems = getLocalStorageCart()
 const orderObj = getLocalStorageOrder()
@@ -106,7 +107,15 @@ export const calcPoint = createAsyncThunk('coupon/calc', async (points, thunkAPI
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response.data)
     }
-})
+});
+
+export const apply_bxgy_discount = createAsyncThunk('product/get_ids', async (bxgy, thunkAPI) => {
+    try {
+        return await productService.getProductsByIds(bxgy);
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response.data)
+    }
+});
 
 /**
  * Calculate discount
@@ -114,7 +123,14 @@ export const calcPoint = createAsyncThunk('coupon/calc', async (points, thunkAPI
  */
 export const calculateDiscount = createAsyncThunk('discount/calc', async (data, thunkAPI) => {
     try {
-        return await discountService.calcDiscount(data);
+        const result = await discountService.calcDiscount(data);
+
+        if(result.orderObj.bxgy_items){
+            console.log(result.orderObj.bxgy_items);
+            result.orderObj.bxgy_items.map(e => thunkAPI.dispatch(apply_bxgy_discount(e)))
+        }
+
+        return result;
     } catch (error) {
         return thunkAPI.rejectWithValue(error.response.data)
     }
@@ -205,7 +221,7 @@ export const cartSlice = createSlice({
         productSubTotal: (state) => {
             state.orderObj.subTotal = state.cartItems.reduce((subTotal, product) => {
                 const {price, quantity, discount} = product;
-                return subTotal + price * quantity - discount
+                return subTotal + (price  - discount) * quantity
             }, 0);
         },
         productTotalAmount: (state) => {
@@ -418,6 +434,57 @@ export const cartSlice = createSlice({
             }).addCase(calculateDiscount.rejected, (state) => {
                 state.loading = false
                 //alert(trans("discount_applied_failed"));
+            })
+
+            .addCase(apply_bxgy_discount.pending, (state) => {
+                state.loading = true
+                state.error = false
+            }).addCase(apply_bxgy_discount.fulfilled, (state, action) => {
+                state.loading = false;
+                const bxgy = action.payload;
+                if(bxgy.items){
+                    bxgy.items.map(e => {
+
+                        let item_discount_value;
+
+                        e.id = (Math.floor(Math.random() * 100) + 1) + e.id + "_gift";
+                        e.name = "[Gift] " + e.name;
+                        e.gifted = true;
+                        e.quantity = bxgy.qty;
+                        e.discounts = e.discounts || [];
+                        e.discount = 0;
+
+                        if(bxgy.type === "free_product"){
+                            e.price = 0;
+                        }
+                        else if (bxgy.type === "percentage") {
+                            item_discount_value = (bxgy.value * (e.price - e.discount)) / 100
+                        } else if (bxgy.type === "flat") {
+                            item_discount_value = parseInt(bxgy.value);
+
+                        } else if (bxgy.type === "fixed_price") {
+                            item_discount_value = e.price - bxgy.value
+                        }
+
+                        e.discounts.push({
+                            name: bxgy.name,
+                            value: Math.round(item_discount_value),
+                            adjust: {type: bxgy.type, value: bxgy.value}
+                        });
+
+                        e.discount = Math.round(e.discounts.reduce((t, e) => {
+                            t += e.value;
+                            return t;
+                        }, 0));
+
+                        return e;
+                    });
+
+                    state.cartItems = state.cartItems.concat(bxgy.items);
+                }
+
+            }).addCase(apply_bxgy_discount.rejected, (state) => {
+                state.loading = false
             })
     }
 })

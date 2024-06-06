@@ -104,7 +104,7 @@ const CartTable = ({cartItems, dispatch}) => {
                             </div>}
 
                         </td>
-                        <td>${(product.price * product.quantity - product.discount)}</td>
+                        <td>${(product.price - product.discount)* product.quantity}</td>
                     </tr>
                 ))
             ) : null}

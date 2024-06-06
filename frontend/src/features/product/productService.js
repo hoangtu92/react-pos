@@ -19,6 +19,12 @@ const getProducts = async (query) => {
     const response = await httpRequest.get(url)
     return response.data
 }
+
+const getProductsByIds = async (bxgy) => {
+    // localhost:5000/api/product/get_ids
+    const response = await httpRequest.post("/product/get_ids", {bxgy: bxgy})
+    return response.data
+}
 const truncateProduct = async() => {
     //api/product/truncate
     const response = await httpRequest.get("/product/truncate");
@@ -58,6 +64,7 @@ const removeCartItem = async(data) => {
 const productService = {
     productSync,
     getProducts,
+    getProductsByIds,
     productCount,
     truncateProduct,
     batch,

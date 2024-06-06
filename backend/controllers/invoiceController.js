@@ -244,7 +244,7 @@ const issueInvoice = async(req, res) => {
             return item.price - item.discount
         })
         const joinSubTotal = order.cartItems.map(item => {
-            return Math.round((item.price - item.discount) * item.quantity)
+            return Math.round((item.price  - item.discount)* item.quantity)
         })
         const joinDesc = order.cartItems.map(item => {
             return item.name

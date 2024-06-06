@@ -109,7 +109,8 @@ const syncOrder = async(req, res) => {
             ],
             line_items: order.cartItems.map(e => {
                 return {
-                    sku: e.sku,
+                    product_id: e.parent_id ? e.parent_id : e.product_id,
+                    variation_id: e.parent_id ? e.product_id : 0,
                     quantity: e.quantity.toString(),
                     total: ((e.price - e.discount) * e.quantity).toString(),
                     subtotal: ((e.price - e.discount) * e.quantity).toString(),
