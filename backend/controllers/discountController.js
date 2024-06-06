@@ -654,10 +654,9 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
             }
 
             const discountXY = (item, range) => {
-                const auto_add = discount.mode === "auto_add";
 
                 if (range.free_type === "free_product") {
-                    gift_adjustment(cartItems, item, orderObj, discount, range, auto_add);
+                    gift_adjustment(cartItems, item, orderObj, discount, range, false);
 
                 } else if (range.free_type === "percentage" || range.free_type === "flat") {
                     const adjustment = {
@@ -669,7 +668,7 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
                         recursive: range.recursive
                     };
 
-                    item_adjustment(cartItems, item, orderObj, discount, adjustment, matchedProducts, matchedFilters, auto_add)
+                    item_adjustment(cartItems, item, orderObj, discount, adjustment, matchedProducts, matchedFilters, false)
                 }
 
             }
