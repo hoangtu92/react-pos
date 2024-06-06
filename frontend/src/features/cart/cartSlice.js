@@ -447,8 +447,8 @@ export const cartSlice = createSlice({
 
                         let item_discount_value;
 
-                        e.id = (Math.floor(Math.random() * 100) + 1) + e.id + "_gift";
-                        e.name = "[Gift] " + e.name;
+                        e.id = (Math.floor(Math.random() * 100) + 1) + e.id + "_bxgy";
+                        e.name = "[BXGY] " + e.name;
                         e.gifted = true;
                         e.quantity = bxgy.qty;
                         e.discounts = e.discounts || [];

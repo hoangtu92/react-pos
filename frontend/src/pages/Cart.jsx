@@ -453,7 +453,7 @@ const Cart = () => {
                                 size={"lg"}
                                 className={"mb-2"}
                                 onChange={onCustomerSearch}
-                                placeholder={selectedCustomer.phone}
+                                placeholder={selectedCustomer.phone ? selectedCustomer.phone : trans("phone")}
                                 autoFocus
                                 onFocus={e => e.target.select()}
                             />
@@ -499,7 +499,7 @@ const Cart = () => {
                                     onBlur={handleCarrierIDChange}
                                     onFocus={e => e.target.select()}
                                     value={carrierId}
-                                    placeholder={selectedCustomer.carrier_id ?? trans("placeholder_carrierid")}
+                                    placeholder={selectedCustomer.carrier_id ? selectedCustomer.carrier_id : trans("placeholder_carrierid")}
                                     name={"carrier_id"}
 
                                 />}
@@ -541,7 +541,7 @@ const Cart = () => {
                                     <Form.Control
                                         name={"pos_discount"}
                                         onChange={handleDiscountValue}
-                                        placeholder={orderObj.pos_discount}
+                                        placeholder={orderObj.pos_discount ? orderObj.pos_discount : trans("discount")}
                                         min={0}
                                         size={"lg"}
                                         type="number"
