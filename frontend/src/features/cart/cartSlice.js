@@ -457,25 +457,29 @@ export const cartSlice = createSlice({
                         if(bxgy.type === "free_product"){
                             e.price = 0;
                         }
-                        else if (bxgy.type === "percentage") {
-                            item_discount_value = (bxgy.value * (e.price - e.discount)) / 100
-                        } else if (bxgy.type === "flat") {
-                            item_discount_value = parseInt(bxgy.value);
+                        else {
+                            if (bxgy.type === "percentage") {
+                                item_discount_value = (bxgy.value * (e.price - e.discount)) / 100
+                            } else if (bxgy.type === "flat") {
+                                item_discount_value = parseInt(bxgy.value);
 
-                        } else if (bxgy.type === "fixed_price") {
-                            item_discount_value = e.price - bxgy.value
+                            } else if (bxgy.type === "fixed_price") {
+                                item_discount_value = e.price - bxgy.value
+                            }
+
+                            e.discounts.push({
+                                name: bxgy.name,
+                                value: Math.round(item_discount_value),
+                                adjust: {type: bxgy.type, value: bxgy.value}
+                            });
+
+                            e.discount = Math.round(e.discounts.reduce((t, e) => {
+                                t += e.value;
+                                return t;
+                            }, 0));
                         }
 
-                        e.discounts.push({
-                            name: bxgy.name,
-                            value: Math.round(item_discount_value),
-                            adjust: {type: bxgy.type, value: bxgy.value}
-                        });
 
-                        e.discount = Math.round(e.discounts.reduce((t, e) => {
-                            t += e.value;
-                            return t;
-                        }, 0));
 
                         return e;
                     });

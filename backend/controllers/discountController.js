@@ -626,7 +626,9 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
                         type: range.free_type,
                         mode: discount.adjustments.mode,
                         name: discount.title
-                    })
+                    });
+
+                    return;
 
                     // Discount apply on the cheapest/highest price of product in the cart that belong to specified category list
                 } else if (discount.adjustments.type === "bxgy_category") {
