@@ -574,6 +574,13 @@ const cart_adjustment = (cartItems, orderObj, discount, adjustment, matchedProdu
     }, 0)
 }
 
+/**
+ *
+ * @param cartItems
+ * @param matchedProducts
+ * @param on_qualified
+ * @returns {*}
+ */
 const qualified_cart_items = (cartItems, matchedProducts, on_qualified) => {
     return cartItems
         .filter(e => !e.gifted && (matchedProducts.indexOf(e.product_id) >= 0 || matchedProducts.indexOf(0) >= 0))
@@ -687,9 +694,9 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
                 return cb(Y, free_qty)
             }
 
-            checkQuantityAndDoDiscount(cartItems, discount, matchedProducts, async (range, item) => {
+            checkQuantityAndDoDiscount(cartItems, discount, matchedProducts, (range, item) => {
 
-                await getItemY(range, item, (item_Y, free_qty) => {
+                getItemY(range, item, (item_Y, free_qty) => {
                     if (item_Y) {
 
                         const adjustment = {
@@ -706,7 +713,6 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
                             if(remain_qty > 0){
                                 remain_qty = item_adjustment(cartItems, item_Y.shift(), orderObj, discount, adjustment, matchedProducts, matchedFilters, remain_qty)
                             }
-
                         }
                     }
                 });
