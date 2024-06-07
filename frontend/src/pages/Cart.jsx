@@ -37,6 +37,7 @@ import SmoothScroll from "../components/SmoothScroll";
 import trans from "../utils/translate";
 import {handleChange} from "../features/cart/cartSlice";
 import {handleProductStateChange} from "../features/product/productSlice";
+import {number_format} from "../utils/prototype";
 
 const Cart = () => {
 
@@ -337,12 +338,12 @@ const Cart = () => {
                             <tbody>
                             <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
                                 <th>{trans("subtotal")}:</th>
-                                <td>${orderObj.subTotal}</td>
+                                <td>${number_format(orderObj.subTotal)}</td>
                             </tr>
                             {coupons.map(e => {
                                 return <tr key={e.code}>
                                     <th>{e.code}</th>
-                                    <td>-${e.totals.total_discount}</td>
+                                    <td>-${number_format(Math.round(e.totals.total_discount))}</td>
                                 </tr>
                             })}
 
@@ -357,13 +358,13 @@ const Cart = () => {
                                             {orderObj.discounts && orderObj.discounts.map((discount, index) => (
                                                 <tr key={index}>
                                                     <th style={{textAlign: "left"}}><small>{discount.name}:</small></th>
-                                                    <td><small>-${discount.value}</small></td>
+                                                    <td><small>-${number_format(Math.round(discount.value))}</small></td>
                                                 </tr>
                                             ))}
 
                                             {orderObj.pos_discount ? <tr>
                                                 <th style={{textAlign: "left"}}><small>{trans("pos_discount")}:</small></th>
-                                                <td><small>-${orderObj.pos_discount}</small></td>
+                                                <td><small>-${number_format(orderObj.pos_discount)}</small></td>
                                             </tr>: null}
                                         </tbody>
                                     </table>
@@ -372,12 +373,12 @@ const Cart = () => {
 
                             {orderObj.discountAmount ? <tr style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
                                 <th>{trans("total_discount")}:</th>
-                                <td>-${orderObj.discountAmount}</td>
+                                <td>-${number_format(orderObj.discountAmount)}</td>
                             </tr> : null}
 
                             {orderObj.redeem_value > 0 ? <tr>
                                 <th>{trans("redeem")}:</th>
-                                <td>-${orderObj.redeem_value}</td>
+                                <td>-${number_format(orderObj.redeem_value)}</td>
                             </tr> : null}
 
                             <tr>
@@ -388,13 +389,13 @@ const Cart = () => {
                             <tr className="grand-total border-top border-warning" style={orderObj.customTotalAmount > 0 ? {textDecoration: "line-through"} : null}>
                                 <th>{trans("total")}:</th>
                                 <td>
-                                    <strong>${orderObj.totalAmount}</strong>
+                                    <strong>${number_format(orderObj.totalAmount)}</strong>
                                 </td>
                             </tr>
                             {orderObj.customTotalAmount > 0 ? <tr className="custom-total border-top border-warning pt-2">
                                 <th>{trans("custom")}:</th>
                                 <td>
-                                    <strong>${orderObj.customTotalAmount}</strong>
+                                    <strong>${number_format(orderObj.customTotalAmount)}</strong>
                                 </td>
                             </tr> : null }
                             <tr>

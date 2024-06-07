@@ -1,8 +1,8 @@
 import {decrease, increase, removeCartItem, updateItemPrice} from "../features/cart/cartSlice";
 import {FaTimes} from "react-icons/fa";
 import {React} from "react";
-import {Form} from "react-bootstrap";
 import trans from "../utils/translate";
+import {number_format} from "../utils/prototype";
 
 const CartTable = ({cartItems, dispatch}) => {
     return (
@@ -10,9 +10,8 @@ const CartTable = ({cartItems, dispatch}) => {
             <colgroup>
                 <col width={"5%"}/>
                 <col width={"10%"}/>
-                <col width={"35%"}/>
-                <col width={"10%"}/>
-                <col width={"15%"}/>
+                <col width={"40%"}/>
+                <col width={"20%"}/>
                 <col width={"15%"}/>
                 <col width={"10%"}/>
             </colgroup>
@@ -22,7 +21,6 @@ const CartTable = ({cartItems, dispatch}) => {
                 <td>{trans("image")}</td>
                 <td>{trans("product")}</td>
                 <td>{trans("price")}</td>
-                <td>{trans("discount")}</td>
                 <td>{trans("quantity")}</td>
                 <td>{trans("subtotal")}</td>
             </tr>
@@ -61,23 +59,32 @@ const CartTable = ({cartItems, dispatch}) => {
                             </div>
                         </td>
                         <td><span className={"text-black-50"}>{product.name}</span> <br/><small><strong>({product.sku})</strong></small>
+
                             <small className={"ms-2"}>{product.original_price > 0 && product.price != product.original_price ?
 
                                 <span>
                                     <del className={"text-danger pe-2"}>${product.original_price}</del>
                                 </span>
-
                                 : <span className={"text-warning"}>${product.original_price}</span>}</small>
                         </td>
 
-                        <td>
-                            {product.gifted ? <span>{product.price}</span> : <Form.Group className={"d-flex flex-row align-items-center"}>
-                                <span className={"me-1"}>$ </span><Form.Control onChange={(e) => dispatch(updateItemPrice({id: product.id, price: e.target.value}))} onFocus={e => e.target.select()} type={"number"} value={product.price} />
-                            </Form.Group>}
+                        <td style={{textAlign: "left"}}>
+                            {product.gifted ? <span>{product.price}</span> :
 
-                        </td>
+                            <div className={"flex flex-column"}>
 
-                        <td><small>{product.discounts ? product.discounts.map(e => e.name ? `${e.name}: -$${e.value}` : `-$${e.value}`).join("\n") : null}</small>
+                                {product.regular_qty > 0 ? <small className={"me-1"}>{product.discount ? <del className={"text-danger"}>NT${product.price}</del> : null}
+                                    <span className={"text-black"}> NT${number_format(Math.round(product.price - product.discount))} x {product.regular_qty}</span> </small> : null }
+
+                                {product.discount_items.length ? <div>
+                                    {product.discount_items.map(item => <small className={"text-black"} key={item.name}>
+                                        <del className={"text-danger"}>NT${product.price}</del>
+                                        <span className={"text-black"}> NT${item.price > 0 ? number_format(Math.round(item.price - product.discount)) : item.price} x {item.quantity}</span>
+                                    </small>)}
+                                </div> : null}
+                            </div>
+                            }
+
                         </td>
 
                         <td>
@@ -104,7 +111,7 @@ const CartTable = ({cartItems, dispatch}) => {
                             </div>}
 
                         </td>
-                        <td>${(product.price - product.discount)* product.quantity}</td>
+                        <td>${number_format(Math.round((product.price - product.discount)* product.regular_qty + product.discount_items.reduce((t, e) => {t += t += e.price > 0 ? e.quantity * (e.price - product.discount) : 0;return t;}, 0)))}</td>
                     </tr>
                 ))
             ) : null}

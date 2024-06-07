@@ -238,18 +238,40 @@ const issueInvoice = async(req, res) => {
             return;
         }
 
-        const customer = Customer.findOne({id: order.customer})
+        const customer = Customer.findOne({id: order.customer});
 
-        const joinAmount = order.cartItems.map(item => {
-            return item.price - item.discount
+        const cartItems = order.cartItems.reduce((t, e) => {
+            if(e.regular_qty){
+                t.push({
+                    name: e.name,
+                    quantity: e.regular_qty,
+                    price: e.price,
+                    discount: e.discount
+                })
+            }
+            if(e.discount_items){
+                e.discount_items.map(discount_item => {
+                    t.push({
+                        name: e.name,
+                        quantity: discount_item.quantity,
+                        price: discount_item.price,
+                        discount: e.discount
+                    })
+                })
+            }
+            return t;
+        }, []);
+
+        const joinAmount = cartItems.map(item => {
+            return item.price > 0 ? item.price - item.discount : 0;
         })
-        const joinSubTotal = order.cartItems.map(item => {
-            return Math.round((item.price  - item.discount)* item.quantity)
+        const joinSubTotal = cartItems.map(item => {
+            return item.price > 0 ? Math.round((item.price  - item.discount)* item.quantity) : 0
         })
-        const joinDesc = order.cartItems.map(item => {
+        const joinDesc = cartItems.map(item => {
             return item.name
         });
-        const joinQuantity = order.cartItems.map(item => {
+        const joinQuantity = cartItems.map(item => {
             return item.quantity
         });
 

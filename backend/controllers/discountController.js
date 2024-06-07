@@ -254,7 +254,7 @@ const check_condition_rules = (discount, cartItems, matchedProducts) => {
                 compare_arr = condition.options.product.map(product_id => {
                     return cartItems.reduce((t, item) => {
                         if (product_id == item.product_id || product_id == item.parent_id) {
-                            t += item.quantity;
+                            t += item.quantity + item.discounted_qty;
                         }
                         return t;
                     }, 0);
@@ -365,30 +365,32 @@ const check_condition_rules = (discount, cartItems, matchedProducts) => {
  * @param orderObj
  * @param discount
  * @param adjustment
- * @param auto_add
  * @returns {boolean|{image: (string[]|React.SVGFactory|React.SVGProps<SVGImageElement>|string|*), original_price: number, quantity: (number|*), discounts: [{name: string, value: number}], gifted: boolean, price: number, name: string, discount: number, id: string, sku: (string[]|*)}}
  */
-const gift_adjustment = (cartItems, item, orderObj, discount, adjustment, auto_add = false) => {
+const gift_adjustment = (cartItems, item, orderObj, discount, adjustment) => {
     const gift_qty = adjustment.recursive ? Math.floor(item.quantity / adjustment.from) * adjustment.free_qty : adjustment.free_qty;
+
     if (gift_qty > 0) {
         let item_to_add = {
             id: (Math.floor(Math.random() * 100) + 1) + item.id + "_gift",
             name: "[Gift] " + item.name,
             image: item.image,
+            product_id: item.product_id,
+            parent_id: item.parent_id,
             sku: item.sku,
             quantity: gift_qty,
+            regular_qty: gift_qty,
             price: 0,
             discount: 0,
             discounts: [{
                 name: "Free",
                 value: 0
             }],
+            discount_items: [],
+            discounted_qty: 0,
             original_price: item.original_price,
             gifted: true
         };
-        if(!auto_add){
-            item.quantity -= gift_qty;
-        }
 
         cartItems.push(item_to_add);
 
@@ -405,17 +407,20 @@ const gift_adjustment = (cartItems, item, orderObj, discount, adjustment, auto_a
  * @param adjustment
  * @param matchedProducts
  * @param matchedFilters
- * @param auto_add
+ * @param affected_qty
  * @returns {number}
  */
-const item_adjustment = (cartItems, item, orderObj, discount, adjustment, matchedProducts, matchedFilters, auto_add = false) => {
+const item_adjustment = (cartItems, item, orderObj, discount, adjustment, matchedProducts, matchedFilters = false, affected_qty) => {
     if (!item.discount) item.discount = 0;
     if (!item.discounts) item.discounts = [];
-    let item_discount_value = 0;
+    let item_discount_value = 0, remain_qty = affected_qty;
 
     if (matchedProducts.indexOf(item.product_id) >= 0 || matchedProducts.indexOf(0) >= 0) {
 
-        if (adjustment.type === "percentage") {
+        if (adjustment.type === "free_product") {
+            item_discount_value = item.price;
+        }
+        else if (adjustment.type === "percentage") {
             item_discount_value = (adjustment.value * (item.price - item.discount)) / 100
         } else if (adjustment.type === "flat") {
             item_discount_value = parseInt(adjustment.value);
@@ -424,48 +429,75 @@ const item_adjustment = (cartItems, item, orderObj, discount, adjustment, matche
             item_discount_value = item.price - adjustment.value
         }
 
-        item_discount_value = Math.floor(item_discount_value);
+        affected_qty = affected_qty ? affected_qty : adjustment.recursive ? Math.floor(item.quantity / adjustment.from) * adjustment.free_qty : adjustment.free_qty;
 
-        if(auto_add){
-            const free_qty = adjustment.recursive ? Math.floor(item.quantity / adjustment.from) * adjustment.free_qty : adjustment.free_qty;
-            cartItems.push({
-                id: item.id + "_discount",
-                name: "[Discounted] " + item.name,
-                image: item.image,
-                sku: item.sku,
-                quantity: free_qty,
-                price: item.price,
-                discount: Math.floor(item_discount_value),
-                discounts: [{
-                    name: adjustment.label ? adjustment.label : adjustment.cart_label ? adjustment.cart_label : discount.title,
-                    value: item_discount_value,
-                    reason: matchedFilters,
-                    adjust: {type: adjustment.type, value: adjustment.value}
-                }],
-                original_price: item.original_price,
-                gifted: true
-            });
+        remain_qty = affected_qty;
+
+
+        item.discount_items = item.discount_items || [];
+        item.discounted_qty = item.discounted_qty || 0;
+
+        let discount_item = {
+            quantity: affected_qty,
+            id: item.id + "_discounted",
+            price: item.price - item_discount_value,
+            name: adjustment.label ? adjustment.label : discount.adjustments.cart_label ? discount.adjustments.cart_label : discount.title,
+            reason: matchedFilters,
+            adjust: {type: adjustment.type, value: adjustment.value}
+        };
+
+        if(item.quantity <= affected_qty){
+            discount_item.quantity = item.quantity;
+            remain_qty = affected_qty - item.quantity;
+            item.discounted_qty += item.quantity;
+            item.regular_qty  = 0;
         }
         else{
-            if (adjustment.apply_as_cart_rule !== "1") {
-
-                item.discount += Math.floor(item_discount_value);
-                item.discounts.push({
-                    name: adjustment.label ? adjustment.label : adjustment.cart_label ? adjustment.cart_label : discount.title,
-                    value: item_discount_value,
-                    reason: matchedFilters,
-                    adjust: {type: adjustment.type, value: adjustment.value}
-                })
-            }
+            item.regular_qty -= affected_qty;
+            item.discounted_qty += affected_qty;
+            remain_qty = 0;
         }
 
+        item.discount_items.push(discount_item);
+    }
 
+    return remain_qty;
+}
 
+/**
+ *
+ * @param item
+ * @param discount
+ * @param adjustment
+ * @param matchedProducts
+ * @param matchedFilters
+ * @returns {number}
+ */
+const item_discount = (item, discount, adjustment, matchedProducts, matchedFilters) => {
+    let item_discount_value = 0;
+
+    if (adjustment.type === "percentage") {
+        item_discount_value = (adjustment.value * (item.price - item.discount)) / 100
+    } else if (adjustment.type === "flat") {
+        item_discount_value = parseInt(adjustment.value);
+
+    } else if (adjustment.type === "fixed_price") {
+        item_discount_value = item.price - adjustment.value
+    }
+
+    if (discount.adjustments.apply_as_cart_rule !== "1") {
+
+        item.discount += item_discount_value;
+        item.discounts.push({
+            name: adjustment.label ? adjustment.label : discount.adjustments.cart_label ? discount.adjustments.cart_label : discount.title,
+            value: item_discount_value,
+            reason: matchedFilters,
+            adjust: {type: adjustment.type, value: adjustment.value}
+        })
     }
 
     return item_discount_value;
 }
-
 /**
  * Perform direct discount to product price
  * @param cartItems
@@ -478,18 +510,16 @@ const item_adjustment = (cartItems, item, orderObj, discount, adjustment, matche
  */
 const product_adjustment = (cartItems, orderObj, discount, adjustment, matchedProducts, matchedFilters) => {
     let total_discount = 0;
-    cartItems
-        .filter(e => !e.gifted && (matchedProducts.indexOf(e.product_id) >= 0 || matchedProducts.indexOf(0) >= 0))
-        .map(item => {
-            total_discount += item_adjustment(cartItems, item, orderObj, discount, adjustment, matchedProducts, matchedFilters)
-        return item;
-    });
 
-    if (adjustment.apply_as_cart_rule === "1") {
+    qualified_cart_items(cartItems, matchedProducts, item => {
+        total_discount += item_discount(item, discount, adjustment, matchedProducts, matchedFilters)
+    })
+
+    if (discount.adjustments.apply_as_cart_rule === "1") {
         // Apply as coupon/discount
         orderObj.discounts.push({
-            name: adjustment.label ? adjustment.label : adjustment.cart_label ? adjustment.cart_label : discount.title,
-            value: Math.floor(total_discount),
+            name: adjustment.label ? adjustment.label : discount.adjustments.cart_label ? discount.adjustments.cart_label : discount.title,
+            value: total_discount,
             reason: matchedFilters,
             adjust: {type: adjustment.type, value: adjustment.value}
         });
@@ -522,7 +552,7 @@ const cart_adjustment = (cartItems, orderObj, discount, adjustment, matchedProdu
                 // Todo check valid rule
                 t += (adjustment.value * (e.price - e.discount) * e.quantity) / 100
             } else if (adjustment.type === "flat") {
-                t += parseInt(adjustment.value);
+                t += parseInt(adjustment.value) * e.quantity;
             }
             return t;
         }, 0);
@@ -532,8 +562,8 @@ const cart_adjustment = (cartItems, orderObj, discount, adjustment, matchedProdu
 
     // Apply as coupon/discount
     orderObj.discounts.push({
-        name: adjustment.label ? adjustment.label : adjustment.cart_label ? adjustment.cart_label : discount.title,
-        value: Math.floor(discount_value),
+        name: adjustment.label ? adjustment.label : discount.adjustments.cart_label ? discount.adjustments.cart_label : discount.title,
+        value: discount_value,
         reason: matchedFilters,
         adjust: {type: adjustment.type, value: adjustment.value}
     });
@@ -542,6 +572,15 @@ const cart_adjustment = (cartItems, orderObj, discount, adjustment, matchedProdu
         t += e.value;
         return t;
     }, 0)
+}
+
+const qualified_cart_items = (cartItems, matchedProducts, on_qualified) => {
+    return cartItems
+        .filter(e => !e.gifted && (matchedProducts.indexOf(e.product_id) >= 0 || matchedProducts.indexOf(0) >= 0))
+        .map(item => {
+            if(on_qualified) on_qualified(item);
+            return item;
+        });
 }
 
 /**
@@ -569,41 +608,37 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
             product_adjustment(cartItems, orderObj, discount, discount.adjustments, matchedProducts, matchedFilters);
             break;
         case "wdr_bulk_discount":
-
-            checkQuantityAndDoDiscount(cartItems, discount, matchedProducts, async (range, item) => {
-                //console.log("Bulk discount: ", range, item)
-                product_adjustment(cartItems, orderObj, discount, range, matchedProducts, matchedFilters);
+            discounted = true;
+            checkQuantityAndDoDiscount(cartItems, discount, matchedProducts, async (range, item, quantity) => {
+                //console.log("Bulk discount: ", range, quantity)
+                item_discount(item, discount, range, matchedProducts, matchedFilters)
             })
 
             break;
 
         case "wdr_buy_x_get_x_discount":
             discounted = true;
-            cartItems.map(e => {
-                if (matchedProducts.indexOf(e.product_id) >= 0 || matchedProducts.indexOf(0) >= 0) {
 
-                    checkRange(Object.values(discount.adjustments.ranges), e.quantity).map(range => {
+            qualified_cart_items(cartItems, matchedProducts, item => {
+                checkRange(Object.values(discount.adjustments.ranges), item.quantity).map(range => {
 
-                        if (range.free_type === "free_product") {
+                    if (range.free_type === "free_product") {
 
-                            gift_adjustment(cartItems, e, orderObj, discount, range, true);
+                        gift_adjustment(cartItems, item, orderObj, discount, range);
 
-                        } else if (range.free_type === "percentage" || range.free_type === "flat") {
-                            const adjustment = {
-                                apply_as_cart_rule: 0,
-                                type: range.free_type,
-                                value: range.free_value,
-                                from: range.from,
-                                free_qty: range.free_qty,
-                                recursive: range.recursive
-                            };
-                            item_adjustment(cartItems, e, orderObj, discount, adjustment, matchedProducts, matchedFilters, true)
-                        }
+                    } else if (range.free_type === "percentage" || range.free_type === "flat") {
+                        const adjustment = {
+                            apply_as_cart_rule: 0,
+                            type: range.free_type,
+                            value: range.free_value,
+                            from: range.from,
+                            free_qty: range.free_qty,
+                            recursive: range.recursive
+                        };
+                        item_adjustment(cartItems, item, orderObj, discount, adjustment, matchedProducts, matchedFilters)
+                    }
 
-                    });
-                }
-
-                return e;
+                });
             })
 
             break;
@@ -633,56 +668,49 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
                     // Discount apply on the cheapest/highest price of product in the cart that belong to specified category list
                 } else if (discount.adjustments.type === "bxgy_category") {
                     Y = cartItems
-                        .filter(e => e.categories && range.categories && range.categories.filter(cat_id => e.categories.indexOf(cat_id) >= 0).length > 0);
+                        .filter(e => !e.gifted && e.categories && range.categories && range.categories.filter(cat_id => e.categories.indexOf(cat_id) >= 0).length > 0);
 
                     // Discount apply on the cheapest/highest price of product in the cart no matter which category it belong to
                 } else if (discount.adjustments.type === "bxgy_all") {
-                    Y = cartItems;
+                    Y = cartItems.filter(e => !e.gifted);
                 }
-
 
                 if(item && item.variant_ids){
                     Y = Y.filter(e => (item.variant_ids.indexOf(e.product_id) >= 0 || e.product_id == item.product_id));
                 }
 
+                Y = Y.sort((a, b) => discount.adjustments.mode === "cheapest" ? a.price - b.price : b.price - a.price);
+
                 if(Y && Y.length > free_qty){
-                    Y = Y.filter(e => !e.discount).sort((a, b) => discount.adjustments.mode === "cheapest" ? b.price - a.price : a.price - b.price);
-                    Y.splice(0, Y.length - free_qty);
+                    Y = Y.slice(0, Y.length - free_qty);
                 }
-
-                return cb(Y)
-            }
-
-            const discountXY = (item, range) => {
-
-                if (range.free_type === "free_product") {
-                    gift_adjustment(cartItems, item, orderObj, discount, range, false);
-
-                } else if (range.free_type === "percentage" || range.free_type === "flat") {
-                    const adjustment = {
-                        apply_as_cart_rule: 0,
-                        type: range.free_type,
-                        value: range.free_value,
-                        from: range.from,
-                        free_qty: range.free_qty,
-                        recursive: range.recursive
-                    };
-
-                    item_adjustment(cartItems, item, orderObj, discount, adjustment, matchedProducts, matchedFilters, false)
-                }
-
+                return cb(Y, free_qty)
             }
 
             checkQuantityAndDoDiscount(cartItems, discount, matchedProducts, async (range, item) => {
-                //console.log("BXGY discount: ", range, item)
-                await getItemY(range, item, (item_Y) => {
+
+                await getItemY(range, item, (item_Y, free_qty) => {
                     if (item_Y) {
-                        item_Y.map(e => {
-                            discountXY(e, range)
-                        })
+
+                        const adjustment = {
+                            apply_as_cart_rule: 0,
+                            type: range.free_type,
+                            value: range.free_value,
+                            from: range.from,
+                            free_qty: range.free_qty,
+                            recursive: range.recursive
+                        };
+
+                        let remain_qty = free_qty;
+                        while(item_Y.length){
+                            if(remain_qty > 0){
+                                remain_qty = item_adjustment(cartItems, item_Y.shift(), orderObj, discount, adjustment, matchedProducts, matchedFilters, remain_qty)
+                            }
+
+                        }
                     }
                 });
-            })
+            }, true)
 
             break;
         default:
@@ -693,19 +721,30 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
 
 }
 
-const checkQuantityAndDoDiscount = (cartItems, discount, matchedProducts, cb) => {
+/**
+ *
+ * @param cartItems
+ * @param discount
+ * @param matchedProducts
+ * @param cb
+ * @param bxgy
+ */
+const checkQuantityAndDoDiscount = (cartItems, discount, matchedProducts, cb, bxgy = false) => {
     let loop_items = cartItems;
     if (discount.adjustments.operator === "product_cumulative") {
         // Count filter set
-        const quantity = cartItems
-            .filter(item => !item.gifted && (matchedProducts.indexOf(item.product_id) >= 0 || matchedProducts.indexOf(0) >= 0))
-            .reduce((t, e) => {
-                t += e.quantity;
+        const quantity = qualified_cart_items(cartItems, matchedProducts).reduce((t, e) => {
+                t += e.quantity + e.discounted_qty;
                 return t;
             }, 0);
 
         checkRange(Object.values(discount.adjustments.ranges), quantity).map(async range => {
-            if(cb) cb(range, {quantity})
+            if(cb) {
+                if(bxgy) cb(range, {quantity})
+                else qualified_cart_items(cartItems, matchedProducts, item => {
+                    cb(range, item, quantity)
+                })
+            }
         });
     } else {
 
@@ -728,7 +767,7 @@ const checkQuantityAndDoDiscount = (cartItems, discount, matchedProducts, cb) =>
                 return t;
             }, {})).map(variants => {
                 return variants.reduce((t, e) => {
-                    t.quantity += e.quantity;
+                    t.quantity += e.quantity + e.discounted_qty;
                     t.product_id = e.parent_id ? e.parent_id : e.product_id;
                     t.variants.push(e);
                     t.variant_ids.push(e.product_id);
@@ -738,13 +777,11 @@ const checkQuantityAndDoDiscount = (cartItems, discount, matchedProducts, cb) =>
 
         }
 
-        loop_items
-            .filter(item => matchedProducts.indexOf(item.product_id) >= 0 || matchedProducts.indexOf(0) >= 0)
-            .map(item => {
-                checkRange(Object.values(discount.adjustments.ranges), item.quantity).map(async range => {
-                    if(cb) cb(range, item)
-                });
-            })
+        qualified_cart_items(loop_items, matchedProducts, item => {
+            checkRange(Object.values(discount.adjustments.ranges), item.quantity).map(async range => {
+                if(cb) cb(range, item)
+            });
+        })
     }
 }
 
@@ -793,7 +830,6 @@ const process_discount = (discount, cartItems, orderObj = {}) => {
 const calculate_discount = async (req, res) => {
     let {cartItems, selectedCustomer, orderObj} = req.body;
 
-
     orderObj.discounts = [];
     orderObj.discount_value = 0;
     orderObj.bxgy_items = [];
@@ -801,6 +837,9 @@ const calculate_discount = async (req, res) => {
     cartItems.map(e => {
         e.discount = 0;
         e.discounts = [];
+        e.discount_items = [];
+        e.discounted_qty = 0;
+        e.regular_qty = e.quantity;
         return e
     });
 

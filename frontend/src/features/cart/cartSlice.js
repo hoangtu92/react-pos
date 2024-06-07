@@ -126,7 +126,6 @@ export const calculateDiscount = createAsyncThunk('discount/calc', async (data, 
         const result = await discountService.calcDiscount(data);
 
         if(result.orderObj.bxgy_items){
-            console.log(result.orderObj.bxgy_items);
             result.orderObj.bxgy_items.map(e => thunkAPI.dispatch(apply_bxgy_discount(e)))
         }
 
@@ -211,7 +210,7 @@ export const cartSlice = createSlice({
                 // index -1
                 // New product to cart add
                 const item = {...action.payload, quantity: 1};
-                state.cartItems.push({...action.payload, quantity: 1, discount: 0, off: Math.round(100*(action.payload.original_price - action.payload.price)/action.payload.original_price)});
+                state.cartItems.push({...action.payload, quantity: 1, discount: 0, discount_items: [], regular_qty: 0, discounted_qty: 0, off: Math.round(100*(action.payload.original_price - action.payload.price)/action.payload.original_price)});
                 state.addCartItem = item;
             }
             addLocalStorageCart(state.cartItems);
@@ -219,10 +218,21 @@ export const cartSlice = createSlice({
 
         },
         productSubTotal: (state) => {
-            state.orderObj.subTotal = state.cartItems.reduce((subTotal, product) => {
-                const {price, quantity, discount} = product;
-                return subTotal + (price  - discount) * quantity
-            }, 0);
+            state.orderObj.subTotal = Math.round(state.cartItems.reduce((subTotal, product) => {
+                const {price, regular_qty, discount} = product;
+                const discounted_item_subtotal = product.discount_items.reduce((t, e) => {
+                    t += e.price > 0 ? e.quantity * (e.price - discount) : 0;
+                    return t;
+                    }, 0);
+
+                subTotal += discounted_item_subtotal + (price  - discount) * regular_qty;
+                return subTotal;
+            }, 0));
+
+            state.cartItems.map(e => {
+                e.price_after_discount = e.price - e.discount
+                return e;
+            })
         },
         productTotalAmount: (state) => {
             state.orderObj.totalAmount = state.orderObj.subTotal;
@@ -453,6 +463,8 @@ export const cartSlice = createSlice({
                         e.quantity = bxgy.qty;
                         e.discounts = e.discounts || [];
                         e.discount = 0;
+                        e.discounted_qty = 0;
+                        e.discount_items = [];
 
                         if(bxgy.type === "free_product"){
                             e.price = 0;

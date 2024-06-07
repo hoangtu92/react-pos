@@ -107,16 +107,38 @@ const syncOrder = async(req, res) => {
                     "value": order._id
                 }
             ],
-            line_items: order.cartItems.map(e => {
-                return {
-                    product_id: e.parent_id ? e.parent_id : e.product_id,
-                    variation_id: e.parent_id ? e.product_id : 0,
-                    quantity: e.quantity.toString(),
-                    total: ((e.price - e.discount) * e.quantity).toString(),
-                    subtotal: ((e.price - e.discount) * e.quantity).toString(),
+            line_items: order.cartItems.reduce((t, e) => {
+
+                if(e.regular_qty){
+                    t.push({
+                        product_id: e.parent_id ? e.parent_id : e.product_id,
+                        variation_id: e.parent_id ? e.product_id : 0,
+                        quantity: e.regular_qty.toString(),
+                        total: ((e.price - e.discount) * e.regular_qty).toString(),
+                        subtotal: ((e.price - e.discount) * e.regular_qty).toString()
+                    })
                 }
-            })
+
+                if(e.discount_items){
+                    e.discount_items.map(discount_item => {
+
+                        t.push({
+                            product_id: e.parent_id ? e.parent_id : e.product_id,
+                            variation_id: e.parent_id ? e.product_id : 0,
+                            quantity: discount_item.quantity.toString(),
+                            total: discount_item.price > 0 ? ((discount_item.price - e.discount) * discount_item.quantity).toString() : "0",
+                            subtotal: discount_item.price > 0 ? ((discount_item.price - e.discount) * discount_item.quantity).toString() : "0"
+                        })
+
+                    });
+
+                }
+
+                return t;
+            }, [])
         };
+
+        console.log(data)
 
         // Customer id
         const customer = await Customer.findOne({_id: order.customer});
