@@ -424,7 +424,7 @@ const item_adjustment = (cartItems, item, orderObj, discount, adjustment, matche
             item_discount_value = item.price - adjustment.value
         }
 
-        item_discount_value = Math.round(item_discount_value);
+        item_discount_value = Math.floor(item_discount_value);
 
         if(auto_add){
             const free_qty = adjustment.recursive ? Math.floor(item.quantity / adjustment.from) * adjustment.free_qty : adjustment.free_qty;
@@ -435,7 +435,7 @@ const item_adjustment = (cartItems, item, orderObj, discount, adjustment, matche
                 sku: item.sku,
                 quantity: free_qty,
                 price: item.price,
-                discount: Math.round(item_discount_value),
+                discount: Math.floor(item_discount_value),
                 discounts: [{
                     name: adjustment.label ? adjustment.label : adjustment.cart_label ? adjustment.cart_label : discount.title,
                     value: item_discount_value,
@@ -449,7 +449,7 @@ const item_adjustment = (cartItems, item, orderObj, discount, adjustment, matche
         else{
             if (adjustment.apply_as_cart_rule !== "1") {
 
-                item.discount += Math.round(item_discount_value);
+                item.discount += Math.floor(item_discount_value);
                 item.discounts.push({
                     name: adjustment.label ? adjustment.label : adjustment.cart_label ? adjustment.cart_label : discount.title,
                     value: item_discount_value,
@@ -489,7 +489,7 @@ const product_adjustment = (cartItems, orderObj, discount, adjustment, matchedPr
         // Apply as coupon/discount
         orderObj.discounts.push({
             name: adjustment.label ? adjustment.label : adjustment.cart_label ? adjustment.cart_label : discount.title,
-            value: Math.round(total_discount),
+            value: Math.floor(total_discount),
             reason: matchedFilters,
             adjust: {type: adjustment.type, value: adjustment.value}
         });
@@ -533,7 +533,7 @@ const cart_adjustment = (cartItems, orderObj, discount, adjustment, matchedProdu
     // Apply as coupon/discount
     orderObj.discounts.push({
         name: adjustment.label ? adjustment.label : adjustment.cart_label ? adjustment.cart_label : discount.title,
-        value: Math.round(discount_value),
+        value: Math.floor(discount_value),
         reason: matchedFilters,
         adjust: {type: adjustment.type, value: adjustment.value}
     });

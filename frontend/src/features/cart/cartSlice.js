@@ -469,11 +469,11 @@ export const cartSlice = createSlice({
 
                             e.discounts.push({
                                 name: bxgy.name,
-                                value: Math.round(item_discount_value),
+                                value: Math.floor(item_discount_value),
                                 adjust: {type: bxgy.type, value: bxgy.value}
                             });
 
-                            e.discount = Math.round(e.discounts.reduce((t, e) => {
+                            e.discount = Math.floor(e.discounts.reduce((t, e) => {
                                 t += e.value;
                                 return t;
                             }, 0));
