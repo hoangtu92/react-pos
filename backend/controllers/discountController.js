@@ -67,7 +67,7 @@ const do_sync_discounts = async (cb = null) => {
             for (let i = 0; i < data.length; i++) {
                 let {filters, additional, conditions, discount_type, exclusive, priority, title} = data[i];
 
-                let adjustments = {};
+                let adjustments = "{}";
                 switch (discount_type) {
                     case "wdr_simple_discount":
                         adjustments = data[i]["product_adjustments"];
@@ -75,16 +75,12 @@ const do_sync_discounts = async (cb = null) => {
                     case "wdr_cart_discount":
                         adjustments = data[i]["cart_adjustments"];
                         break;
-                    case "wdr_free_shipping":
-                        // do not adjust anything
-                        break;
                     case "wdr_bulk_discount":
                         adjustments = data[i]["bulk_adjustments"];
                         break;
                     case "wdr_set_discount":
                         adjustments = data[i]["set_adjustments"];
                         break;
-
                     case "wdr_buy_x_get_y_discount":
                         adjustments = data[i]["buy_x_get_y_adjustments"];
                         break;
