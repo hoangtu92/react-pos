@@ -219,13 +219,13 @@ export const cartSlice = createSlice({
         },
         productSubTotal: (state) => {
             state.orderObj.subTotal = Math.round(state.cartItems.reduce((subTotal, product) => {
-                const {price, regular_qty, discount} = product;
+                const {price, regular_qty, quantity, discount} = product;
                 const discounted_item_subtotal = product.discount_items.reduce((t, e) => {
                     t += e.price > 0 ? e.quantity * (e.price - discount) : 0;
                     return t;
                     }, 0);
 
-                subTotal += discounted_item_subtotal + (price  - discount) * regular_qty;
+                subTotal += discounted_item_subtotal ? discounted_item_subtotal + (price  - discount) * regular_qty : (price  - discount) * quantity;
                 return subTotal;
             }, 0));
 

@@ -411,8 +411,7 @@ const gift_adjustment = (cartItems, item, orderObj, discount, adjustment) => {
  * @returns {number}
  */
 const item_adjustment = (cartItems, item, orderObj, discount, adjustment, matchedProducts, matchedFilters = false, affected_qty) => {
-    if (!item.discount) item.discount = 0;
-    if (!item.discounts) item.discounts = [];
+
     let item_discount_value = 0, remain_qty = affected_qty;
 
     if (matchedProducts.indexOf(item.product_id) >= 0 || matchedProducts.indexOf(0) >= 0) {
@@ -427,6 +426,9 @@ const item_adjustment = (cartItems, item, orderObj, discount, adjustment, matche
 
         } else if (adjustment.type === "fixed_price") {
             item_discount_value = item.price - adjustment.value
+        }
+        else if (adjustment.type === "fixed_set_price") {
+            item_discount_value = item.price - adjustment.value/adjustment.from;
         }
 
         affected_qty = affected_qty ? affected_qty : adjustment.recursive ? Math.floor(item.quantity / adjustment.from) * adjustment.free_qty : adjustment.free_qty;
@@ -620,7 +622,38 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
                 //console.log("Bulk discount: ", range, quantity)
                 item_discount(item, discount, range, matchedProducts, matchedFilters)
             })
+            break;
+        case "wdr_set_discount":
+            discounted = true;
+            let remain_qty;
+            checkQuantityAndDoDiscount(cartItems, discount, matchedProducts, async (range, item, quantity) => {
 
+                if(quantity){
+                    // When quantity counting operator is product_cumulative
+                    remain_qty = remain_qty ?? quantity - quantity % range.from;
+                }
+                else{
+                    remain_qty = item.quantity - item.quantity % range.from;
+                }
+                //console.log(remain_qty, range, item)
+
+                if(item.variant_ids){
+                    cartItems
+                    .filter(e => (item.variant_ids.indexOf(e.product_id) >= 0 || e.product_id == item.product_id))
+                    .filter(e => !e.gifted && (matchedProducts.indexOf(e.product_id) >= 0 || matchedProducts.indexOf(0) >= 0))
+                    .map(qualified_item => {
+                        if(remain_qty > 0)
+                            remain_qty = item_adjustment(cartItems, qualified_item, orderObj, discount, range, matchedProducts, matchedFilters, remain_qty)
+                    })
+                }
+                else{
+
+                    if(remain_qty > 0){
+                        remain_qty = item_adjustment(cartItems, item, orderObj, discount, range, matchedProducts, matchedFilters, remain_qty);
+                    }
+                }
+
+            })
             break;
 
         case "wdr_buy_x_get_x_discount":
@@ -780,7 +813,6 @@ const checkQuantityAndDoDiscount = (cartItems, discount, matchedProducts, cb, bx
                     return t;
                 }, {quantity: 0, variants: [], variant_ids: []})
             });
-
         }
 
         qualified_cart_items(loop_items, matchedProducts, item => {

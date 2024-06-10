@@ -11,6 +11,7 @@ import { useSelector, useDispatch } from "react-redux";
 import {FaTrashAlt} from "react-icons/fa";
 import Button from "react-bootstrap/Button";
 import trans from "../utils/translate";
+import {number_format} from "../utils/prototype";
 
 const ShoppingCart = () => {
   const { cartItems, orderObj } = useSelector(
@@ -105,12 +106,12 @@ const ShoppingCart = () => {
       <div className="total-card">
         <div className="total-items">
           <span className="items-count">{trans("items")} ({cartItems.length})</span>
-          <span className="items-price">${orderObj.subTotal}</span>
+          <span className="items-price">${number_format(orderObj.subTotal)}</span>
         </div>
         <div className="divider"></div>
         <div className="total">
           <span className="total-text">{trans("total")} </span>
-          <span className="total-item-price">$ {orderObj.totalAmount}</span>
+          <span className="total-item-price">$ {number_format(orderObj.totalAmount)}</span>
         </div>
 
         <div className="pay">
