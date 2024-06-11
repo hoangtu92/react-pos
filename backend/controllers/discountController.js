@@ -498,6 +498,7 @@ const item_discount = (item, discount, adjustment, matchedProducts, matchedFilte
             adjust: {type: adjustment.type, value: adjustment.value}
         })
     }
+    else item_discount_value *= item.quantity;
 
     return item_discount_value;
 }
