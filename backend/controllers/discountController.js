@@ -697,6 +697,7 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
                             mode: discount.adjustments.mode,
                             name: discount.title
                         });
+                        return;
                     }
 
                     // Discount apply on the cheapest/highest price of product in the cart that belong to specified category list
