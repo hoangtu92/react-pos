@@ -440,7 +440,7 @@ export const cartSlice = createSlice({
                 state.orderObj.pos_discount = state.orderObj.pos_discount ?? 0;
                 state.orderObj.discount_value = state.orderObj.discount_value ?? 0;
 
-                state.orderObj.discountAmount = parseInt(state.orderObj.discount_value) + parseInt(state.orderObj.pos_discount)
+                state.orderObj.discountAmount = Math.round(parseFloat(state.orderObj.discount_value) + parseInt(state.orderObj.pos_discount))
                 state.updatedCartItem = false;
                 //toast.success(trans("discount_applied_success"));
 
