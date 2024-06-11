@@ -205,12 +205,13 @@ export const cartSlice = createSlice({
             // Increasing the quantity of the product
             if (cartIndex >= 0) {
                 state.cartItems[cartIndex].quantity += 1
+                state.cartItems[cartIndex].regular_qty += 1
                 state.addCartItem = state.cartItems[cartIndex];
             } else {
                 // index -1
                 // New product to cart add
                 const item = {...action.payload, quantity: 1};
-                state.cartItems.push({...action.payload, quantity: 1, discount: 0, discount_items: [], regular_qty: 0, discounted_qty: 0, off: Math.round(100*(action.payload.original_price - action.payload.price)/action.payload.original_price)});
+                state.cartItems.push({...action.payload, quantity: 1, discount: 0, discount_items: [], regular_qty: 1, discounted_qty: 0, off: Math.round(100*(action.payload.original_price - action.payload.price)/action.payload.original_price)});
                 state.addCartItem = item;
             }
             addLocalStorageCart(state.cartItems);
@@ -219,13 +220,13 @@ export const cartSlice = createSlice({
         },
         productSubTotal: (state) => {
             state.orderObj.subTotal = Math.round(state.cartItems.reduce((subTotal, product) => {
-                const {price, regular_qty, quantity, discount} = product;
+                const {price, regular_qty, discount} = product;
                 const discounted_item_subtotal = product.discount_items.reduce((t, e) => {
-                    t += e.price > 0 ? e.quantity * (e.price - discount) : 0;
+                    t += e.price ? e.quantity * (e.price - discount) : 0;
                     return t;
                     }, 0);
 
-                subTotal += discounted_item_subtotal ? discounted_item_subtotal + (price  - discount) * regular_qty : (price  - discount) * quantity;
+                subTotal += discounted_item_subtotal + (price  - discount) * regular_qty;
                 return subTotal;
             }, 0));
 
@@ -246,7 +247,8 @@ export const cartSlice = createSlice({
         },
         increase: (state, action) => {
             const product = state.cartItems.find((item) => item.id === action.payload)
-            product.quantity = product.quantity + 1
+            product.quantity  += 1;
+            product.regular_qty  += 1;
             addLocalStorageCart(state.cartItems);
             state.updatedCartItem = true;
         },
@@ -255,7 +257,8 @@ export const cartSlice = createSlice({
             if (product.quantity <= 1) {
                 product.quantity = 1
             } else {
-                product.quantity = product.quantity - 1
+                product.quantity -= 1;
+                product.regular_qty -= 1;
             }
             addLocalStorageCart(state.cartItems);
             state.updatedCartItem = true;
