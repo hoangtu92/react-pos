@@ -230,13 +230,14 @@ const check_discount = (discount, cartItems, orderObj, callback = null) => {
  */
 const check_condition_rules = (discount, cartItems, matchedProducts) => {
     const conditions = Object.values(discount.conditions);
-    if (conditions) return conditions.filter(condition => {
 
-        const taxonomies = {
-            "cart_item_product_category": "categories",
-            "wdr_cart_item_pwb-brand": "brands",
-            "cart_item_product_tags": "tags",
-        }
+    const taxonomies = {
+        "cart_item_product_category": "categories",
+        "wdr_cart_item_pwb-brand": "brands",
+        "cart_item_product_tags": "tags",
+    }
+
+    if (conditions) return conditions.filter(condition => {
 
         let compare_value;
         let condition_value = condition.options.value ?? condition.options.from;
@@ -244,9 +245,10 @@ const check_condition_rules = (discount, cartItems, matchedProducts) => {
         let operator = condition.options.operator;
         if (condition.type === "cart_item_product_combination" || condition.type === "cart_item_category_combination") {
 
-            let all_presence, compare_arr;
+            let all_presence, compare_arr, type;
 
             if (condition.type === "cart_item_product_combination") {
+                type = condition.options.type;
                 compare_arr = condition.options.product.map(product_id => {
                     return cartItems.reduce((t, item) => {
                         if (product_id == item.product_id || product_id == item.parent_id) {
@@ -261,6 +263,8 @@ const check_condition_rules = (discount, cartItems, matchedProducts) => {
                 all_presence = compare_arr.filter(e => e).length >= condition.options.product.length;
 
             } else {
+                type = condition.options.combination;
+
                 compare_arr = condition.options.category.map(cat_id => {
                     return cartItems.reduce((t, item) => {
                         const {categories, discount, price, quantity} = item;
@@ -283,18 +287,19 @@ const check_condition_rules = (discount, cartItems, matchedProducts) => {
                 all_presence = compare_arr.filter(e => e).length >= condition.options.category.length;
             }
 
-            //console.log(compare_arr, "all_presence", all_presence)
-
-            if (condition.options.type === "each") {
+            if (type === "each") {
                 compare_value = all_presence ? Math.min(...compare_arr) : 0;
-            } else if (condition.options.type === "combine") {
+            } else if (type === "combine") {
                 compare_value = all_presence ? compare_arr.reduce((t, e) => {
                     t += e;
                     return t;
                 }, 0) : 0;
-            } else if (condition.options.type === "any") {
+            } else if (type === "any") {
                 compare_value = Math.max(...compare_arr);
             }
+
+            //console.log(compare_arr, "all_presence", all_presence, compare_value)
+
         } else if (Object.keys(taxonomies).indexOf(condition.type) >= 0) {
 
             operator = condition.options.cartqty;
