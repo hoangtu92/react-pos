@@ -19,9 +19,9 @@ const issueInvoice = async (id) => {
     return response.data
 }
 
-const getOrders = async () => {
+const getOrders = async (page = 1, limit = 20, counting = 0) => {
     // localhost:5000/api/order/get-orders
-    const response = await httpRequest.get("/order/get-orders")
+    const response = await httpRequest.get(`/order/get-orders?page=${page}&limit=${limit}&counting=${counting}`)
     return response.data
 }
 

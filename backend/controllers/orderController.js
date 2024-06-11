@@ -365,16 +365,31 @@ const syncOrder = async(req, res) => {
 // @route   /api/order/get-orders
 // @desc    Get Orders
 const getOrders = async (req, res) => {
-    const orders = await Order.aggregate([{
-        $lookup: {
-            from: "users",
-            localField: "clerk",
-            foreignField: "_id",
-            as: "clerks"
-        }
-    }]).sort({createdAt: 'desc'});
+    const {counting} = req.query;
 
-    res.status(201).json(orders)
+    const page = req.query.page ?? 0;
+
+    const limit = parseInt(req.query.limit) ?? 20;
+    let result;
+
+    if(counting !== "0"){
+        result = await Order.countDocuments({})
+    }
+    else{
+        result = await Order.aggregate([{
+            $lookup: {
+                from: "users",
+                localField: "clerk",
+                foreignField: "_id",
+                as: "clerks"
+            }
+        }]).sort({createdAt: 'desc'})
+            .skip(page * limit)
+            .limit(limit);
+
+    }
+
+    return res.status(200).json(result)
 }
 
 module.exports = {

@@ -11,7 +11,7 @@ const OrderItem = ({ order, onClick }) => {
   const dispatch = useDispatch();
 
   return (
-    <div className="order-details" key={order._id} onClick={onClick}>
+    <div className="order-details" onClick={onClick}>
       <div className="order-title">
         <span className="order-id"><strong>{trans("order_id")}: # {order._id} - #{order.order_id}</strong> (<small className="qta">
           {trans("sold")} :{order.cartItems.reduce((prev, cur) => {
@@ -28,7 +28,7 @@ const OrderItem = ({ order, onClick }) => {
 
           <Table className={"w-50"} striped bordered hover>
               <tbody>
-              {order.cartItems.map(e => <tr key={e._id}>
+              {order.cartItems.map(e => <tr key={e._id + Math.floor(Math.random() * 100) + Math.floor(Math.random() * 100)}>
                   <td><small>{e.name}</small></td>
                   <td><small>x{e.quantity}</small></td>
                   <td><small>${e.price}</small></td>
