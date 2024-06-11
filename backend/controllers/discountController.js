@@ -413,56 +413,51 @@ const gift_adjustment = (cartItems, item, orderObj, discount, adjustment) => {
  */
 const item_adjustment = (cartItems, item, orderObj, discount, adjustment, matchedProducts, matchedFilters = false, affected_qty) => {
 
-    let item_discount_value = 0, remain_qty = affected_qty;
+    let item_discount_value = 0, remain_qty;
 
-    if (matchedProducts.indexOf(item.product_id) >= 0 || matchedProducts.indexOf(0) >= 0) {
-
-        if (adjustment.type === "free_product") {
-            item_discount_value = item.price;
-        }
-        else if (adjustment.type === "percentage") {
-            item_discount_value = (adjustment.value * (item.price - item.discount)) / 100
-        } else if (adjustment.type === "flat") {
-            item_discount_value = parseInt(adjustment.value);
-
-        } else if (adjustment.type === "fixed_price") {
-            item_discount_value = item.price - adjustment.value
-        }
-        else if (adjustment.type === "fixed_set_price") {
-            item_discount_value = item.price - adjustment.value/adjustment.from;
-        }
-
-        affected_qty = affected_qty ? affected_qty : adjustment.recursive ? Math.floor(item.quantity / adjustment.from) * adjustment.free_qty : adjustment.free_qty;
-
-        remain_qty = affected_qty;
-
-
-        item.discount_items = item.discount_items || [];
-        item.discounted_qty = item.discounted_qty || 0;
-
-        let discount_item = {
-            quantity: affected_qty,
-            id: item.id + "_discounted",
-            price: item.price - item_discount_value,
-            name: adjustment.label ? adjustment.label : discount.adjustments.cart_label ? discount.adjustments.cart_label : discount.title,
-            reason: matchedFilters,
-            adjust: {type: adjustment.type, value: adjustment.value}
-        };
-
-        if(item.quantity <= affected_qty){
-            discount_item.quantity = item.quantity;
-            remain_qty = affected_qty - item.quantity;
-            item.discounted_qty += item.quantity;
-            item.regular_qty  = 0;
-        }
-        else{
-            item.regular_qty -= affected_qty;
-            item.discounted_qty += affected_qty;
-            remain_qty = 0;
-        }
-
-        item.discount_items.push(discount_item);
+    if (adjustment.type === "free_product") {
+        item_discount_value = item.price;
     }
+    else if (adjustment.type === "percentage") {
+        item_discount_value = (adjustment.value * (item.price - item.discount)) / 100
+    } else if (adjustment.type === "flat") {
+        item_discount_value = parseInt(adjustment.value);
+
+    } else if (adjustment.type === "fixed_price") {
+        item_discount_value = item.price - adjustment.value
+    }
+    else if (adjustment.type === "fixed_set_price") {
+        item_discount_value = item.price - adjustment.value/adjustment.from;
+    }
+
+    affected_qty = affected_qty ? affected_qty : adjustment.recursive ? Math.floor(item.quantity / adjustment.from) * adjustment.free_qty : adjustment.free_qty;
+
+
+    item.discount_items = item.discount_items || [];
+    item.discounted_qty = item.discounted_qty || 0;
+
+    let discount_item = {
+        quantity: affected_qty,
+        id: item.id + "_discounted",
+        price: item.price - item_discount_value,
+        name: adjustment.label ? adjustment.label : discount.adjustments.cart_label ? discount.adjustments.cart_label : discount.title,
+        reason: matchedFilters,
+        adjust: {type: adjustment.type, value: adjustment.value}
+    };
+
+    if(item.quantity <= affected_qty){
+        discount_item.quantity = item.quantity;
+        remain_qty = affected_qty - item.quantity;
+        item.discounted_qty += item.quantity;
+        item.regular_qty  = 0;
+    }
+    else{
+        item.regular_qty -= affected_qty;
+        item.discounted_qty += affected_qty;
+        remain_qty = 0;
+    }
+
+    item.discount_items.push(discount_item);
 
     return remain_qty;
 }
@@ -691,27 +686,30 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
                 // Discount get free quantity/fixed/percentage discounted on specific product (Increase quantity even on exists product in cart)
                 if (discount.adjustments.type === "bxgy_product") {
 
-                    if(!orderObj.bxgy_items) orderObj.bxgy_items = [];
-                    orderObj.bxgy_items.push({
-                        items: range.products,
-                        qty: free_qty,
-                        value: range.free_value,
-                        type: range.free_type,
-                        mode: discount.adjustments.mode,
-                        name: discount.title
-                    });
-
-                    return;
+                    Y = cartItems.filter(e => range.products.indexOf(e.product_id.toString()) >= 0 || range.products.indexOf(e.parent_id.toString()) >= 0);
+                    if(!Y.length){
+                        if(!orderObj.bxgy_items) orderObj.bxgy_items = [];
+                        orderObj.bxgy_items.push({
+                            items: range.products,
+                            qty: free_qty,
+                            value: range.free_value,
+                            type: range.free_type,
+                            mode: discount.adjustments.mode,
+                            name: discount.title
+                        });
+                    }
 
                     // Discount apply on the cheapest/highest price of product in the cart that belong to specified category list
                 } else if (discount.adjustments.type === "bxgy_category") {
                     Y = cartItems
-                        .filter(e => !e.gifted && e.categories && range.categories && range.categories.filter(cat_id => e.categories.indexOf(cat_id) >= 0).length > 0);
+                        .filter(e => e.categories && range.categories && range.categories.filter(cat_id => e.categories.indexOf(cat_id) >= 0).length > 0);
 
                     // Discount apply on the cheapest/highest price of product in the cart no matter which category it belong to
                 } else if (discount.adjustments.type === "bxgy_all") {
-                    Y = cartItems.filter(e => !e.gifted);
+                    Y = cartItems;
                 }
+
+                Y = Y.filter(e => !e.gifted);
 
                 if(item && item.variant_ids){
                     Y = Y.filter(e => (item.variant_ids.indexOf(e.product_id) >= 0 || e.product_id == item.product_id));
@@ -719,9 +717,6 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
 
                 Y = Y.sort((a, b) => discount.adjustments.mode === "cheapest" ? a.price - b.price : b.price - a.price);
 
-                if(Y && Y.length > free_qty){
-                    Y = Y.slice(0, Y.length - free_qty);
-                }
                 return cb(Y, free_qty)
             }
 
@@ -739,11 +734,8 @@ const do_discount = (discount, matchedProducts, matchedFilters, matchedCondition
                             recursive: range.recursive
                         };
 
-                        let remain_qty = free_qty;
-                        while(item_Y.length){
-                            if(remain_qty > 0){
-                                remain_qty = item_adjustment(cartItems, item_Y.shift(), orderObj, discount, adjustment, matchedProducts, matchedFilters, remain_qty)
-                            }
+                        while(free_qty > 0){
+                            free_qty = item_adjustment(cartItems, item_Y.shift(), orderObj, discount, adjustment, matchedProducts, matchedFilters, free_qty)
                         }
                     }
                 });
