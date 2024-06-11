@@ -527,10 +527,6 @@ const product_adjustment = (cartItems, orderObj, discount, adjustment, matchedPr
             reason: matchedFilters,
             adjust: {type: adjustment.type, value: adjustment.value}
         });
-        orderObj.discount_value += orderObj.discounts.reduce((t, e) => {
-            t += e.value;
-            return t;
-        }, 0)
     }
 
 

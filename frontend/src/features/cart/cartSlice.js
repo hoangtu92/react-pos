@@ -438,7 +438,11 @@ export const cartSlice = createSlice({
                     state.orderObj = action.payload.orderObj;
                 }
                 state.orderObj.pos_discount = state.orderObj.pos_discount ?? 0;
-                state.orderObj.discount_value = state.orderObj.discount_value ?? 0;
+
+                state.orderObj.discount_value = state.orderObj.discounts.reduce((t, e) => {
+                    t += e.value;
+                    return t;
+                }, 0);
 
                 state.orderObj.discountAmount = Math.round(parseFloat(state.orderObj.discount_value) + parseInt(state.orderObj.pos_discount))
                 state.updatedCartItem = false;
