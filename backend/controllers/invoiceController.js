@@ -123,7 +123,7 @@ const getQRValue = async (order) => {
     const str_12  = "1"; // 1 code Base64
     const str_13 = order.cartItems.reduce((t, e, i) => {
         if(i < 2){
-            t.push(e.name.slice(0, 30).replace(":", ""));
+            t.push(e.name.slice(0, 25).replace(":", ""));
             t.push(e.quantity);
             t.push(e.price)
         }
