@@ -327,7 +327,8 @@ const issueInvoice = async(req, res) => {
 
         if(typeof order.buyer_id !== "undefined" && order.buyer_id != null && order.buyer_id.length > 0){
             data["Buyer_id"] = order.buyer_id;
-            data["TaxAmount"] = Math.round((parseInt(order.totalAmount)/1.05) * 0.05);
+            let finalAmount = order.customTotalAmount > 0 ? order.customTotalAmount : order.totalAmount;
+            data["TaxAmount"] = Math.round((parseInt(finalAmount)/1.05) * 0.05);
             data["CompanyName"] = "";
             //data["RandomNumber"] = "";
         }
