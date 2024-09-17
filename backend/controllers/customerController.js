@@ -117,8 +117,12 @@ const syncCustomer = async(req, res) => {
  * @returns {Promise<void>}
  */
 const addOrUpdateCustomer = async (req, res) => {
-    const {buyer_id, carrier_id, email, name, phone} = req.body;
-    if(name && phone){
+    let {buyer_id, carrier_id, email, name, phone} = req.body;
+    if(phone){
+
+        if(!name){
+            name = phone;
+        }
 
         let customer = await Customer.findOneAndUpdate({phone: phone}, {
             buyer_id, carrier_id, email, name, phone
