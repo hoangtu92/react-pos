@@ -109,6 +109,17 @@ export const calcPoint = createAsyncThunk('coupon/calc', async (points, thunkAPI
     }
 });
 
+/**
+ * Calculate maximum point can be used in current order.
+ */
+export const calcMaxUsagePoint = createAsyncThunk('order/maxUsagePoint', async (total_amount, thunkAPI) => {
+    try {
+        return await cartService.calcMaxUsagePoint(total_amount);
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.response.data)
+    }
+});
+
 export const apply_bxgy_discount = createAsyncThunk('product/get_ids', async (bxgy, thunkAPI) => {
     try {
         return await productService.getProductsByIds(bxgy);
@@ -385,8 +396,8 @@ export const cartSlice = createSlice({
                 state.loading = false;
                 state.error = false;
 
-                if(action.payload.amount > state.orderObj.totalAmount){
-                    alert(trans("redeem_amount_exceed_total_error"));
+                if(action.payload.amount > state.orderObj.subTotal*0.1){
+                    alert(trans("redeem_amount_exceed_10_percent_total_error"));
                     state.orderObj.redeem_value = 0;
                     state.orderObj.redeem_points = 0;
                     addLocalStorageOrder(state.orderObj);
@@ -397,6 +408,21 @@ export const cartSlice = createSlice({
                     cartSlice.caseReducers.productTotalAmount(state, action);
                 }
 
+            })
+
+            .addCase(calcMaxUsagePoint.pending, (state) => {
+                state.loading = true;
+
+            }).addCase(calcMaxUsagePoint.rejected, (state, action) => {
+                state.loading = false;
+                state.orderObj.maxUsagePoint = 0;
+                state.orderObj.minUsagePoint = 0;
+
+            }).addCase(calcMaxUsagePoint.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = false;
+                state.orderObj.maxUsagePoint = action.payload.maxUsagePoint;
+                state.orderObj.minUsagePoint = action.payload.minUsagePoint;
             })
 
 
@@ -447,7 +473,7 @@ export const cartSlice = createSlice({
                     return t;
                 }, 0);
 
-                state.orderObj.discountAmount = Math.round(parseFloat(state.orderObj.discount_value) + parseInt(state.orderObj.pos_discount))
+                state.orderObj.discountAmount = Math.floor(parseFloat(state.orderObj.discount_value) + parseInt(state.orderObj.pos_discount))
                 state.updatedCartItem = false;
                 //toast.success(trans("discount_applied_success"));
 

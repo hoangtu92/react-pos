@@ -93,8 +93,10 @@ const syncOrder = async(req, res) => {
     const {order: id} = req.params;
 
     const order = await Order.findOne({_id: id});
+    let response_data = {};
     if(order){
         const needDiscount = order.redeem_points > 0 || order.discountAmount > 0;
+        console.log("Found order: ", id, "needDiscount: ", needDiscount);
 
         let data = {
             payment_method: order.paymentMethod,
@@ -138,7 +140,7 @@ const syncOrder = async(req, res) => {
             }, [])
         };
 
-        console.log(data)
+        console.log("Order Data", data)
 
         // Customer id
         const customer = await Customer.findOne({_id: order.customer});
@@ -200,6 +202,7 @@ const syncOrder = async(req, res) => {
                     const userResult = await result.json();
                     if(userResult.data){
                         user_id = userResult.data.user_id;
+                        console.log("Found customer: ", user_id);
                     }
                 }
             }
@@ -213,6 +216,7 @@ const syncOrder = async(req, res) => {
                     const result = await api.post("customers", customerObj);
                     if(result.status){
                         user_id = result.data.id;
+                        console.log("New customer: ", user_id);
                     }
                     else{
                         console.error("Could not create new user", customerObj);
@@ -226,6 +230,7 @@ const syncOrder = async(req, res) => {
             else{
                 // Update customer data
                 await api.put("customers/" + user_id, customerObj);
+                console.log("Updated customer data ", user_id);
             }
 
             if(user_id){
@@ -288,14 +293,18 @@ const syncOrder = async(req, res) => {
                 delete(data.line_items);
                 delete(data.set_paid);
                 delete(data.status);
-
+                console.log("Order existed, update data");
                 await api.put("orders/" + order.order_id, data);
+                console.log("Order updated");
+
             }
             else{
+                console.log("Creating new order");
                 const result = await api.post("orders", data);
 
                 if(result.status === 200 || result.status === 201){
                     const order_id = result.data.id;
+                    console.log("Order created");
 
                     await Order.updateOne({_id: order._id}, {
                         order_id
@@ -304,7 +313,8 @@ const syncOrder = async(req, res) => {
                     // Todo redeem
                     if(needDiscount){
                         if(order.redeem_points > 0){
-                            await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/points/redeem`, {
+                            console.log("Adding redeem point");
+                            const response = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/points/redeem`, {
                                 method: "POST",
                                 headers: {
                                     'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
@@ -315,11 +325,15 @@ const syncOrder = async(req, res) => {
                                     points: order.redeem_points
                                 })
                             });
+                            const redeem_res = await response.json();
+                            response_data.redeem = redeem_res;
+                            console.log("Redeem added", redeem_res);
                         }
 
                         // Todo discount
                         if(order.discountAmount > 0){
-                            await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/discount/apply`, {
+                            console.log("Adding discount");
+                            const response = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/discount/apply`, {
                                 method: "POST",
                                 headers: {
                                     'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
@@ -330,21 +344,31 @@ const syncOrder = async(req, res) => {
                                     discount_value: order.discountAmount
                                 })
                             });
+                            const discount_res = await response.json();
+                            response_data.discount = discount_res;
+                            console.log("Discount added",discount_res);
                         }
 
 
+                        console.log("Update order");
                         // Complete the order
-                        await api.put("orders/" + order_id, {
+                        const response = await api.put("orders/" + order_id, {
                             status: "completed"
                         });
+                        const update_res = await response.json();
+                        console.log("Order Updated", update_res);
                     }
                 }
             }
 
+            response_data.order = order;
+            response_data.request_data = data;
+
+
             res.status(201).json({
                 status: true,
                 msg: "Sync completed",
-                data: order
+                data: response_data
             })
         } catch (e) {
             res.status(400).json({
@@ -392,8 +416,24 @@ const getOrders = async (req, res) => {
     return res.status(200).json(result)
 }
 
+/**
+ * /api/order/get-max-usage-point
+ * @param req
+ * @param res
+ */
+const calcMaxUsagePoint = async (req, res) => {
+    const {total_amount} = req.query;
+    const redeem_ratio = await Setting.findOne({name: "redeem_ratio"});
+    const maxUsagePoint = Math.floor(total_amount*0.1 * redeem_ratio.value)
+    return res.status(200).json({
+        maxUsagePoint,
+        minUsagePoint: redeem_ratio.value
+    })
+}
+
 module.exports = {
     addOrder,
     getOrders,
-    syncOrder
+    syncOrder,
+    calcMaxUsagePoint
 }

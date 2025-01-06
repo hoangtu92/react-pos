@@ -4,7 +4,8 @@ import {getLocalStorageSettings, updateLocalStorageSettings} from "./localStorag
 
 const trans = (key) => {
     let settings = getLocalStorageSettings();
-    if(typeof settings.language === "undefined" || settings.language == "" || settings.language == null){
+    if(settings === null) settings = {};
+    if(typeof settings.language === "undefined" || settings.language === "" || settings.language == null){
         settings.language = "tw";
         updateLocalStorageSettings(settings);
     }

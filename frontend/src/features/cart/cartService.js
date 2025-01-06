@@ -1,5 +1,10 @@
 import httpRequest from '../../utils/request'
 
+/**
+ *
+ * @param carrier_id
+ * @returns {Promise<{}|any>}
+ */
 const validateCarrierID = async (carrier_id) => {
     // /api/invoice/validate-carrier-id
 
@@ -11,8 +16,23 @@ const validateCarrierID = async (carrier_id) => {
     }
     else return {};
 }
+/**
+ *
+ * @param total_amount
+ * @returns {Promise<{}|any>}
+ */
+const calcMaxUsagePoint = async(total_amount) => {
+    // /api/order/get-max-usage-point
+    if(typeof total_amount != "undefined"){
+        const response = await httpRequest.get(`/order/get-max-usage-point?total_amount=${total_amount}`)
+        return response.data;
+    }
+    else return {};
+}
+
 
 const discountService = {
-    validateCarrierID
+    validateCarrierID,
+    calcMaxUsagePoint
 }
 export default discountService;

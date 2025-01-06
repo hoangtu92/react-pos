@@ -11,7 +11,7 @@ import {Badge, Form, Modal, Spinner} from "react-bootstrap"
 import InputGroup from "react-bootstrap/InputGroup"
 import {useNavigate, Link} from "react-router-dom";
 import {
-    addUpdateCustomer,
+    addUpdateCustomer, calcMaxUsagePoint,
     calcPoint, calculateDiscount,
     clearCart,
     clearOrder,
@@ -62,12 +62,19 @@ const Cart = () => {
 
     useEffect(() => {
         dispatch(productSubTotal());
+
     }, [dispatch, cartItems]);
 
     useEffect(() => {
         dispatch(productTotalAmount());
     }, [dispatch, orderObj.subTotal, orderObj.discountAmount, orderObj.redeem_value]);
 
+    useEffect(() => {
+
+        if(settings.showCustomerModal)
+            dispatch(calcMaxUsagePoint(orderObj.subTotal))
+
+    }, [dispatch, settings.showCustomerModal]);
 
     useEffect(() => {
         if(updatedCartItem) {
@@ -511,7 +518,7 @@ const Cart = () => {
                             {selectedCustomer.points > 0 ?
                                 <Form.Group className={"mb-2"}>
                                     <Form.Label htmlFor="inputPoints" className={"me-2"}>{trans("redeem_points")}
-                                        (max: {selectedCustomer.points} points)</Form.Label>
+                                        (Balance: {selectedCustomer.points} points. Min: {orderObj.minUsagePoint}.  Max: {orderObj.maxUsagePoint} points)</Form.Label>
                                     {orderObj.redeem_value > 0 ? <Badge bg="success">Off -NT$ {orderObj.redeem_value}</Badge> : null}
                                     <div className={"d-flex flex-row"}>
                                         <InputGroup>

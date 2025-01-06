@@ -309,7 +309,7 @@ const calcPointValue = async(req, res) => {
         else{
             res.status(200).json({
                 points: points,
-                amount: points/redeem_ratio.value
+                amount: Math.floor(points/redeem_ratio.value)
             })
         }
 

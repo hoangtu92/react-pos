@@ -76,6 +76,7 @@ const languages = {
     "invoice_issued_success": ['Invoice issued successfully!', 'Invoice issued successfully!'],
     "invalid_tax_id_msg": ["Invalid Tax ID", "統一編號錯誤，請再次確認！"],
     "redeem_amount_exceed_total_error": ["Exceed total amount", "折扣超過總金額"],
+    "redeem_amount_exceed_10_percent_total_error": ["Point can be discounted up to 10% of the total amount, please modify the discount amount", "【狗狗幣最多折抵總金額10%，請修改折扣金額】"],
     "point_too_small_msg": ["Point too small", "Point too small"],
     "carrier_id_validate_success": ["Carrier ID is valid", "載具正確"],
     "carrier_id_validate_failed": ["Carrier ID is invalid", "錯誤！請重新輸入載具！"],
