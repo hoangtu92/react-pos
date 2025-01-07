@@ -313,8 +313,7 @@ const syncOrder = async(req, res) => {
                     // Todo redeem
                     if(needDiscount){
                         if(order.redeem_points > 0){
-                            console.log("Adding redeem point");
-                            const response = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/points/redeem`, {
+                            await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/points/redeem`, {
                                 method: "POST",
                                 headers: {
                                     'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
@@ -325,15 +324,12 @@ const syncOrder = async(req, res) => {
                                     points: order.redeem_points
                                 })
                             });
-                            const redeem_res = await response.json();
-                            response_data.redeem = redeem_res;
-                            console.log("Redeem added", redeem_res);
+                            console.log("redeem added")
                         }
 
                         // Todo discount
                         if(order.discountAmount > 0){
-                            console.log("Adding discount");
-                            const response = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/discount/apply`, {
+                            await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/discount/apply`, {
                                 method: "POST",
                                 headers: {
                                     'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
@@ -344,31 +340,23 @@ const syncOrder = async(req, res) => {
                                     discount_value: order.discountAmount
                                 })
                             });
-                            const discount_res = await response.json();
-                            response_data.discount = discount_res;
-                            console.log("Discount added",discount_res);
+                            console.log("discount added")
                         }
 
 
-                        console.log("Update order");
                         // Complete the order
-                        const response = await api.put("orders/" + order_id, {
+                        await api.put("orders/" + order_id, {
                             status: "completed"
                         });
-                        const update_res = await response.json();
-                        console.log("Order Updated", update_res);
+                        console.log("Updated order");
                     }
                 }
             }
 
-            response_data.order = order;
-            response_data.request_data = data;
-
-
             res.status(201).json({
                 status: true,
                 msg: "Sync completed",
-                data: response_data
+                data: order
             })
         } catch (e) {
             res.status(400).json({
