@@ -100,6 +100,8 @@ const languages = {
     "discount_applied_failed": ["Discount applied failed.", "Discount applied failed."],
     "discount_sync_success": ["Discount sync success.", "Discount sync success."],
     "discount_sync_failed": ["Discount sync failed.", "Discount sync failed."],
+    "point_total": ["Total", "總點數"],
+    "point_max": ["Max", "最高折抵"],
 
 
 };
