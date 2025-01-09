@@ -518,7 +518,7 @@ const Cart = () => {
                             {selectedCustomer.points > 0 ?
                                 <Form.Group className={"mb-2"}>
                                     <Form.Label htmlFor="inputPoints" className={"me-2"}>{trans("redeem_points")}
-                                        ({trans("point_total")}: {selectedCustomer.points} points. {trans("point_max")}: {orderObj.maxUsagePoint} points)</Form.Label>
+                                        ({trans("point_max")}: {orderObj.maxUsagePoint < selectedCustomer.points ? orderObj.maxUsagePoint : selectedCustomer.points} points)</Form.Label>
                                     {orderObj.redeem_value > 0 ? <Badge bg="success">Off -NT$ {orderObj.redeem_value}</Badge> : null}
                                     <div className={"d-flex flex-row"}>
                                         <InputGroup>
