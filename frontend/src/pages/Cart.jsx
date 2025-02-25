@@ -38,6 +38,7 @@ import trans from "../utils/translate";
 import {handleChange} from "../features/cart/cartSlice";
 import {handleProductStateChange} from "../features/product/productSlice";
 import {number_format} from "../utils/prototype";
+import {toast} from "react-toastify";
 
 const Cart = () => {
 
@@ -122,6 +123,11 @@ const Cart = () => {
     }
 
     const onRedeemPointChange = e => {
+        if(e.target.value > selectedCustomer.points){
+            toast.error(trans("not_enough_points"));
+
+            return;
+        }
         if(e.target.value.length > 0)
             dispatch(updateOrderDetail({name: 'redeem_points', value: e.target.value}));
     }

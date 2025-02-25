@@ -104,6 +104,7 @@ const languages = {
     "point_max": ["Max", "最高折抵"],
 
 
+    "not_enough_points": ["Not enough points", "超過此帳號總點數，請重新輸入"]
 };
 
 export default languages;
