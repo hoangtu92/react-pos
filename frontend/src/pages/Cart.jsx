@@ -2,7 +2,7 @@ import {React, useEffect, useState} from "react";
 import {
     FaCheckCircle,
     FaCreditCard, FaEraser,
-    FaHome,
+    FaHome, FaLine,
     FaMoneyBillAlt, FaPrint, FaShoppingBag,
     FaStoreAlt, FaTrashAlt,
     FaUber
@@ -328,13 +328,22 @@ const Cart = () => {
                                                        htmlFor="cash_payment"><FaMoneyBillAlt/> {trans("cash")}</label>
                                             </span>
 
-                                    <span>
+                                    <span className={"me-2"}>
                                                 <input className={"d-none payment-select "} id={"credit_payment"}
                                                        checked={orderObj.paymentMethod === "credit"}
                                                        onChange={handleUpdatePayment} type={"radio"} name={"payment"}
                                                        value={"credit"}/>
                                                 <label className={"btn btn-outline-secondary btn-lg"}
                                                        htmlFor="credit_payment"><FaCreditCard/> {trans("credit_card")}
+                                            </label>
+                                            </span>
+                                    <span>
+                                                <input className={"d-none payment-select "} id={"line_payment"}
+                                                       checked={orderObj.paymentMethod === "linepay"}
+                                                       onChange={handleUpdatePayment} type={"radio"} name={"payment"}
+                                                       value={"linepay"}/>
+                                                <label className={"btn btn-outline-secondary btn-lg"}
+                                                       htmlFor="line_payment"><FaLine/> {trans("line_pay")}
                                             </label>
                                             </span>
                                 </div>
