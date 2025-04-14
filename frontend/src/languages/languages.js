@@ -105,7 +105,8 @@ const languages = {
 
 
     "not_enough_points": ["Not enough points", "超過此帳號總點數，請重新輸入"],
-    "line_pay": ["LINE Pay", "LINE Pay"]
+    "line_pay": ["LINE Pay", "LINE Pay"],
+    "atm": ["ATM", "店面轉帳"],
 };
 
 export default languages;

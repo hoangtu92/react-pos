@@ -3,7 +3,7 @@ import {
     FaCheckCircle,
     FaCreditCard, FaEraser,
     FaHome, FaLine,
-    FaMoneyBillAlt, FaPrint, FaShoppingBag,
+    FaMoneyBillAlt, FaPiggyBank, FaPrint, FaShoppingBag,
     FaStoreAlt, FaTrashAlt,
     FaUber
 } from "react-icons/fa"
@@ -319,8 +319,8 @@ const Cart = () => {
                             </div>
 
                             <div className="payment-method  mb-4">
-                                <div className={"d-flex flex-row"}>
-                                            <span className={"me-2"}>
+                                <div className={"d-flex flex-row flex-wrap"}>
+                                            <span className={"me-2 mb-2"}>
                                                 <input className={"d-none payment-select "} id={"cash_payment"}
                                                        checked={orderObj.paymentMethod === "cash"} onChange={handleUpdatePayment}
                                                        type={"radio"} name={"payment"} value={"cash"}/>
@@ -328,7 +328,7 @@ const Cart = () => {
                                                        htmlFor="cash_payment"><FaMoneyBillAlt/> {trans("cash")}</label>
                                             </span>
 
-                                    <span className={"me-2"}>
+                                    <span className={"me-2 mb-2"}>
                                                 <input className={"d-none payment-select "} id={"credit_payment"}
                                                        checked={orderObj.paymentMethod === "credit"}
                                                        onChange={handleUpdatePayment} type={"radio"} name={"payment"}
@@ -344,6 +344,16 @@ const Cart = () => {
                                                        value={"linepay"}/>
                                                 <label className={"btn btn-outline-secondary btn-lg"}
                                                        htmlFor="line_payment"><FaLine/> {trans("line_pay")}
+                                            </label>
+                                            </span>
+
+                                    <span className={"me-2 mb-2"}>
+                                                <input className={"d-none payment-select "} id={"atm_payment"}
+                                                       checked={orderObj.paymentMethod === "atm"}
+                                                       onChange={handleUpdatePayment} type={"radio"} name={"payment"}
+                                                       value={"atm"}/>
+                                                <label className={"btn btn-outline-secondary btn-lg"}
+                                                       htmlFor="atm_payment"><FaPiggyBank/> {trans("atm")}
                                             </label>
                                             </span>
                                 </div>
