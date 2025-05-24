@@ -100,6 +100,6 @@ export const updateLocalStorageCustomerSync = (product_sync) => {
 
 export const getLocalStorageCustomerSync = () => {
     let result = JSON.parse(localStorage.getItem('customer_sync'));
-    return result ?? {total_customers: 0, synced_customers: 0, synced_percent: 0, page: 1, playing: false}
+    return result ?? {total_customers: 0, synced_customers: 0, synced_percent: 0, page: 1, look_back: 0, playing: false}
 }
 

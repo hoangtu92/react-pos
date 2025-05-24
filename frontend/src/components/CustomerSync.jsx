@@ -2,8 +2,9 @@ import React, {useEffect} from "react";
 import {useDispatch, useSelector} from "react-redux";
 import Button from "react-bootstrap/Button";
 import {countCustomers, updateSyncCustomer} from "../features/customer/customerSlice";
-import {ProgressBar} from "react-bootstrap";
+import {Form, OverlayTrigger, ProgressBar, Tooltip} from "react-bootstrap";
 import trans from "../utils/translate";
+import {FaQuestionCircle} from "react-icons/fa";
 
 const CustomerSync = () => {
     const {syncObj} = useSelector((state) => state.customer);
@@ -42,8 +43,26 @@ const CustomerSync = () => {
             <div className={"border-opacity-25 p-4 border-dark border"}>
                 <h3 className={"border-bottom border-dark-subtle mb-4 pb-4"}>{trans("customer")}</h3>
                 <div className={"d-flex pt-3 pb-3  flex-row align-items-center"}>
+                    <Form.Group className={"w_50 d-flex flex-row mb-3 align-items-center"}>
+                        <Form.Label className={"mb-0 w-100"}>{trans("max_day")}:</Form.Label>
+                        <Form.Control min={0} type={"number"} placeholder={syncObj.look_back}
+                                      disabled={syncObj.playing}
+                                      onChange={e => dispatch(updateSyncCustomer({
+                                          name: "look_back",
+                                          value: e.target.value
+                                      }))}/>
 
-                    <div className={"mb-3"}>
+                        <OverlayTrigger
+                            placement="right"
+                            delay={{ show: 250, hide: 400 }}
+                            overlay={<Tooltip id="button-tooltip">
+                                {trans("product_sync_tips")}
+                            </Tooltip>}
+                        ><Button variant="dark"><FaQuestionCircle/></Button></OverlayTrigger>
+
+                    </Form.Group>
+
+                    <div className={"mb-3 ms-2"}>
                         {syncObj.playing ?
                             <Button variant={"warning"} onClick={pauseSyncCustomer}>{trans("pause")}</Button> :
                             syncObj.page > 1 ?

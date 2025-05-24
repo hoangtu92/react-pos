@@ -24,7 +24,7 @@ export const syncCustomers = createAsyncThunk('customer/syncCustomer', async (ar
             const syncObj = getLocalStorageCustomerSync();
             if(syncObj.playing){
                 const next_page = args.page + 1;
-                thunkAPI.dispatch(syncCustomers({page: next_page}))
+                thunkAPI.dispatch(syncCustomers({page: next_page, look_back: args.look_back}))
             }
         }
         return result
@@ -38,15 +38,15 @@ export const countCustomers = createAsyncThunk('customer/countCustomers', async 
 
         const syncObj = getLocalStorageCustomerSync();
 
-        const result = await customerService.customerCount();
+        const result = await customerService.customerCount(syncObj.look_back);
 
         if(result.total > 0){
             if(syncObj.page > 0){
-                thunkAPI.dispatch(syncCustomers({page: syncObj.page}))
+                thunkAPI.dispatch(syncCustomers({page: syncObj.page, look_back: syncObj.look_back}))
             }
             else{
                 thunkAPI.dispatch(clearValues())
-                thunkAPI.dispatch(syncCustomers({page: 1}))
+                thunkAPI.dispatch(syncCustomers({page: 1, look_back: syncObj.look_back}))
             }
         }
         else{

@@ -1,12 +1,12 @@
 import httpRequest from '../../utils/request'
 
 const customerSync = async (args) => {
-    const response = await httpRequest.get("/customer/sync?count=0&page=" + args.page)
+    const response = await httpRequest.get(`/customer/sync?count=0&page=${args.page}&look_back=${args.look_back}`)
     return response.data
 }
 
-const customerCount = async () => {
-    const response = await httpRequest.get(`/customer/sync?count=1`)
+const customerCount = async (look_back) => {
+    const response = await httpRequest.get(`/customer/sync?look_back=${look_back}&count=1`)
     return response.data
 }
 
