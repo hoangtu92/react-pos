@@ -27,9 +27,9 @@ const searchCustomers = async (req, res) => {
     res.status(201).json(customers)
 }
 
-const do_sync = async (page = 1, perpage=20, count, cb) => {
+const do_sync = async (page = 1, perpage=20, count,look_back = 0, cb) => {
 
-    let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/customer/get?page=${page}&per_page=${perpage}&count=${count}`, {
+    let result = await fetch(`${process.env.JD_HOST}/wp-json/pos/v1/customer/get?page=${page}&per_page=${perpage}&count=${count}&look_back=${look_back}`, {
         method: "GET",
         headers: {
             'Authorization': "Basic " + btoa(process.env.JD_ACCOUNT),
@@ -98,8 +98,8 @@ const do_sync = async (page = 1, perpage=20, count, cb) => {
 // @route /api/customer/sync
 // @desc Sync customer with justdog
 const syncCustomer = async(req, res) => {
-    const { page, count } = req.query;
-    await do_sync(page, 10, count, (results) => {
+    const { page, look_back, count } = req.query;
+    await do_sync(page, 10, count, look_back, (results) => {
         if(results){
             res.status(200).json(results)
         }
