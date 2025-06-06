@@ -15,7 +15,7 @@ const do_sync_discounts = require("../controllers/DiscountController").do_sync_d
         console.log(result.total + " Product synced")
     });
 
-    await do_sync_customer(1, -1, 0, result => {
+    await do_sync_customer(1, -1, 0, 0, result => {
         //console.log(result)
         console.log(result.total + " Customer synced")
     });
